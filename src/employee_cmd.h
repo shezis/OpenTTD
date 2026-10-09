@@ -17,9 +17,11 @@
 CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role);
 CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee);
 CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town);
+CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open);
 
 DEF_CMD_TRAIT(Commands::HireEmployee, CmdHireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::FireEmployee, CmdFireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::AssignRep, CmdAssignRep, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::SetHub, CmdSetHub, {}, CommandType::OtherManagement)
 
 #endif /* EMPLOYEE_CMD_H */

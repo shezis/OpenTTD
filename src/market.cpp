@@ -87,7 +87,28 @@ bool IsTownInRepRange(CompanyID company, TownID town)
 	const Company *c = Company::GetIfValid(company);
 	const Town *t = Town::GetIfValid(town);
 	if (c == nullptr || t == nullptr || c->location_of_HQ == INVALID_TILE) return false;
-	return DistanceManhattan(c->location_of_HQ, t->xy) <= REP_RANGE_TILES;
+	if (DistanceManhattan(c->location_of_HQ, t->xy) <= REP_RANGE_TILES) return true;
+	for (const Town *hub : Town::Iterate()) {
+		if (hub->founder_hubs.Test(company) && DistanceManhattan(hub->xy, t->xy) <= REP_RANGE_TILES) return true;
+	}
+	return false;
+}
+
+/** Whether a company has a sales hub in a town. */
+bool HasHubInTown(CompanyID company, TownID town)
+{
+	const Town *t = Town::GetIfValid(town);
+	return t != nullptr && t->founder_hubs.Test(company);
+}
+
+/** Number of sales hubs a company runs. */
+uint CountHubs(CompanyID company)
+{
+	uint n = 0;
+	for (const Town *t : Town::Iterate()) {
+		if (t->founder_hubs.Test(company)) n++;
+	}
+	return n;
 }
 
 /** Number of a company's sales reps working a town. */
@@ -171,6 +192,7 @@ uint GetCompanyStrength(CompanyID company, TownID town)
 		if (e->company == company && e->role == EmployeeRole::Sales && e->town == town) reach += e->skill * e->morale / 75;
 	}
 	if (GetCompanyHQTown(company) == town) reach += 40;
+	if (t->founder_hubs.Test(company)) reach += 30;
 
 	/* Word of mouth: existing customers here and in nearby towns. */
 	reach += t->founder_users[company] / 50;

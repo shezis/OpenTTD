@@ -61,6 +61,7 @@ struct MarketWindow : public Window {
 	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
 	{
 		if (widget == WID_MK_CAPTION) return GetString(STR_MARKET_CAPTION, this->window_number);
+		if (widget == WID_MK_HUB) return GetString(HasHubInTown(this->GetCompany(), this->selected) ? STR_MARKET_CLOSE_HUB : STR_MARKET_OPEN_HUB, HUB_OPEN_COST);
 		return this->Window::GetWidgetString(widget, stringid);
 	}
 
@@ -117,6 +118,7 @@ struct MarketWindow : public Window {
 							x += seg;
 						}
 						StringID status = GetCompanyHQTown(company) == t->index ? STR_MARKET_STATUS_HQ
+								: HasHubInTown(company, t->index) ? STR_MARKET_STATUS_HUB
 								: IsTownOpportunity(company, t->index) ? STR_MARKET_STATUS_OPPORTUNITY
 								: !IsTownInRepRange(company, t->index) ? STR_MARKET_STATUS_OUT_OF_RANGE
 								: STR_MARKET_STATUS_NONE;
@@ -174,6 +176,13 @@ struct MarketWindow : public Window {
 			case WID_MK_SHOW:
 				if (Town::IsValidID(this->selected)) ScrollMainWindowToTile(Town::Get(this->selected)->xy);
 				break;
+
+			case WID_MK_HUB:
+				if (Town::IsValidID(this->selected)) {
+					bool open = !HasHubInTown(company, this->selected);
+					Command<Commands::SetHub>::Post(open ? STR_ERROR_CAN_T_OPEN_HUB : STR_ERROR_CAN_T_CLOSE_HUB, this->selected, open);
+				}
+				break;
 		}
 	}
 
@@ -192,6 +201,7 @@ struct MarketWindow : public Window {
 		this->SetWidgetDisabledState(WID_MK_ADD_REP, !own || !sel || !IsTownInRepRange(this->GetCompany(), this->selected));
 		this->SetWidgetDisabledState(WID_MK_REMOVE_REP, !own || !sel || CountRepsInTown(this->GetCompany(), this->selected) == 0);
 		this->SetWidgetDisabledState(WID_MK_SHOW, !sel);
+		this->SetWidgetDisabledState(WID_MK_HUB, !own || !sel || GetCompanyHQTown(this->GetCompany()) == this->selected);
 		this->SetDirty();
 	}
 };
@@ -211,6 +221,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_market_widgets = {
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_ADD_REP), SetStringTip(STR_MARKET_ADD_REP, STR_MARKET_ADD_REP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_REMOVE_REP), SetStringTip(STR_MARKET_REMOVE_REP, STR_MARKET_REMOVE_REP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_HUB), SetToolTip(STR_MARKET_HUB_TOOLTIP_PLAIN), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_SHOW), SetStringTip(STR_MARKET_SHOW, STR_MARKET_SHOW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),

@@ -176,7 +176,7 @@ struct StatusBarWindow : Window {
 	static void DrawFounderStatus(const Rect &tr)
 	{
 		const Company *c = Company::Get(_local_company);
-		Money burn = GetMonthlyPayroll(c->index) + GetOfficeRent(c->office_level);
+		Money burn = GetMonthlyPayroll(c->index) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index);
 		std::string runway;
 		TextColour colour = TextColour::White;
 		if (c->money <= 0) {

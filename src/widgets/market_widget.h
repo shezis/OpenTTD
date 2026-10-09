@@ -19,6 +19,7 @@ enum MarketWidgets : WidgetID {
 	WID_MK_ADD_REP, ///< Send a free rep to the selected town.
 	WID_MK_REMOVE_REP, ///< Take a rep off the selected town.
 	WID_MK_SHOW, ///< Scroll the map to the selected town.
+	WID_MK_HUB, ///< Open or close a sales hub in the selected town.
 };
 
 #endif /* WIDGETS_MARKET_WIDGET_H */

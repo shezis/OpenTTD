@@ -3885,6 +3885,16 @@ STR_MARKET_STATUS_HQ                                            :{NUM}% · your 
 STR_MARKET_STATUS_OPPORTUNITY                                   :{NUM}% · opportunity
 STR_MARKET_STATUS_OUT_OF_RANGE                                  :{NUM}% · out of range
 STR_MARKET_STATUS_NONE                                          :{NUM}%
+STR_MARKET_STATUS_HUB                                           :{NUM}% · your hub
+STR_MARKET_OPEN_HUB                                             :{BLACK}Open hub ({CURRENCY_SHORT})
+STR_MARKET_CLOSE_HUB                                            :{BLACK}Close hub
+STR_MARKET_HUB_TOOLTIP_PLAIN                                    :{BLACK}A sales hub adds presence in its town and lets reps reach towns near it. Each hub pays monthly rent
+STR_ERROR_CAN_T_OPEN_HUB                                        :{WHITE}Can't open a sales hub here...
+STR_ERROR_CAN_T_CLOSE_HUB                                       :{WHITE}Can't close this sales hub...
+STR_ERROR_HUB_NEEDS_HQ                                          :{WHITE}... open your HQ first
+STR_ERROR_HUB_ALREADY_OPEN                                      :{WHITE}... you already have a hub here
+STR_ERROR_HUB_IN_HQ_TOWN                                        :{WHITE}... your HQ already covers this town
+STR_ERROR_TOO_MANY_HUBS                                         :{WHITE}... you already run the maximum number of hubs
 STR_MARKET_WANTS                                                :wants {STRING} and {STRING} · {NUM} rep{P "" s} here
 STR_MARKET_SUMMARY                                              :{BLACK}{NUM} customer{P "" s} · MRR {CURRENCY_LONG} · {CURRENCY_SHORT} per customer per month
 STR_MARKET_ADD_REP                                              :{BLACK}Add rep here

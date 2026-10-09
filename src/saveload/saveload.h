@@ -432,6 +432,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeWorkTracks, ///< Saveload version: 373, Founder Mode fork\n Sequential engineering, business and sales work catalog.
 	FounderModeBackground, ///< Saveload version: 374, Founder Mode fork\n Founder background sets the starting team.
 	FounderModeMarket, ///< Saveload version: 375, Founder Mode fork\n Customers per town and sales rep assignments.
+	FounderModeHubs, ///< Saveload version: 376, Founder Mode fork\n Sales hubs in towns.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

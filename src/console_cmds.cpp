@@ -1031,6 +1031,21 @@ static bool ConMarket(std::span<std::string_view> argv)
 	return true;
 }
 
+/** Founder Mode: open or close a sales hub. @copydoc IConsoleCmdProc */
+static bool ConHub(std::span<std::string_view> argv)
+{
+	if (argv.size() != 3) {
+		IConsolePrint(CC_HELP, "Open or close a sales hub. Usage: 'hub open|close <town rank>'.");
+		return true;
+	}
+	auto rank = ParseInteger(argv[2]);
+	auto towns = GetTownsBySize();
+	if (!rank.has_value() || *rank < 1 || *rank > towns.size()) return true;
+	bool open = StrEqualsIgnoreCase(argv[1], "open");
+	Command<Commands::SetHub>::Post(open ? STR_ERROR_CAN_T_OPEN_HUB : STR_ERROR_CAN_T_CLOSE_HUB, towns[*rank - 1]->index, open);
+	return true;
+}
+
 /** Founder Mode: assign the nth sales rep to a town. @copydoc IConsoleCmdProc */
 static bool ConAssignRep(std::span<std::string_view> argv)
 {
@@ -3310,6 +3325,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("market",                  ConMarket);
 	IConsole::CmdRegister("market_window",           [](std::span<std::string_view> argv) { if (!argv.empty()) ShowMarketWindow(_local_company); return true; });
 	IConsole::CmdRegister("assign_rep",              ConAssignRep);
+	IConsole::CmdRegister("hub",                     ConHub);
 	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);
 	IConsole::CmdRegister("plan",                    ConPlan);

@@ -103,7 +103,7 @@ void PayEmployees()
 	if (!_settings_game.game_creation.founder_mode) return;
 
 	for (const Company *c : Company::Iterate()) {
-		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level)));
+		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index)));
 
 		Money payroll = GetMonthlyPayroll(c->index);
 		if (payroll == 0) continue;
@@ -247,4 +247,41 @@ CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town)
 	}
 
 	return CommandCost();
+}
+
+/**
+ * Open or close a sales hub in a town. Closing sends the town's reps home if it leaves them out of range.
+ * @param flags Type of operation.
+ * @param town The town.
+ * @param open True to open, false to close.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open)
+{
+	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
+	Town *t = Town::GetIfValid(town);
+	const Company *c = Company::GetIfValid(_current_company);
+	if (t == nullptr || c == nullptr) return CMD_ERROR;
+
+	if (open) {
+		if (c->location_of_HQ == INVALID_TILE) return CommandCost(STR_ERROR_HUB_NEEDS_HQ);
+		if (t->founder_hubs.Test(_current_company)) return CommandCost(STR_ERROR_HUB_ALREADY_OPEN);
+		if (GetCompanyHQTown(_current_company) == town) return CommandCost(STR_ERROR_HUB_IN_HQ_TOWN);
+		if (CountHubs(_current_company) >= MAX_HUBS_PER_COMPANY) return CommandCost(STR_ERROR_TOO_MANY_HUBS);
+		if (flags.Test(DoCommandFlag::Execute)) t->founder_hubs.Set(_current_company);
+	} else {
+		if (!t->founder_hubs.Test(_current_company)) return CMD_ERROR;
+		if (flags.Test(DoCommandFlag::Execute)) {
+			t->founder_hubs.Reset(_current_company);
+			for (Employee *e : Employee::Iterate()) {
+				if (e->company == _current_company && Town::IsValidID(e->town) && !IsTownInRepRange(_current_company, e->town)) e->town = TownID::Invalid();
+			}
+		}
+	}
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		InvalidateWindowData(WindowClass::Market, _current_company);
+		InvalidateWindowData(WindowClass::Team, _current_company);
+	}
+	return CommandCost(ExpensesType::Construction, open ? HUB_OPEN_COST : Money(0));
 }

@@ -15,7 +15,10 @@
 #include "feature_type.h"
 #include "town_type.h"
 
-static constexpr uint REP_RANGE_TILES = 48; ///< Reps can cover towns this close to the HQ (hubs extend this later).
+static constexpr uint REP_RANGE_TILES = 48; ///< Reps can cover towns this close to the HQ or a sales hub.
+static constexpr uint MAX_HUBS_PER_COMPANY = 8; ///< Sales hub limit.
+static constexpr Money HUB_OPEN_COST = 15000; ///< One-off cost of opening a hub.
+static constexpr Money HUB_RENT = 1500; ///< Monthly rent per hub.
 
 std::array<FeatureCategory, 2> GetTownWants(TownID town);
 uint GetCompanyFit(CompanyID company, TownID town);
@@ -26,6 +29,8 @@ Money GetCompanyPricePerUser(CompanyID company);
 Money GetCompanyMRR(CompanyID company);
 TownID GetCompanyHQTown(CompanyID company);
 bool IsTownInRepRange(CompanyID company, TownID town);
+bool HasHubInTown(CompanyID company, TownID town);
+uint CountHubs(CompanyID company);
 bool IsTownOpportunity(CompanyID company, TownID town);
 uint CountRepsInTown(CompanyID company, TownID town);
 CompanyID GetTownMarketLeader(TownID town);
