@@ -20,6 +20,9 @@
 #include "timer/timer_game_economy.h"
 #include "town.h"
 #include "window_func.h"
+#include "ai/ai_config.hpp"
+#include "station_base.h"
+#include "vehicle_base.h"
 #include "strings_func.h"
 #include "viewport_func.h"
 
@@ -168,6 +171,53 @@ std::string GetFounderTownLabel(TownID town, bool with_population)
 	return GetString(str, town, t->cache.population, share);
 }
 
+/**
+ * Set up the new game's AI slots as transit operators running the bundled AI.
+ * Called before a Founder Mode world is generated.
+ */
+void ConfigureFounderOperators()
+{
+	uint8_t n = _settings_newgame.game_creation.founder_transit_operators;
+	_settings_newgame.difficulty.max_no_competitors = n;
+	_settings_newgame.difficulty.competitors_interval = MIN_COMPETITORS_INTERVAL;
+	for (uint i = 1; i <= n && i < MAX_COMPANIES; i++) {
+		AIConfig *config = AIConfig::GetConfig(CompanyID(i), AIConfig::ScriptSettingSource::ForceNewGame);
+		config->Change(FOUNDER_OPERATOR_AI);
+		if (!config->HasScript()) continue; // Bundled AI missing; OpenTTD falls back to a random one.
+		config->SetSetting("use_trains", 1);
+		config->SetSetting("use_roadvehs", 1);
+		config->SetSetting("use_aircraft", 0);
+	}
+}
+
+/**
+ * Transit operators are the AI companies. (Rival startups, also AI, arrive in phase 6 and will be told apart then.)
+ * @param company The company.
+ * @return True for a transit operator.
+ */
+bool IsFounderOperator(CompanyID company)
+{
+	const Company *c = Company::GetIfValid(company);
+	return c != nullptr && c->is_ai;
+}
+
+/**
+ * Monthly city transit budget: a fixed amount per resident of the towns the operator's stations serve.
+ * @param company The operator.
+ * @return Budget, capped.
+ */
+Money GetOperatorTransitBudget(CompanyID company)
+{
+	std::vector<TownID> served;
+	for (const Station *st : Station::Iterate()) {
+		if (st->owner != company || st->town == nullptr) continue;
+		if (std::ranges::find(served, st->town->index) == served.end()) served.push_back(st->town->index);
+	}
+	Money budget = 0;
+	for (TownID t : served) budget += OPERATOR_BUDGET_PER_RESIDENT * Town::Get(t)->cache.population;
+	return std::min(budget, OPERATOR_BUDGET_CAP);
+}
+
 /** Potential customers in a town. */
 uint GetTownMarketSize(TownID town)
 {
@@ -256,6 +306,16 @@ static const IntervalTimer<TimerGameEconomy> _economy_market_monthly({TimerGameE
 	}
 
 	for (const Company *c : Company::Iterate()) {
+		if (IsFounderOperator(c->index)) {
+			Money budget = GetOperatorTransitBudget(c->index);
+			if (budget > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -budget));
+			uint vehicles = 0;
+			for (const Vehicle *v : Vehicle::Iterate()) {
+				if (v->owner == c->index && v->IsPrimaryVehicle()) vehicles++;
+			}
+			Debug(Facility::Misc, Severity::Info, "Founder Mode: operator {} got transit budget {}, runs {} vehicles", c->index + 1, budget, vehicles);
+			continue;
+		}
 		Money mrr = GetCompanyMRR(c->index);
 		if (mrr > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -mrr));
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} has {} users, MRR {}", c->index + 1, GetCompanyUsers(c->index), mrr);

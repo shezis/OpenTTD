@@ -86,6 +86,8 @@
 #	include <emscripten/html5.h>
 #endif
 
+#include "market_func.h"
+
 #include "safeguards.h"
 
 void CallLandscapeTick();
@@ -894,6 +896,9 @@ static void MakeNewGame(bool from_heightmap, bool reset_settings)
 	}
 
 	ResetGRFConfig(true);
+
+	/* Founder Mode: AI slots become transit operators running the bundled AI. */
+	if (_settings_newgame.game_creation.founder_mode) ConfigureFounderOperators();
 
 	GenerateWorldSetCallback(&MakeNewGameDone);
 	GenerateWorld(from_heightmap ? GWM_HEIGHTMAP : GWM_NEWGAME, 1 << _settings_game.game_creation.map_x, 1 << _settings_game.game_creation.map_y, reset_settings);

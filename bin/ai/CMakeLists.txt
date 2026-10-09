@@ -16,6 +16,13 @@ set(AI_COMPAT_SOURCE_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/compat_13.nut
 	${CMAKE_CURRENT_SOURCE_DIR}/compat_14.nut
 	${CMAKE_CURRENT_SOURCE_DIR}/compat_15.nut
+	# Founder Mode transit operators (see THIRD_PARTY.md).
+	${CMAKE_CURRENT_SOURCE_DIR}/SimpleAI-14.tar
+	${CMAKE_CURRENT_SOURCE_DIR}/library/Pathfinder.Road-4.tar
+	${CMAKE_CURRENT_SOURCE_DIR}/library/Pathfinder.Rail-1.tar
+	${CMAKE_CURRENT_SOURCE_DIR}/library/Graph.AyStar-4.tar
+	${CMAKE_CURRENT_SOURCE_DIR}/library/Graph.AyStar-6.tar
+	${CMAKE_CURRENT_SOURCE_DIR}/library/Queue.BinaryHeap-1.tar
 )
 
 foreach(AI_COMPAT_SOURCE_FILE IN LISTS AI_COMPAT_SOURCE_FILES)
@@ -23,6 +30,7 @@ foreach(AI_COMPAT_SOURCE_FILE IN LISTS AI_COMPAT_SOURCE_FILES)
     string(CONCAT AI_COMPAT_BINARY_FILE "${CMAKE_BINARY_DIR}/" "${AI_COMPAT_SOURCE_FILE_NAME}")
 
     add_custom_command(OUTPUT ${AI_COMPAT_BINARY_FILE}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/ai/library
             COMMAND ${CMAKE_COMMAND} -E copy
                     ${AI_COMPAT_SOURCE_FILE}
                     ${AI_COMPAT_BINARY_FILE}

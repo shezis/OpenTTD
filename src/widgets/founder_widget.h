@@ -27,6 +27,9 @@ enum FounderSetupWidgets : WidgetID {
 	WID_FSU_SC_SANDBOX, ///< Scenario: sandbox.
 	WID_FSU_SC_GOLIATH, ///< Scenario: David vs Goliath.
 	WID_FSU_SC_TUTORIAL, ///< Scenario: tutorial.
+	WID_FSU_TR_NONE, ///< No transit operators.
+	WID_FSU_TR_TWO, ///< Two transit operators.
+	WID_FSU_TR_FOUR, ///< Four transit operators.
 	WID_FSU_MAP, ///< Map settings.
 	WID_FSU_START, ///< Found the company.
 };

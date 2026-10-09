@@ -307,6 +307,10 @@ struct FounderSetupWindow : public Window {
 		this->MarkSelected(WID_FSU_BG_ENGINEER, bg == 0);
 		this->MarkSelected(WID_FSU_BG_SELLER, bg == 1);
 		this->MarkSelected(WID_FSU_BG_OPERATOR, bg == 2);
+		uint8_t tr = _settings_newgame.game_creation.founder_transit_operators;
+		this->MarkSelected(WID_FSU_TR_NONE, tr == 0);
+		this->MarkSelected(WID_FSU_TR_TWO, tr > 0 && tr <= 2);
+		this->MarkSelected(WID_FSU_TR_FOUR, tr > 2);
 		this->SetDirty();
 	}
 
@@ -319,6 +323,10 @@ struct FounderSetupWindow : public Window {
 				_settings_newgame.game_creation.founder_background = static_cast<uint8_t>(widget - WID_FSU_BG_ENGINEER);
 				this->UpdateBackground();
 				break;
+
+			case WID_FSU_TR_NONE: _settings_newgame.game_creation.founder_transit_operators = 0; this->UpdateBackground(); break;
+			case WID_FSU_TR_TWO: _settings_newgame.game_creation.founder_transit_operators = 2; this->UpdateBackground(); break;
+			case WID_FSU_TR_FOUR: _settings_newgame.game_creation.founder_transit_operators = 4; this->UpdateBackground(); break;
 
 			case WID_FSU_MAP:
 				_settings_newgame.game_creation.founder_mode = true;
@@ -350,6 +358,12 @@ static constexpr std::initializer_list<NWidgetPart> _nested_founder_setup_widget
 			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_GOLIATH), SetStringTip(STR_FOUNDER_SETUP_SC_GOLIATH, STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_SANDBOX), SetStringTip(STR_FOUNDER_SETUP_SC_SANDBOX, STR_FOUNDER_SETUP_SC_SANDBOX_TOOLTIP), SetFill(1, 0),
 			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_TUTORIAL), SetStringTip(STR_FOUNDER_SETUP_SC_TUTORIAL, STR_FOUNDER_SETUP_SC_TUTORIAL_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_LABEL, Colours::Invalid), SetStringTip(STR_FOUNDER_SETUP_TRANSIT), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+			NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+				NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_TR_NONE), SetStringTip(STR_FOUNDER_SETUP_TR_NONE, STR_FOUNDER_SETUP_TR_TOOLTIP), SetFill(1, 0),
+				NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_TR_TWO), SetStringTip(STR_FOUNDER_SETUP_TR_TWO, STR_FOUNDER_SETUP_TR_TOOLTIP), SetFill(1, 0),
+				NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_TR_FOUR), SetStringTip(STR_FOUNDER_SETUP_TR_FOUR, STR_FOUNDER_SETUP_TR_TOOLTIP), SetFill(1, 0),
+			EndContainer(),
 		EndContainer(),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),

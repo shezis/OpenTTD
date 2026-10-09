@@ -433,6 +433,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeBackground, ///< Saveload version: 374, Founder Mode fork\n Founder background sets the starting team.
 	FounderModeMarket, ///< Saveload version: 375, Founder Mode fork\n Customers per town and sales rep assignments.
 	FounderModeHubs, ///< Saveload version: 376, Founder Mode fork\n Sales hubs in towns.
+	FounderModeTransit, ///< Saveload version: 377, Founder Mode fork\n Transit operators setting.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

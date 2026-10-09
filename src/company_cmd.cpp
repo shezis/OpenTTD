@@ -667,7 +667,7 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = CompanyID::Invalid(
 
 	SetDefaultCompanySettings(c->index);
 	ClearEnginesHiddenFlagOfCompany(c->index);
-	if (_settings_game.game_creation.founder_mode) ApplyFounderBackground(c->index);
+	if (_settings_game.game_creation.founder_mode && !is_ai) ApplyFounderBackground(c->index);
 
 	GeneratePresidentName(c);
 
