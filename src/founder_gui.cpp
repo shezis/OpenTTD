@@ -31,6 +31,9 @@
 #include "viewport_func.h"
 #include "palette_func.h"
 
+#include "timer/timer.h"
+#include "timer/timer_window.h"
+
 #include "widgets/founder_widget.h"
 
 #include "table/strings.h"
@@ -207,11 +210,10 @@ struct FounderStartWindow : public Window {
 		this->vscroll->SetCapacityFromWidget(this, WID_FS_LIST, WidgetDimensions::scaled.framerect.Vertical());
 	}
 
-	void OnHundredthTick() override
-	{
-		/* Towns grow while the player decides; keep the list and order current. */
+	/** Towns grow while the player decides; keep the list and order current. */
+	const IntervalTimer<TimerWindow> refresh_interval = {std::chrono::seconds(3), [this](auto) {
 		this->SetWidgetDirty(WID_FS_LIST);
-	}
+	}};
 
 	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
 	{
