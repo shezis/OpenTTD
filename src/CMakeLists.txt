@@ -365,6 +365,12 @@ add_files(
     office_func.h
     office_gui.cpp
     office_gui.h
+    feature.cpp
+    feature_base.h
+    feature_cmd.h
+    feature_type.h
+    roadmap_gui.cpp
+    roadmap_gui.h
     order_backup.cpp
     order_backup.h
     order_base.h

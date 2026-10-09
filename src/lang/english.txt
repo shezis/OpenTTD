@@ -3863,6 +3863,34 @@ STR_OFFICE_UPGRADE_TOOLTIP                                      :{BLACK}Move to 
 STR_OFFICE_TEAM                                                 :{BLACK}Team
 STR_OFFICE_TEAM_TOOLTIP                                         :{BLACK}Open the team window
 STR_ERROR_CAN_T_UPGRADE_OFFICE                                  :{WHITE}Can't move to a bigger office...
+STR_ROADMAP_CAPTION                                             :{WHITE}{COMPANY} Roadmap
+STR_ROADMAP_NONE                                                :{ORANGE}- No features planned. Add one with "New feature" -
+STR_ROADMAP_LIST_TOOLTIP                                        :{BLACK}Features in progress, then the backlog, then shipped. Click one to select it
+STR_ROADMAP_SUMMARY                                             :{BLACK}{NUM} of {NUM} engineer{P "" s} assigned · Velocity {NUM}.{NUM} points per day
+STR_ROADMAP_STATUS_BACKLOG                                      :Backlog · {NUM} points
+STR_ROADMAP_STATUS_PROGRESS                                     :{NUM}% · {NUM} engineer{P "" s}
+STR_ROADMAP_STATUS_SHIPPED                                      :Shipped · quality {NUM} · {NUM} bug{P "" s}
+STR_ROADMAP_NEW                                                 :{BLACK}New feature
+STR_ROADMAP_NEW_TOOLTIP                                         :{BLACK}Add a feature to the backlog. Bigger categories take more effort
+STR_ROADMAP_ADD_ENGINEER                                        :{BLACK}+ Engineer
+STR_ROADMAP_ADD_ENGINEER_TOOLTIP                                :{BLACK}Put one more engineer on the selected feature
+STR_ROADMAP_REMOVE_ENGINEER                                     :{BLACK}- Engineer
+STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP                             :{BLACK}Take one engineer off the selected feature
+STR_ROADMAP_SHIP                                                :{BLACK}Ship now
+STR_ROADMAP_SHIP_TOOLTIP                                        :{BLACK}Ship the selected feature before it is finished. Unfinished work lowers quality and adds bugs. Needs at least 50% done
+STR_FEATURE_CATEGORY_CORE                                       :Core
+STR_FEATURE_CATEGORY_MOBILE                                     :Mobile
+STR_FEATURE_CATEGORY_PAYMENTS                                   :Payments
+STR_FEATURE_CATEGORY_ANALYTICS                                  :Analytics
+STR_FEATURE_CATEGORY_INTEGRATIONS                               :Integrations
+STR_FEATURE_CATEGORY_SECURITY                                   :Security
+STR_ERROR_CAN_T_CREATE_FEATURE                                  :{WHITE}Can't add this feature...
+STR_ERROR_CAN_T_ASSIGN_FEATURE                                  :{WHITE}Can't change the engineers on this feature...
+STR_ERROR_CAN_T_SHIP_FEATURE                                    :{WHITE}Can't ship this feature...
+STR_ERROR_ROADMAP_FULL                                          :{WHITE}... the roadmap is full. Ship or finish something first
+STR_ERROR_FEATURE_SHIPPED                                       :{WHITE}... this feature has already shipped
+STR_ERROR_NO_FREE_ENGINEER                                      :{WHITE}... no free engineer. Hire one or move someone off another feature
+STR_ERROR_FEATURE_TOO_EARLY                                     :{WHITE}... less than half of it is built
 STR_ERROR_OFFICE_AT_MAX                                         :{WHITE}... this is already the largest office
 STR_ERROR_NO_FREE_DESK                                          :{WHITE}... no free desk. Move to a bigger office first
 STR_TEAM_HIRE_ENGINEER                                          :{BLACK}Hire engineer

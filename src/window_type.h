@@ -755,6 +755,12 @@ enum class WindowClass : uint16_t {
 	 */
 	Office,
 
+	/**
+	 * Founder Mode roadmap window; %Window numbers:
+	 *   - #CompanyID = #RoadmapWidgets
+	 */
+	Roadmap,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 

@@ -59,6 +59,9 @@
 #include "office_gui.h"
 #include "office_cmd.h"
 #include "office_func.h"
+#include "feature_base.h"
+#include "feature_cmd.h"
+#include "roadmap_gui.h"
 
 #include "safeguards.h"
 
@@ -895,6 +898,68 @@ static bool ConUpgradeOffice(std::span<std::string_view> argv)
 		return true;
 	}
 	Command<Commands::UpgradeOffice>::Post(STR_ERROR_CAN_T_UPGRADE_OFFICE, static_cast<uint8_t>(GetOfficeLevel(_local_company) + 1));
+	return true;
+}
+
+/** Founder Mode: open the roadmap window. @copydoc IConsoleCmdProc */
+static bool ConRoadmap(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Open your roadmap in Founder Mode. Usage: 'roadmap'.");
+		return true;
+	}
+	ShowRoadmapWindow(_local_company);
+	return true;
+}
+
+/** Founder Mode: add a feature to the backlog. @copydoc IConsoleCmdProc */
+static bool ConFeature(std::span<std::string_view> argv)
+{
+	static const std::string_view names[] = {"core", "mobile", "payments", "analytics", "integrations", "security"};
+	if (argv.size() != 2) {
+		IConsolePrint(CC_HELP, "Add a feature to your backlog. Usage: 'feature <core|mobile|payments|analytics|integrations|security>'.");
+		return true;
+	}
+	for (uint i = 0; i < std::size(names); i++) {
+		if (StrEqualsIgnoreCase(argv[1], names[i])) {
+			Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<FeatureCategory>(i));
+			return true;
+		}
+	}
+	IConsolePrint(CC_ERROR, "Unknown category '{}'.", argv[1]);
+	return true;
+}
+
+/** Founder Mode: set engineers on a feature. @copydoc IConsoleCmdProc */
+static bool ConAssign(std::span<std::string_view> argv)
+{
+	if (argv.size() != 3) {
+		IConsolePrint(CC_HELP, "Put engineers on a feature. Usage: 'assign <feature id> <engineers>'. Feature ids start at 0.");
+		return true;
+	}
+	auto id = ParseInteger(argv[1]);
+	auto n = ParseInteger(argv[2]);
+	if (!id.has_value() || !n.has_value() || *n > 255) {
+		IConsolePrint(CC_ERROR, "Invalid feature id or engineer count.");
+		return true;
+	}
+	Command<Commands::AssignFeature>::Post(STR_ERROR_CAN_T_ASSIGN_FEATURE, FeatureID(*id), static_cast<uint8_t>(*n));
+	return true;
+}
+
+/** Founder Mode: ship a feature now. @copydoc IConsoleCmdProc */
+static bool ConShip(std::span<std::string_view> argv)
+{
+	if (argv.size() != 2) {
+		IConsolePrint(CC_HELP, "Ship a feature now (at least 50% done). Usage: 'ship <feature id>'.");
+		return true;
+	}
+	auto id = ParseInteger(argv[1]);
+	if (!id.has_value()) {
+		IConsolePrint(CC_ERROR, "Invalid feature id.");
+		return true;
+	}
+	Command<Commands::ShipFeature>::Post(STR_ERROR_CAN_T_SHIP_FEATURE, FeatureID(*id));
 	return true;
 }
 
@@ -3147,6 +3212,10 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("team",                    ConTeam);
 	IConsole::CmdRegister("office",                  ConOffice);
 	IConsole::CmdRegister("upgrade_office",          ConUpgradeOffice);
+	IConsole::CmdRegister("roadmap",                 ConRoadmap);
+	IConsole::CmdRegister("feature",                 ConFeature);
+	IConsole::CmdRegister("assign",                  ConAssign);
+	IConsole::CmdRegister("ship",                    ConShip);
 	IConsole::CmdRegister("payroll",                 ConPayroll);
 	IConsole::CmdRegister("unpause",                 ConUnpauseGame,      ConHookServerOrNoNetwork);
 

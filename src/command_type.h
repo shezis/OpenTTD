@@ -383,6 +383,9 @@ enum class Commands : uint8_t {
 	HireEmployee, ///< Founder Mode: hire an employee
 	FireEmployee, ///< Founder Mode: let an employee go
 	UpgradeOffice, ///< Founder Mode: move to a bigger office
+	CreateFeature, ///< Founder Mode: add a feature to the backlog
+	AssignFeature, ///< Founder Mode: set engineers on a feature
+	ShipFeature, ///< Founder Mode: ship a feature early
 
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };

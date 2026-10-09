@@ -76,6 +76,7 @@
 #include "dropdown_common_type.h"
 
 #include "team_gui.h"
+#include "roadmap_gui.h"
 
 #include "safeguards.h"
 
@@ -2037,7 +2038,7 @@ struct MainToolbarWindow : Window {
 
 		/* Founder Mode has no transport network, so switch off everything that builds or lists one. */
 		if (_settings_game.game_creation.founder_mode) {
-			this->SetWidgetsDisabledState(true, WID_TN_RAILS, WID_TN_ROADS, WID_TN_TRAMS, WID_TN_WATER, WID_TN_AIR, WID_TN_TRAINS, WID_TN_ROADVEHS, WID_TN_SHIPS, WID_TN_AIRCRAFT);
+			this->SetWidgetsDisabledState(true, WID_TN_RAILS, WID_TN_ROADS, WID_TN_TRAMS, WID_TN_WATER, WID_TN_AIR, WID_TN_ROADVEHS, WID_TN_SHIPS, WID_TN_AIRCRAFT);
 		}
 
 		this->DrawWidgets();
@@ -2048,6 +2049,11 @@ struct MainToolbarWindow : Window {
 		if (_game_mode != GameMode::Menu && widget == WID_TN_STATIONS && _settings_game.game_creation.founder_mode) {
 			/* In Founder Mode the stations button opens the team instead. */
 			ShowTeamWindow(_local_company);
+			return;
+		}
+		if (_game_mode != GameMode::Menu && widget == WID_TN_TRAINS && _settings_game.game_creation.founder_mode) {
+			/* ... and the trains button opens the roadmap. */
+			ShowRoadmapWindow(_local_company);
 			return;
 		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
@@ -2064,7 +2070,7 @@ struct MainToolbarWindow : Window {
 		if (_settings_game.game_creation.founder_mode) {
 			switch (hotkey) {
 				case MTHK_BUILD_RAIL: case MTHK_BUILD_ROAD: case MTHK_BUILD_TRAM: case MTHK_BUILD_DOCKS: case MTHK_BUILD_AIRPORT:
-				case MTHK_TRAIN_LIST: case MTHK_ROADVEH_LIST: case MTHK_SHIP_LIST: case MTHK_AIRCRAFT_LIST:
+				case MTHK_ROADVEH_LIST: case MTHK_SHIP_LIST: case MTHK_AIRCRAFT_LIST:
 					return EventState::Handled;
 				default: break;
 			}
@@ -2094,7 +2100,13 @@ struct MainToolbarWindow : Window {
 			case MTHK_GRAPHS: ShowOperatingProfitGraph(); break;
 			case MTHK_LEAGUE: ShowFirstLeagueTable(); break;
 			case MTHK_INDUSTRIES: ShowBuildIndustryWindow(); break;
-			case MTHK_TRAIN_LIST: ShowVehicleListWindow(_local_company, VehicleType::Train); break;
+			case MTHK_TRAIN_LIST:
+				if (_settings_game.game_creation.founder_mode) {
+					ShowRoadmapWindow(_local_company);
+				} else {
+					ShowVehicleListWindow(_local_company, VehicleType::Train);
+				}
+				break;
 			case MTHK_ROADVEH_LIST: ShowVehicleListWindow(_local_company, VehicleType::Road); break;
 			case MTHK_SHIP_LIST: ShowVehicleListWindow(_local_company, VehicleType::Ship); break;
 			case MTHK_AIRCRAFT_LIST: ShowVehicleListWindow(_local_company, VehicleType::Aircraft); break;

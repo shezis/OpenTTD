@@ -120,6 +120,7 @@ public:
 		Subsidy, ///< Creating new subsidies.
 		Town, ///< Town growth and rating management.
 		Vehicle, ///< Income and profit warnings.
+		Founder, ///< Founder Mode product progress.
 	};
 
 	struct TPeriod {
