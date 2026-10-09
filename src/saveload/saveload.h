@@ -439,6 +439,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeIPO, ///< Saveload version: 380, Founder Mode fork\n IPO and runway warnings.
 	FounderModeRivals, ///< Saveload version: 381, Founder Mode fork\n Rival startups told apart from transit operators.
 	FounderModeStaffLevels, ///< Saveload version: 382, Founder Mode fork\n Staff levels, per-person work and field costs.
+	FounderModeWorkItems, ///< Saveload version: 383, Founder Mode fork\n Work impacts, costs, forks, city work and the work log.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

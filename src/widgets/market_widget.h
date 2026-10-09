@@ -21,6 +21,7 @@ enum MarketWidgets : WidgetID {
 	WID_MK_SHOW, ///< Scroll the map to the selected town.
 	WID_MK_HUB, ///< Open or close a sales hub in the selected town.
 	WID_MK_SPONSOR, ///< Sponsor a transit operator (dropdown).
+	WID_MK_CITY_WORK, ///< Plan city work for the selected town (dropdown).
 };
 
 #endif /* WIDGETS_MARKET_WIDGET_H */

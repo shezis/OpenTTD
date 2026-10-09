@@ -33,13 +33,11 @@ static const Company *GetFounderCompany(ScriptCompany::CompanyID company)
 	return ::Company::GetIfValid(ScriptCompany::FromScriptCompanyID(company));
 }
 
-/** The roadmap entry of a catalog item, or nullptr when it is not planned. */
-static const Feature *FindWorkItem(::CompanyID company, SQInteger item)
+/** The central roadmap entry of a catalog item, or nullptr when it is not planned. */
+static const Feature *FindPlannedItem(::CompanyID company, SQInteger item)
 {
-	for (const Feature *f : Feature::Iterate()) {
-		if (f->company == company && f->spec == item) return f;
-	}
-	return nullptr;
+	if (item < 0 || item >= ::GetWorkItemCount()) return nullptr;
+	return ::FindWorkItem(company, static_cast<uint8_t>(item));
 }
 
 /* static */ bool ScriptFounder::IsFounderMode()
@@ -289,9 +287,13 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	const Company *c = GetFounderCompany(company);
 	if (c == nullptr || item < 0 || item >= ::GetWorkItemCount()) return WORK_LOCKED;
 	if (::HasShippedWorkItem(c->index, item)) return WORK_SHIPPED;
-	const Feature *f = FindWorkItem(c->index, item);
+	const Feature *f = FindPlannedItem(c->index, item);
 	if (f != nullptr) return f->state == FeatureState::InProgress ? WORK_IN_PROGRESS : WORK_BACKLOG;
-	return ::GetWorkItemAvailability(c->index, item) == WorkItemAvailability::Available ? WORK_AVAILABLE : WORK_LOCKED;
+	switch (::GetWorkItemAvailability(c->index, item)) {
+		case WorkItemAvailability::Available: return WORK_AVAILABLE;
+		case WorkItemAvailability::Excluded: return WORK_EXCLUDED;
+		default: return WORK_LOCKED;
+	}
 }
 
 /* static */ SQInteger ScriptFounder::GetWorkItemProgress(ScriptCompany::CompanyID company, SQInteger item)
@@ -299,7 +301,7 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	const Company *c = GetFounderCompany(company);
 	if (c == nullptr || item < 0 || item >= ::GetWorkItemCount()) return -1;
 	if (::HasShippedWorkItem(c->index, item)) return 100;
-	const Feature *f = FindWorkItem(c->index, item);
+	const Feature *f = FindPlannedItem(c->index, item);
 	return f == nullptr ? -1 : f->GetProgressPercent();
 }
 
@@ -313,7 +315,7 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 {
 	const Company *c = GetFounderCompany(company);
 	if (c == nullptr) return -1;
-	const Feature *f = FindWorkItem(c->index, item);
+	const Feature *f = FindPlannedItem(c->index, item);
 	return f == nullptr ? -1 : f->assigned;
 }
 
@@ -405,14 +407,33 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 {
 	EnforceCompanyModeValid(false);
 	EnforcePrecondition(false, item >= 0 && item < ::GetWorkItemCount());
-	return ScriptObject::Command<Commands::CreateFeature>::Do(static_cast<uint8_t>(item));
+	return ScriptObject::Command<Commands::CreateFeature>::Do(static_cast<uint8_t>(item), TownID::Invalid());
+}
+
+/* static */ bool ScriptFounder::IsCityWorkItem(SQInteger item)
+{
+	return item >= 0 && item < ::GetWorkItemCount() && ::GetWorkItemSpec(item).city;
+}
+
+/* static */ bool ScriptFounder::PlanCityWork(SQInteger item, TownID town)
+{
+	EnforceCompanyModeValid(false);
+	EnforcePrecondition(false, IsCityWorkItem(item));
+	EnforcePrecondition(false, ScriptTown::IsValidTown(town));
+	return ScriptObject::Command<Commands::CreateFeature>::Do(static_cast<uint8_t>(item), town);
+}
+
+/* static */ Money ScriptFounder::GetWorkItemRunCost(SQInteger item)
+{
+	if (item < 0 || item >= ::GetWorkItemCount()) return -1;
+	return ::GetWorkItemSpec(item).run_cost;
 }
 
 /* static */ bool ScriptFounder::StaffWorkItem(SQInteger item, SQInteger people)
 {
 	EnforceCompanyModeValid(false);
 	EnforcePrecondition(false, people >= 0 && people <= UINT8_MAX);
-	const Feature *f = FindWorkItem(ScriptObject::GetCompany(), item);
+	const Feature *f = FindPlannedItem(ScriptObject::GetCompany(), item);
 	EnforcePrecondition(false, f != nullptr);
 	return ScriptObject::Command<Commands::AssignFeature>::Do(f->index, static_cast<uint8_t>(people));
 }

@@ -35,8 +35,6 @@
 #include "safeguards.h"
 
 static constexpr uint8_t WORK_ITEM_MVP = 0; ///< "MVP prototype": no customers before it ships.
-static constexpr uint8_t WORK_ITEM_PRICING_PAGE = 21; ///< "Pricing page": raises the price per user.
-static constexpr uint8_t WORK_ITEM_SELF_SERVE = 25; ///< "Self-serve checkout": raises the price per user.
 static constexpr uint MARKET_BASELINE = 60; ///< Demand nobody captures, so no company reaches 100%.
 static constexpr uint ORGANIC_RANGE_TILES = 40; ///< Word of mouth reaches towns this close.
 
@@ -71,7 +69,7 @@ uint GetCompanyFit(CompanyID company, TownID town)
 		if (cat == FeatureCategory::Infrastructure || cat == FeatureCategory::End) continue;
 		fit += (cat == wants[0] || cat == wants[1]) ? 50 * f->quality / 80 : 10;
 	}
-	return fit;
+	return fit + GetWorkImpact(company, WorkImpact::LocalFit, town);
 }
 
 /** Town nearest to the company's HQ, or invalid without an HQ. */
@@ -269,7 +267,7 @@ Money GetOperatorTransitBudget(CompanyID company)
 Money GetCompanyMonthlyCosts(CompanyID company)
 {
 	const Company *c = Company::Get(company);
-	return GetMonthlyPayroll(company) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(company) + GetFieldSalesCosts(company) + c->founder_sponsor_monthly;
+	return GetMonthlyPayroll(company) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(company) + GetFieldSalesCosts(company) + GetWorkRunCosts(company) + c->founder_sponsor_monthly;
 }
 
 /** Startup sponsoring a transit operator, or invalid. */
@@ -349,6 +347,7 @@ uint GetCompanyStrength(CompanyID company, TownID town)
 		if (e->company == company && e->role == EmployeeRole::Sales && e->town == town) reach += e->skill * e->morale / 75;
 	}
 	if (GetCompanyHQTown(company) == town) reach += 40;
+	reach += GetWorkImpact(company, WorkImpact::Reach) + GetWorkImpact(company, WorkImpact::LocalReach, town);
 	if (t->founder_hubs.Test(company)) reach += 30;
 
 	/* Sponsored transit: presence along the operator's network, if it also reaches your HQ or a hub. */
@@ -380,7 +379,8 @@ static uint GetChurnPermille(CompanyID company)
 	for (const Feature *f : Feature::Iterate()) {
 		if (f->company == company && f->state == FeatureState::Shipped) bugs += f->bugs;
 	}
-	return std::min<uint>(20 + 3 * bugs, 300);
+	int churn = 20 + 3 * static_cast<int>(bugs) - GetWorkImpact(company, WorkImpact::Churn);
+	return static_cast<uint>(std::clamp(churn, 5, 300));
 }
 
 uint GetCompanyUsers(CompanyID company)
@@ -392,10 +392,7 @@ uint GetCompanyUsers(CompanyID company)
 
 Money GetCompanyPricePerUser(CompanyID company)
 {
-	Money price = 10;
-	if (HasShippedWorkItem(company, WORK_ITEM_PRICING_PAGE)) price += 3;
-	if (HasShippedWorkItem(company, WORK_ITEM_SELF_SERVE)) price += 3;
-	return price;
+	return 10 + GetWorkImpact(company, WorkImpact::Price);
 }
 
 Money GetCompanyMRR(CompanyID company)

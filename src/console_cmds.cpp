@@ -952,7 +952,7 @@ static bool ConPlan(std::span<std::string_view> argv)
 		IConsolePrint(CC_ERROR, "Invalid catalog id.");
 		return true;
 	}
-	Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(*id));
+	Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(*id), TownID::Invalid());
 	return true;
 }
 

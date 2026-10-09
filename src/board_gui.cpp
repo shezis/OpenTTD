@@ -89,7 +89,7 @@ struct BoardWindow : public Window {
 				uint hubs = CountHubs(c->index);
 				uint reps = CountFieldReps(c->index);
 				ir.top = DrawStringMultiLine(ir.left, ir.right, ir.top, ir.top + 2 * line, GetString(STR_BOARD_COSTS_BREAKDOWN,
-						GetMonthlyPayroll(c->index), GetOfficeRent(c->office_level), HUB_RENT * hubs, hubs, GetFieldSalesCosts(c->index), reps, c->founder_sponsor_monthly), TextColour::Grey);
+						GetMonthlyPayroll(c->index), GetOfficeRent(c->office_level), HUB_RENT * hubs, hubs, GetFieldSalesCosts(c->index), reps, GetWorkRunCosts(c->index), c->founder_sponsor_monthly), TextColour::Grey);
 				if (c->money < 0) {
 					DrawString(ir, GetString(STR_BOARD_INSOLVENT, std::max<uint>(c->months_of_bankruptcy, 1)), TextColour::Red);
 				} else if (net <= 0) {

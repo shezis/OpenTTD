@@ -39,6 +39,18 @@ enum class WorkItemAvailability : uint8_t {
 	Locked, ///< Prerequisites not shipped yet.
 	Available, ///< Can be added to the roadmap.
 	Planned, ///< Already on the roadmap (or shipped).
+	Excluded, ///< Another branch of the same fork was chosen; ruled out for good.
+};
+
+/** What a shipped work item changes. */
+enum class WorkImpact : uint8_t {
+	None, ///< Nothing measurable (setup work).
+	Fit, ///< Product fit in towns that want the item's category.
+	Price, ///< Price per customer, in pounds.
+	Churn, ///< Lower monthly churn, in permille.
+	Reach, ///< Sales reach in every town.
+	LocalFit, ///< Product fit in one town (city work).
+	LocalReach, ///< Sales reach in one town (city work).
 };
 
 static constexpr uint8_t INVALID_WORK_ITEM = 0xFF; ///< No catalog item / no prerequisite.

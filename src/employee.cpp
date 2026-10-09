@@ -224,6 +224,8 @@ void PayEmployees()
 		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index)));
 		Money field = GetFieldSalesCosts(c->index);
 		if (field > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, field));
+		Money running = GetWorkRunCosts(c->index);
+		if (running > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, running));
 
 		Money payroll = GetMonthlyPayroll(c->index);
 		if (payroll == 0) continue;

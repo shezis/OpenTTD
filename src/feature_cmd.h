@@ -12,8 +12,9 @@
 
 #include "command_type.h"
 #include "feature_type.h"
+#include "town_type.h"
 
-CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec);
+CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec, TownID town);
 CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t engineers);
 CommandCost CmdShipFeature(DoCommandFlags flags, FeatureID feature);
 

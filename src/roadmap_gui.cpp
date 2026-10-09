@@ -42,6 +42,38 @@ static const StringID _level_short_names[] = {
 	STR_TEAM_LEVEL_SENIOR,
 };
 
+/**
+ * What shipping an item does, in a few words.
+ * @param spec Catalog item.
+ * @param town Town of a city work item.
+ * @return The impact text, empty for setup work.
+ */
+std::string GetWorkImpactText(uint8_t spec, TownID town)
+{
+	const WorkItemSpec &ws = GetWorkItemSpec(spec);
+	switch (ws.impact) {
+		case WorkImpact::Fit: return GetString(STR_WORK_IMPACT_FIT, STR_FEATURE_CATEGORY_CORE + to_underlying(ws.category));
+		case WorkImpact::Price: return GetString(STR_WORK_IMPACT_PRICE, ws.impact_value);
+		case WorkImpact::Churn: return GetString(STR_WORK_IMPACT_CHURN, ws.impact_value);
+		case WorkImpact::Reach: return GetString(STR_WORK_IMPACT_REACH, ws.impact_value);
+		case WorkImpact::LocalFit: return Town::IsValidID(town) ? GetString(STR_WORK_IMPACT_LOCAL_FIT, ws.impact_value, town) : GetString(STR_WORK_IMPACT_LOCAL_FIT_ANY, ws.impact_value);
+		case WorkImpact::LocalReach: return Town::IsValidID(town) ? GetString(STR_WORK_IMPACT_LOCAL_REACH, ws.impact_value, town) : GetString(STR_WORK_IMPACT_LOCAL_REACH_ANY, ws.impact_value);
+		default: return GetString(STR_WORK_IMPACT_NONE);
+	}
+}
+
+/**
+ * Size, impact and costs of an item, for planning lists.
+ * @param spec Catalog item.
+ * @param town Town of a city work item.
+ * @return The details.
+ */
+std::string GetWorkItemDetails(uint8_t spec, TownID town)
+{
+	const WorkItemSpec &ws = GetWorkItemSpec(spec);
+	return GetString(STR_WORK_DETAILS, ws.effort, GetWorkItemSlots(spec), GetWorkImpactText(spec, town), ws.test_cost, ws.run_cost);
+}
+
 /** Name of each track, indexed by #WorkTrack. */
 static const StringID _work_track_names[] = {
 	STR_WORK_TRACK_ENGINEERING,
@@ -64,7 +96,9 @@ static uint GetWorkItemDepth(uint8_t spec)
 static uint GetWorkTreeColumns()
 {
 	uint cols = 0;
-	for (uint i = 0; i < GetWorkItemCount(); i++) cols = std::max(cols, GetWorkItemDepth(i) + 1);
+	for (uint i = 0; i < GetWorkItemCount(); i++) {
+		if (!GetWorkItemSpec(i).city) cols = std::max(cols, GetWorkItemDepth(i) + 1);
+	}
 	return cols;
 }
 
@@ -78,6 +112,7 @@ struct RoadmapWindow : public Window {
 	Scrollbar *hscroll = nullptr; ///< Column scrollbar of the tree.
 	FeatureID selected = FeatureID::Invalid(); ///< Currently selected feature.
 	bool tree_view = true; ///< Show the tree (default) instead of the list.
+	bool log_view = false; ///< Show the work log (shipped items by date) instead of the list.
 	mutable std::vector<std::pair<uint8_t, Rect>> tree_cards; ///< Card rectangles from the last tree draw, for clicks.
 
 	static int ColumnWidth() { return ScaleGUITrad(136); }
@@ -105,7 +140,7 @@ struct RoadmapWindow : public Window {
 			std::vector<uint> rows(GetWorkTreeColumns(), 0);
 			uint max_rows = 0;
 			for (uint i = 0; i < GetWorkItemCount(); i++) {
-				if (to_underlying(GetWorkItemSpec(i).track) != t) continue;
+				if (to_underlying(GetWorkItemSpec(i).track) != t || GetWorkItemSpec(i).city) continue;
 				uint d = GetWorkItemDepth(i);
 				int x = ir.left + ScaleGUITrad(4) + (static_cast<int>(d) - first) * ColumnWidth();
 				int cy = y + header + static_cast<int>(rows[d]) * RowHeight();
@@ -179,6 +214,9 @@ struct RoadmapWindow : public Window {
 				fill = GetColourGradient(Colours::Grey, Shade::Lightest);
 			} else if (avail == WorkItemAvailability::Available) {
 				fill = GetColourGradient(Colours::Cream, Shade::Lighter);
+			} else if (avail == WorkItemAvailability::Excluded) {
+				fill = GetColourGradient(Colours::Red, Shade::Darker);
+				tc = TextColour::Silver;
 			} else {
 				fill = GetColourGradient(Colours::Grey, Shade::Dark);
 				tc = TextColour::Silver;
@@ -231,6 +269,12 @@ struct RoadmapWindow : public Window {
 		for (const Feature *f : Feature::Iterate()) {
 			if (f->company == this->window_number) list.push_back(f);
 		}
+		if (this->log_view) {
+			/* The work log: shipped items, newest first. */
+			std::erase_if(list, [](const Feature *f) { return f->state != FeatureState::Shipped; });
+			std::ranges::stable_sort(list, std::greater{}, [](const Feature *f) { return f->shipped_date; });
+			return list;
+		}
 		auto order = [](FeatureState s) { return s == FeatureState::InProgress ? 0 : (s == FeatureState::Backlog ? 1 : 2); };
 		std::ranges::stable_sort(list, {}, [&order](const Feature *f) { return order(f->state); });
 		return list;
@@ -239,7 +283,7 @@ struct RoadmapWindow : public Window {
 	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
 	{
 		if (widget == WID_RM_CAPTION) return GetString(STR_ROADMAP_CAPTION, this->window_number);
-		if (widget == WID_RM_VIEW) return GetString(this->tree_view ? STR_ROADMAP_VIEW_LIST : STR_ROADMAP_VIEW_TREE);
+		if (widget == WID_RM_VIEW) return GetString(this->tree_view ? STR_ROADMAP_VIEW_LIST : (this->log_view ? STR_ROADMAP_VIEW_TREE : STR_ROADMAP_VIEW_LOG));
 		return this->Window::GetWidgetString(widget, stringid);
 	}
 
@@ -262,7 +306,15 @@ struct RoadmapWindow : public Window {
 	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
-			case WID_RM_LIST: if (this->tree_view) { this->DrawTree(r); } else { this->DrawList(r); } break;
+			case WID_RM_LIST:
+				if (this->tree_view) {
+					this->DrawTree(r);
+				} else if (this->log_view) {
+					this->DrawLog(r);
+				} else {
+					this->DrawList(r);
+				}
+				break;
 
 			case WID_RM_SUMMARY: {
 				CompanyID company = this->GetCompany();
@@ -275,9 +327,10 @@ struct RoadmapWindow : public Window {
 						crew += GetString(STR_ROADMAP_CREW_PERSON, e->GetName(), _level_short_names[to_underlying(e->level)]);
 					}
 					uint per_day = GetFeatureDailyProgress(f);
+					uint32_t left = static_cast<uint32_t>(f->effort) * 100 - std::min<uint32_t>(f->progress, static_cast<uint32_t>(f->effort) * 100);
 					DrawString(r.Shrink(WidgetDimensions::scaled.framerect), crew.empty()
-							? GetString(STR_ROADMAP_CREW_NONE, f->GetName(), GetWorkItemSlots(f->spec))
-							: GetString(STR_ROADMAP_CREW, crew, per_day / 100, per_day % 100 / 10, f->assigned, GetWorkItemSlots(f->spec)));
+							? GetString(STR_ROADMAP_CREW_NONE, f->GetName(), GetWorkItemDetails(f->spec, f->town))
+							: GetString(STR_ROADMAP_CREW, crew, per_day / 100, per_day % 100 / 10, CeilDiv(left, std::max(per_day, 1U)), GetWorkImpactText(f->spec, f->town)));
 					break;
 				}
 				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_ROADMAP_SUMMARY,
@@ -340,6 +393,38 @@ struct RoadmapWindow : public Window {
 		}
 	}
 
+	void DrawLog(const Rect &r) const
+	{
+		Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+		const int row_h = this->resize.step_height;
+		const int text_h = GetCharacterHeight(FontSize::Normal);
+		const auto features = this->GetFeatures();
+		if (features.empty()) {
+			DrawString(ir, STR_ROADMAP_LOG_NONE);
+			return;
+		}
+
+		const int w = ir.Width();
+		const int x_name = w * 16 / 100, x_impact = w * 56 / 100, x_quality = w * 84 / 100;
+		int pos = -this->vscroll->GetPosition();
+		const int cap = this->vscroll->GetCapacity();
+		for (const Feature *f : features) {
+			if (pos >= 0 && pos < cap) {
+				Rect row = ir.WithHeight(row_h);
+				bool sel = f->index == this->selected;
+				if (sel) GfxFillRect(row.left, row.top, row.right, row.bottom - 1, PC_DARK_GREY);
+				TextColour tc = sel ? TextColour::White : TextColour::Black;
+				int ty = row.top + (row_h - text_h) / 2;
+				if (f->shipped_date != TimerGameEconomy::Date{}) DrawString(row.left, row.left + x_name - 4, ty, GetString(STR_JUST_DATE_SHORT, f->shipped_date), tc);
+				DrawString(row.left + x_name, row.left + x_impact - 4, ty, f->GetName(), tc);
+				DrawString(row.left + x_impact, row.left + x_quality - 4, ty, GetWorkImpactText(f->spec, f->town), sel ? TextColour::White : TextColour::DarkGreen);
+				DrawString(row.left + x_quality, row.right, ty, GetString(STR_ROADMAP_LOG_QUALITY, f->quality, f->bugs), f->bugs > 3 && !sel ? TextColour::Red : tc);
+				ir.top += row_h;
+			}
+			pos++;
+		}
+	}
+
 	const Feature *GetSelected() const
 	{
 		const Feature *f = Feature::GetIfValid(this->selected);
@@ -354,7 +439,15 @@ struct RoadmapWindow : public Window {
 			case WID_RM_TAB_WORK: break; // Already showing this tab.
 
 			case WID_RM_VIEW:
-				this->tree_view = !this->tree_view;
+				/* Tree, then list, then log. */
+				if (this->tree_view) {
+					this->tree_view = false;
+				} else if (!this->log_view) {
+					this->log_view = true;
+				} else {
+					this->log_view = false;
+					this->tree_view = true;
+				}
 				this->OnInvalidateData(0);
 				break;
 
@@ -367,7 +460,7 @@ struct RoadmapWindow : public Window {
 							this->selected = f->index;
 							this->OnInvalidateData(0);
 						} else if (this->window_number == _local_company) {
-							Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, s);
+							Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, s, TownID::Invalid());
 						}
 						break;
 					}
@@ -385,11 +478,15 @@ struct RoadmapWindow : public Window {
 				DropDownList list;
 				for (uint i = 0; i < GetWorkItemCount(); i++) {
 					const WorkItemSpec &spec = GetWorkItemSpec(i);
+					if (spec.city) continue; // Planned per town from the market window.
 					StringID track = _work_track_names[to_underlying(spec.track)];
 					switch (GetWorkItemAvailability(company, i)) {
 						case WorkItemAvailability::Planned: break;
 						case WorkItemAvailability::Available:
-							list.push_back(MakeDropDownListStringItem(GetString(STR_ROADMAP_NEW_ITEM, track, spec.name, spec.effort), i));
+							list.push_back(MakeDropDownListStringItem(GetString(spec.fork != 0 ? STR_ROADMAP_NEW_ITEM_FORK : STR_ROADMAP_NEW_ITEM, track, spec.name, GetWorkItemDetails(i, TownID::Invalid())), i));
+							break;
+						case WorkItemAvailability::Excluded:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_ROADMAP_NEW_ITEM_EXCLUDED, track, spec.name, GetWorkItemSpec(GetWorkItemExcludedBy(company, i)).name), i, true));
 							break;
 						case WorkItemAvailability::Locked:
 							list.push_back(MakeDropDownListStringItem(GetString(STR_ROADMAP_NEW_ITEM_LOCKED, track, spec.name, GetWorkItemPrereqText(company, i)), i, true));
@@ -442,7 +539,7 @@ struct RoadmapWindow : public Window {
 		if (index < 0) return;
 		switch (widget) {
 			case WID_RM_NEW:
-				Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index));
+				Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index), TownID::Invalid());
 				break;
 
 			case WID_RM_ADD_ENGINEER:
@@ -469,6 +566,7 @@ struct RoadmapWindow : public Window {
 		if (f == nullptr) this->selected = FeatureID::Invalid();
 
 		this->vscroll->SetCount(this->tree_view ? 0 : this->GetFeatures().size());
+		this->hscroll->SetCount(GetWorkTreeColumns());
 		bool own = this->window_number == _local_company;
 		bool open = f != nullptr && f->state != FeatureState::Shipped;
 		this->SetWidgetDisabledState(WID_RM_NEW, !own);

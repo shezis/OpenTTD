@@ -20,6 +20,10 @@
 #include "timer/timer.h"
 #include "timer/timer_game_economy.h"
 #include "window_func.h"
+#include "economy_func.h"
+#include "market_func.h"
+#include "strings_func.h"
+#include "town.h"
 
 #include "table/strings.h"
 
@@ -35,38 +39,49 @@ static constexpr uint8_t NONE = INVALID_WORK_ITEM;
  * so only ever append new items.
  */
 static const WorkItemSpec _work_items[] = {
+	/*       track                     category                     effort  name                         prereqs                impact                   value  test   run   fork  city */
 	/* Engineering: features and deployments. */
-	/*  0 */ { WorkTrack::Engineering, FeatureCategory::Core,           20, "MVP prototype",             { NONE, NONE, NONE } },
-	/*  1 */ { WorkTrack::Engineering, FeatureCategory::Core,           16, "User accounts",             {    0, NONE, NONE } },
-	/*  2 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 12, "First cloud deployment",    {    0, NONE, NONE } },
-	/*  3 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 14, "CI/CD pipeline",            {    2, NONE, NONE } },
-	/*  4 */ { WorkTrack::Engineering, FeatureCategory::Core,           18, "Onboarding flow",           {    1, NONE, NONE } },
-	/*  5 */ { WorkTrack::Engineering, FeatureCategory::Payments,       30, "Payments and billing",      {    1, NONE, NONE } },
-	/*  6 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 16, "Monitoring and alerts",     {    3, NONE, NONE } },
-	/*  7 */ { WorkTrack::Engineering, FeatureCategory::Mobile,         40, "Mobile app",                {    4, NONE, NONE } },
-	/*  8 */ { WorkTrack::Engineering, FeatureCategory::Integrations,   28, "Public API",                {    1,    3, NONE } },
-	/*  9 */ { WorkTrack::Engineering, FeatureCategory::Analytics,      24, "Analytics dashboards",      {    5, NONE, NONE } },
-	/* 10 */ { WorkTrack::Engineering, FeatureCategory::Security,       26, "Single sign-on",            {    1,    6, NONE } },
-	/* 11 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 36, "Multi-region deployment",   {    6, NONE, NONE } },
-	/* 12 */ { WorkTrack::Engineering, FeatureCategory::Security,       30, "Audit log and compliance",  {   10, NONE, NONE } },
+	/*  0 */ { WorkTrack::Engineering, FeatureCategory::Core,           20, "MVP prototype",             { NONE, NONE, NONE }, WorkImpact::Fit,          0,   500,  200, 0 },
+	/*  1 */ { WorkTrack::Engineering, FeatureCategory::Core,           16, "User accounts",             {    0, NONE, NONE }, WorkImpact::Fit,          0,   400,  100, 0 },
+	/*  2 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 12, "First cloud deployment",    {    0, NONE, NONE }, WorkImpact::Churn,        3,   300,  400, 0 },
+	/*  3 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 14, "CI/CD pipeline",            {    2, NONE, NONE }, WorkImpact::Churn,        2,   200,  150, 0 },
+	/*  4 */ { WorkTrack::Engineering, FeatureCategory::Core,           18, "Onboarding flow",           {    1, NONE, NONE }, WorkImpact::Churn,        4,   400,    0, 0 },
+	/*  5 */ { WorkTrack::Engineering, FeatureCategory::Payments,       30, "Payments and billing",      {    1, NONE, NONE }, WorkImpact::Price,        2,  1500,  200, 2 },
+	/*  6 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 16, "Monitoring and alerts",     {    3, NONE, NONE }, WorkImpact::Churn,        4,   300,  300, 0 },
+	/*  7 */ { WorkTrack::Engineering, FeatureCategory::Mobile,         40, "Mobile app",                {    4, NONE, NONE }, WorkImpact::Fit,          0,  2500,  800, 0 },
+	/*  8 */ { WorkTrack::Engineering, FeatureCategory::Integrations,   28, "Public API",                {    1,    3, NONE }, WorkImpact::Fit,          0,  1200,  300, 0 },
+	/*  9 */ { WorkTrack::Engineering, FeatureCategory::Analytics,      24, "Analytics dashboards",      {    1, NONE, NONE }, WorkImpact::Fit,          0,   800,  250, 0 },
+	/* 10 */ { WorkTrack::Engineering, FeatureCategory::Security,       26, "Single sign-on",            {    1,    6, NONE }, WorkImpact::Fit,          0,  1500,  200, 0 },
+	/* 11 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 36, "Multi-region deployment",   {    6, NONE, NONE }, WorkImpact::Churn,        5,  3000, 2500, 0 },
+	/* 12 */ { WorkTrack::Engineering, FeatureCategory::Security,       30, "Audit log and compliance",  {   10, NONE, NONE }, WorkImpact::Fit,          0,  2000,  300, 0 },
 	/* Business: company setup, legal, fundraising. */
-	/* 13 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Incorporate the company",   { NONE, NONE, NONE } },
-	/* 14 */ { WorkTrack::Business,    FeatureCategory::End,             6, "Bank account and bookkeeping", { 13, NONE, NONE } },
-	/* 15 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Terms of service and privacy", { 13, NONE, NONE } },
-	/* 16 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Payroll and HR setup",      {   14, NONE, NONE } },
-	/* 17 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Pitch deck",                {   13, NONE, NONE } },
-	/* 18 */ { WorkTrack::Business,    FeatureCategory::End,            14, "Investor data room",        {   17,   14, NONE } },
-	/* 19 */ { WorkTrack::Business,    FeatureCategory::End,            12, "Hiring pipeline",           {   16, NONE, NONE } },
-	/* 20 */ { WorkTrack::Business,    FeatureCategory::End,            30, "SOC 2 readiness",           {   15,    6, NONE } },
+	/* 13 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Incorporate the company",   { NONE, NONE, NONE }, WorkImpact::None,         0,   800,   50, 0 },
+	/* 14 */ { WorkTrack::Business,    FeatureCategory::End,             6, "Bank account and bookkeeping", { 13, NONE, NONE }, WorkImpact::None,         0,     0,  150, 0 },
+	/* 15 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Terms of service and privacy", { 13, NONE, NONE }, WorkImpact::Churn,        1,  1500,    0, 0 },
+	/* 16 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Payroll and HR setup",      {   14, NONE, NONE }, WorkImpact::None,         0,     0,  150, 0 },
+	/* 17 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Pitch deck",                {   13, NONE, NONE }, WorkImpact::None,         0,     0,    0, 0 },
+	/* 18 */ { WorkTrack::Business,    FeatureCategory::End,            14, "Investor data room",        {   17,   14, NONE }, WorkImpact::None,         0,     0,  100, 0 },
+	/* 19 */ { WorkTrack::Business,    FeatureCategory::End,            12, "Hiring pipeline",           {   16, NONE, NONE }, WorkImpact::None,         0,     0,  300, 0 },
+	/* 20 */ { WorkTrack::Business,    FeatureCategory::End,            30, "SOC 2 readiness",           {   15,    6, NONE }, WorkImpact::Churn,        3,  6000,  500, 0 },
 	/* Sales: go-to-market. */
-	/* 21 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "Pricing page",              {    0, NONE, NONE } },
-	/* 22 */ { WorkTrack::Sales,       FeatureCategory::End,            10, "Founder-led sales",         {   21, NONE, NONE } },
-	/* 23 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "CRM setup",                 {   22, NONE, NONE } },
-	/* 24 */ { WorkTrack::Sales,       FeatureCategory::End,            14, "Sales playbook",            {   23, NONE, NONE } },
-	/* 25 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Self-serve checkout",       {   21,    5, NONE } },
-	/* 26 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Customer success team",     {   24, NONE, NONE } },
-	/* 27 */ { WorkTrack::Sales,       FeatureCategory::End,            18, "Partner program",           {   24,    8, NONE } },
-	/* 28 */ { WorkTrack::Sales,       FeatureCategory::End,            24, "Enterprise contracts",      {   24,   15,   10 } },
+	/* 21 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "Pricing page",              {    0, NONE, NONE }, WorkImpact::Price,        3,     0,    0, 0 },
+	/* 22 */ { WorkTrack::Sales,       FeatureCategory::End,            10, "Founder-led sales",         {   21, NONE, NONE }, WorkImpact::Reach,       10,     0,    0, 0 },
+	/* 23 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "CRM setup",                 {   22, NONE, NONE }, WorkImpact::Reach,        5,     0,  250, 0 },
+	/* 24 */ { WorkTrack::Sales,       FeatureCategory::End,            14, "Sales playbook",            {   23, NONE, NONE }, WorkImpact::Reach,        8,     0,    0, 0 },
+	/* 25 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Self-serve checkout",       {   21,   29, NONE }, WorkImpact::Price,        3,   400,  150, 0 },
+	/* 26 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Customer success team",     {   24, NONE, NONE }, WorkImpact::Churn,        6,     0,  400, 0 },
+	/* 27 */ { WorkTrack::Sales,       FeatureCategory::End,            18, "Partner program",           {   24,    8, NONE }, WorkImpact::Reach,       12,     0,  300, 0 },
+	/* 28 */ { WorkTrack::Sales,       FeatureCategory::End,            24, "Enterprise contracts",      {   30,   15,   10 }, WorkImpact::Price,        5,  1000,    0, 0 },
+	/* Forks: one branch rules out the other. */
+	/* 29 */ { WorkTrack::Sales,       FeatureCategory::End,            12, "Product-led growth",        {   21, NONE, NONE }, WorkImpact::Reach,       15,     0,  300, 1 },
+	/* 30 */ { WorkTrack::Sales,       FeatureCategory::End,            12, "Sales-led growth",          {   22, NONE, NONE }, WorkImpact::Price,        4,     0,  200, 1 },
+	/* 31 */ { WorkTrack::Engineering, FeatureCategory::Payments,       10, "Payments provider integration", { 1, NONE, NONE }, WorkImpact::Price,        2,   300,  900, 2 },
+	/* 32 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 18, "Serverless platform",       {    2, NONE, NONE }, WorkImpact::Churn,        3,   500, 1500, 3 },
+	/* 33 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 40, "Own servers",               {    3, NONE, NONE }, WorkImpact::Churn,        3,  6000,  300, 3 },
+	/* City work: planned for one town from the Market window. */
+	/* 34 */ { WorkTrack::Engineering, FeatureCategory::End,            10, "Localise for",              {    0, NONE, NONE }, WorkImpact::LocalFit,    40,   300,   50, 0, true },
+	/* 35 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "Local partnerships in",     {    0, NONE, NONE }, WorkImpact::LocalReach,  25,     0,  200, 0, true },
+	/* 36 */ { WorkTrack::Engineering, FeatureCategory::End,            16, "Council integration in",    {   34, NONE, NONE }, WorkImpact::LocalFit,    60,   800,  150, 0, true },
 };
 
 /** Role that staffs each track, indexed by #WorkTrack. */
@@ -92,29 +107,97 @@ const WorkItemSpec &GetWorkItemSpec(uint8_t spec)
 	return _work_items[std::min<uint>(spec, GetWorkItemCount() - 1)];
 }
 
-std::string Feature::GetName() const { return std::string(GetWorkItemSpec(this->spec).name); }
+std::string Feature::GetName() const
+{
+	std::string name(GetWorkItemSpec(this->spec).name);
+	if (Town::IsValidID(this->town)) name += " " + GetString(STR_TOWN_NAME, this->town);
+	return name;
+}
 WorkTrack Feature::GetTrack() const { return GetWorkItemSpec(this->spec).track; }
 
-/** Find a company's roadmap entry for a catalog item, if any. */
-static const Feature *FindWorkItem(CompanyID company, uint8_t spec)
+/**
+ * Find a company's roadmap entry for a catalog item, if any.
+ * @param company The company.
+ * @param spec Catalog item.
+ * @param town Town of a city work item; invalid for central work.
+ * @return The entry, or nullptr.
+ */
+const Feature *FindWorkItem(CompanyID company, uint8_t spec, TownID town)
 {
 	for (const Feature *f : Feature::Iterate()) {
-		if (f->company == company && f->spec == spec) return f;
+		if (f->company == company && f->spec == spec && f->town == town) return f;
 	}
 	return nullptr;
 }
 
-bool HasShippedWorkItem(CompanyID company, uint8_t spec)
+bool HasShippedWorkItem(CompanyID company, uint8_t spec, TownID town)
 {
-	const Feature *f = FindWorkItem(company, spec);
+	const Feature *f = FindWorkItem(company, spec, town);
 	return f != nullptr && f->state == FeatureState::Shipped;
 }
 
-WorkItemAvailability GetWorkItemAvailability(CompanyID company, uint8_t spec)
+/**
+ * The item of the same fork that the company already chose, which rules this one out.
+ * @param company The company.
+ * @param spec Catalog item.
+ * @return The chosen sibling, or #INVALID_WORK_ITEM.
+ */
+uint8_t GetWorkItemExcludedBy(CompanyID company, uint8_t spec)
 {
-	if (FindWorkItem(company, spec) != nullptr) return WorkItemAvailability::Planned;
-	for (uint8_t p : GetWorkItemSpec(spec).prereqs) {
-		if (p != NONE && !HasShippedWorkItem(company, p)) return WorkItemAvailability::Locked;
+	uint8_t fork = GetWorkItemSpec(spec).fork;
+	if (fork == 0) return INVALID_WORK_ITEM;
+	for (const Feature *f : Feature::Iterate()) {
+		if (f->company == company && f->spec != spec && GetWorkItemSpec(f->spec).fork == fork) return f->spec;
+	}
+	return INVALID_WORK_ITEM;
+}
+
+/**
+ * Sum of one kind of impact from a company's shipped work.
+ * @param company The company.
+ * @param impact The kind of impact; the local kinds count only work for \a town.
+ * @param town The town for local impacts.
+ * @return The total.
+ */
+int GetWorkImpact(CompanyID company, WorkImpact impact, TownID town)
+{
+	int total = 0;
+	for (const Feature *f : Feature::Iterate()) {
+		if (f->company != company || f->state != FeatureState::Shipped) continue;
+		const WorkItemSpec &spec = GetWorkItemSpec(f->spec);
+		if (spec.impact != impact) continue;
+		if ((impact == WorkImpact::LocalFit || impact == WorkImpact::LocalReach) && f->town != town) continue;
+		total += spec.impact_value;
+	}
+	return total;
+}
+
+/**
+ * Monthly running costs of everything a company has shipped.
+ * @param company The company.
+ * @return Running costs.
+ */
+Money GetWorkRunCosts(CompanyID company)
+{
+	Money total = 0;
+	for (const Feature *f : Feature::Iterate()) {
+		if (f->company == company && f->state == FeatureState::Shipped) total += GetWorkItemSpec(f->spec).run_cost;
+	}
+	return total;
+}
+
+WorkItemAvailability GetWorkItemAvailability(CompanyID company, uint8_t spec, TownID town)
+{
+	const WorkItemSpec &ws = GetWorkItemSpec(spec);
+	/* City work needs a town; central work must not have one. */
+	if (ws.city != Town::IsValidID(town)) return WorkItemAvailability::Locked;
+	if (FindWorkItem(company, spec, town) != nullptr) return WorkItemAvailability::Planned;
+	if (GetWorkItemExcludedBy(company, spec) != NONE) return WorkItemAvailability::Excluded;
+	for (uint8_t p : ws.prereqs) {
+		if (p == NONE) continue;
+		/* A city item's city prerequisites are for the same town. */
+		TownID pt = GetWorkItemSpec(p).city ? town : TownID::Invalid();
+		if (!HasShippedWorkItem(company, p, pt)) return WorkItemAvailability::Locked;
 	}
 	return WorkItemAvailability::Available;
 }
@@ -233,8 +316,11 @@ static void ShipFeature(Feature *f, const TrackStaffStats &s)
 	f->quality = static_cast<uint8_t>(Clamp<uint>(base * pct / 100, 1, 100));
 	f->bugs = static_cast<uint8_t>(std::min<uint>(UINT8_MAX, (100 - pct) / 8 + RandomRange(3) + juniors));
 	f->state = FeatureState::Shipped;
+	f->shipped_date = TimerGameEconomy::date;
 	ReleaseFeatureStaff(f->index);
 	f->assigned = 0;
+	Money test = GetWorkItemSpec(f->spec).test_cost;
+	if (test > 0) SubtractMoneyFromCompany(f->company, CommandCost(ExpensesType::Other, test));
 	Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} shipped '{}' at {}% (quality {}, bugs {})", f->company + 1, f->GetName(), pct, f->quality, f->bugs);
 	InvalidateWindowData(WindowClass::Roadmap, f->company);
 }
@@ -283,7 +369,7 @@ void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner)
 		if (f->company != old_owner) continue;
 		/* The buyer keeps its own copy of an item it already has. */
 		ReleaseFeatureStaff(f->index);
-		if (new_owner == INVALID_OWNER || FindWorkItem(new_owner, f->spec) != nullptr) {
+		if (new_owner == INVALID_OWNER || FindWorkItem(new_owner, f->spec, f->town) != nullptr) {
 			delete f;
 		} else {
 			f->company = new_owner;
@@ -300,15 +386,21 @@ void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner)
  * @param spec Catalog item.
  * @return The cost of this operation or an error.
  */
-CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec)
+CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec, TownID town)
 {
 	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
 	if (spec >= GetWorkItemCount()) return CMD_ERROR;
 	if (!Company::IsValidID(_current_company)) return CMD_ERROR;
+	if (GetWorkItemSpec(spec).city != (town != TownID::Invalid())) return CMD_ERROR;
+	if (town != TownID::Invalid()) {
+		if (!Town::IsValidID(town)) return CMD_ERROR;
+		if (!IsTownInRepRange(_current_company, town)) return CommandCost(STR_ERROR_TOWN_OUT_OF_REP_RANGE);
+	}
 
-	switch (GetWorkItemAvailability(_current_company, spec)) {
+	switch (GetWorkItemAvailability(_current_company, spec, town)) {
 		case WorkItemAvailability::Planned: return CommandCost(STR_ERROR_WORK_ITEM_PLANNED);
 		case WorkItemAvailability::Locked: return CommandCost(STR_ERROR_WORK_ITEM_LOCKED);
+		case WorkItemAvailability::Excluded: return CommandCost(STR_ERROR_WORK_ITEM_EXCLUDED);
 		case WorkItemAvailability::Available: break;
 	}
 
@@ -321,7 +413,9 @@ CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec)
 	if (flags.Test(DoCommandFlag::Execute)) {
 		Feature *f = Feature::Create(_current_company, spec);
 		f->effort = GetWorkItemSpec(spec).effort;
+		f->town = town;
 		InvalidateWindowData(WindowClass::Roadmap, _current_company);
+		InvalidateWindowData(WindowClass::Market, _current_company);
 	}
 
 	return CommandCost();

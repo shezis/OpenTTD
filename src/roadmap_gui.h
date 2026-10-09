@@ -11,7 +11,10 @@
 #define ROADMAP_GUI_H
 
 #include "company_type.h"
+#include "town_type.h"
 
 void ShowRoadmapWindow(CompanyID company);
+std::string GetWorkImpactText(uint8_t spec, TownID town);
+std::string GetWorkItemDetails(uint8_t spec, TownID town);
 
 #endif /* ROADMAP_GUI_H */

@@ -3896,6 +3896,11 @@ STR_MARKET_STATUS_OUT_OF_RANGE                                  :{NUM}% · out o
 STR_MARKET_STATUS_NONE                                          :{NUM}%
 STR_MARKET_STATUS_HUB                                           :{NUM}% · your hub
 STR_MARKET_SUMMARY_SPONSOR                                      :{BLACK}{NUM} customer{P "" s} · MRR {CURRENCY_LONG} · sponsoring {COMPANY} for {CURRENCY_SHORT}/month
+STR_MARKET_CITY_WORK                                            :{BLACK}City work
+STR_MARKET_CITY_WORK_TOOLTIP                                    :{BLACK}Plan work for the selected town only: localisation, local partnerships and council integration. It raises fit or reach there and goes on your roadmap
+STR_MARKET_CITY_WORK_ITEM                                       :{RAW_STRING} {TOWN} · {RAW_STRING}
+STR_MARKET_CITY_WORK_PLANNED                                    :{RAW_STRING} {TOWN} · on the roadmap
+STR_MARKET_CITY_WORK_LOCKED                                     :{RAW_STRING} {TOWN} · needs {RAW_STRING}
 STR_MARKET_SPONSOR                                              :{BLACK}Sponsor transit
 STR_MARKET_SPONSOR_TOOLTIP                                      :{BLACK}Sponsor a transit operator: its vehicles take your colours, and towns on its network that also reach your HQ or a hub get extra reach
 STR_MARKET_SPONSOR_ITEM                                         :{COMPANY} · {CURRENCY_SHORT} a month
@@ -3924,7 +3929,7 @@ STR_MARKET_NO_FREE_REP                                          :{WHITE}... ever
 STR_BOARD_CAPTION                                               :{WHITE}{COMPANY} Board
 STR_BOARD_NO_ROUNDS                                             :no rounds yet
 STR_BOARD_PUBLIC                                                :public company
-STR_BOARD_COSTS_BREAKDOWN                                       :Salaries {CURRENCY_LONG} · Office {CURRENCY_LONG} · Hubs {CURRENCY_LONG} ({NUM}) · Field sales {CURRENCY_LONG} ({NUM} rep{P "" s}) · Sponsorship {CURRENCY_LONG}
+STR_BOARD_COSTS_BREAKDOWN                                       :Salaries {CURRENCY_LONG} · Office {CURRENCY_LONG} · Hubs {CURRENCY_LONG} ({NUM}) · Field sales {CURRENCY_LONG} ({NUM} rep{P "" s}) · Running costs {CURRENCY_LONG} · Sponsorship {CURRENCY_LONG}
 STR_BOARD_INSOLVENT                                             :Insolvent for {NUM} month{P "" s} · raise money now
 STR_BOARD_IPO_REPORT                                            :You took the company public. Your founders' stake of {NUM}.{NUM}% is worth {CURRENCY_LONG}. Raised {CURRENCY_LONG} over {NUM} round{P "" s}; {NUM} customers today
 STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
@@ -4016,8 +4021,8 @@ STR_ROADMAP_LIST_TOOLTIP                                        :{BLACK}Work in 
 STR_ROADMAP_SUMMARY                                             :{BLACK}Assigned: engineering {NUM}/{NUM} · business {NUM}/{NUM} · sales {NUM}/{NUM}
 STR_ROADMAP_STATUS_BACKLOG                                      :Backlog · {NUM} points
 STR_ROADMAP_STATUS_PROGRESS                                     :{NUM}% · {NUM}/{NUM} slots
-STR_ROADMAP_CREW                                                :{BLACK}Crew: {RAW_STRING} · {NUM}.{NUM} points/day · {NUM}/{NUM} slots
-STR_ROADMAP_CREW_NONE                                           :{BLACK}{RAW_STRING}: nobody yet · {NUM} slots. Use Assign to pick people
+STR_ROADMAP_CREW                                                :{BLACK}Crew: {RAW_STRING} · {NUM}.{NUM} pts/day · done in ~{NUM} day{P "" s} · {RAW_STRING}
+STR_ROADMAP_CREW_NONE                                           :{BLACK}{RAW_STRING}: nobody yet · {RAW_STRING}
 STR_ROADMAP_CREW_PERSON                                         :{RAW_STRING} ({STRING})
 STR_ROADMAP_PERSON_ITEM                                         :{RAW_STRING} · {STRING} · {NUM}.{NUM} pts/day
 STR_ROADMAP_PERSON_ITEM_TOWN                                    :{RAW_STRING} · {STRING} · {NUM}.{NUM} pts/day · leaves {RAW_STRING}
@@ -4027,10 +4032,25 @@ STR_ROADMAP_NOBODY_ON_IT                                        :Nobody is worki
 STR_ROADMAP_STATUS_SHIPPED                                      :Shipped · quality {NUM} · {NUM} bug{P "" s}
 STR_ROADMAP_VIEW_LIST                                           :{BLACK}List
 STR_ROADMAP_VIEW_TREE                                           :{BLACK}Tree
-STR_ROADMAP_VIEW_TOOLTIP                                        :{BLACK}Switch between the work tree and a list. In the tree, click an item to plan it or to select it
+STR_ROADMAP_VIEW_TOOLTIP                                        :{BLACK}Switch between the work tree, a list and the work log. In the tree, click an item to plan it or to select it. Dark red items were ruled out by a fork you took
 STR_ROADMAP_NEW                                                 :{BLACK}New work
 STR_ROADMAP_NEW_TOOLTIP                                         :{BLACK}Add an item from the catalog. Greyed-out items need other work finished first
-STR_ROADMAP_NEW_ITEM                                            :{STRING} · {RAW_STRING} · {NUM} points
+STR_ROADMAP_NEW_ITEM                                            :{STRING} · {RAW_STRING} · {RAW_STRING}
+STR_ROADMAP_NEW_ITEM_FORK                                       :{STRING} · {RAW_STRING} (fork: rules out the other branch) · {RAW_STRING}
+STR_ROADMAP_NEW_ITEM_EXCLUDED                                   :{STRING} · {RAW_STRING} · ruled out: you chose {RAW_STRING}
+STR_WORK_DETAILS                                                :{NUM} pts · {NUM} slots · {RAW_STRING} · testing {CURRENCY_SHORT} · runs {CURRENCY_SHORT}/month
+STR_WORK_IMPACT_NONE                                            :setup work
+STR_WORK_IMPACT_FIT                                             :fit in {STRING} towns
+STR_WORK_IMPACT_PRICE                                           :+£{NUM} per customer
+STR_WORK_IMPACT_CHURN                                           :churn -{NUM}‰
+STR_WORK_IMPACT_REACH                                           :reach +{NUM} everywhere
+STR_WORK_IMPACT_LOCAL_FIT                                       :fit +{NUM} in {TOWN}
+STR_WORK_IMPACT_LOCAL_FIT_ANY                                   :fit +{NUM} in that town
+STR_WORK_IMPACT_LOCAL_REACH                                     :reach +{NUM} in {TOWN}
+STR_WORK_IMPACT_LOCAL_REACH_ANY                                 :reach +{NUM} in that town
+STR_ROADMAP_VIEW_LOG                                            :{BLACK}Log
+STR_ROADMAP_LOG_NONE                                            :{ORANGE}- Nothing shipped yet. Shipped work appears here with its date and impact -
+STR_ROADMAP_LOG_QUALITY                                         :quality {NUM} · {NUM} bug{P "" s}
 STR_ROADMAP_NEW_ITEM_LOCKED                                     :{STRING} · {RAW_STRING} · needs {RAW_STRING}
 STR_ROADMAP_NEW_ALL_PLANNED                                     :Everything in the catalog is planned
 STR_ROADMAP_ADD_ENGINEER                                        :{BLACK}Assign
@@ -4058,6 +4078,7 @@ STR_ERROR_NO_FREE_STAFF                                         :{WHITE}... nobo
 STR_ERROR_WRONG_ROLE_FOR_WORK                                   :{WHITE}This person works a different track
 STR_ERROR_WORK_ITEM_FULL                                        :{WHITE}Every slot on this item is taken
 STR_ERROR_WORK_ITEM_LOCKED                                      :{WHITE}... finish its prerequisites first
+STR_ERROR_WORK_ITEM_EXCLUDED                                    :{WHITE}You chose another branch of this fork
 STR_ERROR_WORK_ITEM_PLANNED                                     :{WHITE}... it is already on the roadmap
 STR_ERROR_FEATURE_TOO_EARLY                                     :{WHITE}... less than half of it is built
 STR_ERROR_OFFICE_AT_MAX                                         :{WHITE}... this is already the largest office

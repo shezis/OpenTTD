@@ -9,6 +9,9 @@
 
 #include "stdafx.h"
 #include "market_func.h"
+#include "roadmap_gui.h"
+#include "feature_cmd.h"
+#include "feature_base.h"
 #include "founder_gui.h"
 #include "employee_base.h"
 #include "employee_cmd.h"
@@ -186,6 +189,29 @@ struct MarketWindow : public Window {
 				if (Town::IsValidID(this->selected)) ScrollMainWindowToTile(Town::Get(this->selected)->xy);
 				break;
 
+			case WID_MK_CITY_WORK: {
+				/* City work for the selected town: localisation, partnerships, council integration. */
+				if (!Town::IsValidID(this->selected)) break;
+				DropDownList list;
+				for (uint i = 0; i < GetWorkItemCount(); i++) {
+					const WorkItemSpec &spec = GetWorkItemSpec(i);
+					if (!spec.city) continue;
+					switch (GetWorkItemAvailability(company, i, this->selected)) {
+						case WorkItemAvailability::Available:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_MARKET_CITY_WORK_ITEM, spec.name, this->selected, GetWorkItemDetails(i, this->selected)), i));
+							break;
+						case WorkItemAvailability::Planned:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_MARKET_CITY_WORK_PLANNED, spec.name, this->selected), i, true));
+							break;
+						default:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_MARKET_CITY_WORK_LOCKED, spec.name, this->selected, GetWorkItemPrereqText(company, i)), i, true));
+							break;
+					}
+				}
+				ShowDropDownList(this, std::move(list), -1, WID_MK_CITY_WORK);
+				break;
+			}
+
 			case WID_MK_SPONSOR: {
 				DropDownList list;
 				const Company *me = Company::Get(company);
@@ -214,6 +240,10 @@ struct MarketWindow : public Window {
 
 	void OnDropdownSelect(WidgetID widget, int index, int) override
 	{
+		if (widget == WID_MK_CITY_WORK && index >= 0 && Town::IsValidID(this->selected)) {
+			Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index), this->selected);
+			return;
+		}
 		if (widget != WID_MK_SPONSOR || index == -1) return;
 		if (index == -2) {
 			Command<Commands::SponsorOperator>::Post(STR_ERROR_CAN_T_SPONSOR, CompanyID::Invalid(), Money(0));
@@ -238,6 +268,7 @@ struct MarketWindow : public Window {
 		this->SetWidgetDisabledState(WID_MK_REMOVE_REP, !own || !sel || CountRepsInTown(this->GetCompany(), this->selected) == 0);
 		this->SetWidgetDisabledState(WID_MK_SHOW, !sel);
 		this->SetWidgetDisabledState(WID_MK_HUB, !own || !sel || GetCompanyHQTown(this->GetCompany()) == this->selected);
+		this->SetWidgetDisabledState(WID_MK_CITY_WORK, !own || !sel || !IsTownInRepRange(this->GetCompany(), this->selected));
 		this->SetDirty();
 	}
 };
@@ -259,6 +290,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_market_widgets = {
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_REMOVE_REP), SetStringTip(STR_MARKET_REMOVE_REP, STR_MARKET_REMOVE_REP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_HUB), SetToolTip(STR_MARKET_HUB_TOOLTIP_PLAIN), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_SHOW), SetStringTip(STR_MARKET_SHOW, STR_MARKET_SHOW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_MK_CITY_WORK), SetStringTip(STR_MARKET_CITY_WORK, STR_MARKET_CITY_WORK_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_MK_SPONSOR), SetStringTip(STR_MARKET_SPONSOR, STR_MARKET_SPONSOR_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),

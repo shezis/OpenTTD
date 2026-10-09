@@ -50,6 +50,7 @@ public:
 		WORK_BACKLOG, ///< Planned, nobody working on it.
 		WORK_IN_PROGRESS, ///< Being worked on.
 		WORK_SHIPPED, ///< Done.
+		WORK_EXCLUDED, ///< Another branch of the same fork was chosen; ruled out for good.
 	};
 
 	/**
@@ -416,6 +417,29 @@ public:
 	 * @game @pre ScriptCompanyMode::IsValid().
 	 */
 	static bool StaffWorkItem(SQInteger item, SQInteger people);
+
+	/**
+	 * Is the item city work, planned for one town with PlanCityWork?
+	 * @param item The item.
+	 * @return True for city work.
+	 */
+	static bool IsCityWorkItem(SQInteger item);
+
+	/**
+	 * Monthly running cost an item adds once shipped.
+	 * @param item The item.
+	 * @return The cost, or -1 for an invalid item.
+	 */
+	static Money GetWorkItemRunCost(SQInteger item);
+
+	/**
+	 * Plan city work for one town; the town must be in reach.
+	 * @param item A city work item.
+	 * @param town The town.
+	 * @return True when planned.
+	 * @game @pre ScriptCompanyMode::IsValid().
+	 */
+	static bool PlanCityWork(SQInteger item, TownID town);
 
 	/**
 	 * Accept or decline the pending investor offer.

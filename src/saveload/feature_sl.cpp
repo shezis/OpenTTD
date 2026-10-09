@@ -20,6 +20,8 @@ static const SaveLoad _features_desc[] = {
 	SaveLoad::Variable<VarFileType::U8>("spec", SLE_OBJECT_ADDRESS(Feature, spec), SaveLoadVersion::FounderModeWorkTracks),
 	SaveLoad::Variable<VarFileType::U8>("state", SLE_OBJECT_ADDRESS(Feature, state)),
 	SaveLoad::Variable<VarFileType::U8>("assigned", SLE_OBJECT_ADDRESS(Feature, assigned)),
+	SaveLoad::Variable<VarFileType::U16>("town", SLE_OBJECT_ADDRESS(Feature, town), SaveLoadVersion::FounderModeWorkItems),
+	SaveLoad::Variable<VarFileType::I32>("shipped_date", SLE_OBJECT_ADDRESS(Feature, shipped_date), SaveLoadVersion::FounderModeWorkItems),
 	SaveLoad::Variable<VarFileType::U8>("quality", SLE_OBJECT_ADDRESS(Feature, quality)),
 	SaveLoad::Variable<VarFileType::U8>("bugs", SLE_OBJECT_ADDRESS(Feature, bugs)),
 	SaveLoad::Variable<VarFileType::U16>("effort", SLE_OBJECT_ADDRESS(Feature, effort)),
