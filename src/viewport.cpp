@@ -1439,6 +1439,12 @@ static void ViewportAddSignStrings(DrawPixelInfo *dpi, const std::vector<const S
  * @param stations List of stations to add.
  * @param small Add small versions of strings.
  */
+/** Founder Mode keeps the map for towns and markets: transit operators' station names stay hidden. */
+static bool IsFounderOperatorStation(const BaseStation *st)
+{
+	return _settings_game.game_creation.founder_mode && Company::IsValidID(st->owner) && IsFounderOperator(st->owner);
+}
+
 static void ViewportAddStationStrings(DrawPixelInfo *dpi, const std::vector<const BaseStation *> &stations, bool small)
 {
 	/* Transparent station signs have colour text instead of a colour panel. */
@@ -1446,6 +1452,7 @@ static void ViewportAddStationStrings(DrawPixelInfo *dpi, const std::vector<cons
 	if (small) flags.Set(ViewportStringFlag::Small);
 
 	for (const BaseStation *st : stations) {
+		if (IsFounderOperatorStation(st)) continue;
 		std::string *str = ViewportAddString(dpi, &st->sign, flags, (st->owner == OWNER_NONE || !st->IsInUse()) ? Colours::Grey : _company_colours[st->owner]);
 		if (str == nullptr) continue;
 
@@ -2327,6 +2334,7 @@ static bool CheckClickOnViewportSign(const Viewport &vp, int x, int y)
 				if (!show_stations) break;
 				st = BaseStation::Get(std::get<StationID>(item.id));
 				if (!show_competitors && _local_company != st->owner && st->owner != OWNER_NONE) break;
+				if (IsFounderOperatorStation(st)) break;
 
 				StationFacilities facilities = st->facilities;
 				if (facilities.None()) facilities = STATION_FACILITY_GHOST;

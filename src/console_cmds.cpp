@@ -935,7 +935,8 @@ static bool ConCatalog(std::span<std::string_view> argv)
 		switch (GetWorkItemAvailability(_local_company, i)) {
 			case WorkItemAvailability::Planned: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): planned", i, tracks[to_underlying(spec.track)], spec.name, spec.effort); break;
 			case WorkItemAvailability::Available: IConsolePrint(CC_INFO, "{:2} {} - {} ({} pts): available", i, tracks[to_underlying(spec.track)], spec.name, spec.effort); break;
-			case WorkItemAvailability::Locked: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): needs {}", i, tracks[to_underlying(spec.track)], spec.name, spec.effort, GetWorkItemPrereqText(_local_company, i)); break;
+			case WorkItemAvailability::Locked: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): {}", i, tracks[to_underlying(spec.track)], spec.name, spec.effort, spec.city ? "city work, plan from the Market window" : "needs " + GetWorkItemPrereqText(_local_company, i)); break;
+			case WorkItemAvailability::Excluded: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): ruled out by a fork", i, tracks[to_underlying(spec.track)], spec.name, spec.effort); break;
 		}
 	}
 	return true;

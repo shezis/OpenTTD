@@ -5,7 +5,7 @@
  * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <https://www.gnu.org/licenses/old-licenses/gpl-2.0>.
  */
 
-/** @file office_gui.cpp Founder Mode office window: an isometric view of the team at their desks. */
+/** @file office_gui.cpp Founder Mode office window: the offices side by side, size against cost. */
 
 #include "stdafx.h"
 #include "office_gui.h"
@@ -30,45 +30,6 @@
 #include "founder_gui.h"
 
 #include "safeguards.h"
-
-/** Maps office floor coordinates (in tiles) to screen pixels, 2:1 isometric like the game map. */
-struct OfficeIso {
-	int ox; ///< Screen x of the floor's back corner.
-	int oy; ///< Screen y of the floor's back corner.
-	int tw; ///< Width of one floor tile in pixels.
-
-	Point operator()(float i, float j) const
-	{
-		return { this->ox + static_cast<int>((i - j) * this->tw / 2), this->oy + static_cast<int>((i + j) * this->tw / 4) };
-	}
-};
-
-/** Draw a box standing on the office floor. */
-static void DrawOfficeBox(const OfficeIso &iso, float i, float j, float w, float d, int h, Colours colour)
-{
-	Point a = iso(i, j), b = iso(i + w, j), c = iso(i + w, j + d), e = iso(i, j + d);
-	auto up = [h](Point p) { return Point{p.x, p.y - h}; };
-
-	const std::array<Point, 4> right = {b, c, up(c), up(b)};
-	const std::array<Point, 4> left = {e, c, up(c), up(e)};
-	const std::array<Point, 4> top = {up(a), up(b), up(c), up(e)};
-	GfxFillPolygon(right, GetColourGradient(colour, Shade::Dark));
-	GfxFillPolygon(left, GetColourGradient(colour, Shade::Normal));
-	GfxFillPolygon(top, GetColourGradient(colour, Shade::Lighter));
-}
-
-/** Draw a person standing on the floor. */
-static void DrawOfficePerson(const OfficeIso &iso, float i, float j, Colours colour)
-{
-	Point p = iso(i, j);
-	int bw = std::max(2, iso.tw / 10), bh = std::max(4, iso.tw / 4), hd = std::max(2, iso.tw / 10);
-	GfxFillRect(p.x - bw, p.y - bh, p.x + bw, p.y, GetColourGradient(colour, Shade::Normal));
-	GfxFillRect(p.x - hd, p.y - bh - 2 * hd - 1, p.x + hd, p.y - bh - 1, GetColourGradient(Colours::Cream, Shade::Lighter));
-}
-
-/** Shirt colour of each role, indexed by #EmployeeRole. */
-static const Colours _role_colours[] = { Colours::Blue, Colours::Purple, Colours::Orange, Colours::Green };
-static_assert(std::size(_role_colours) == to_underlying(EmployeeRole::End));
 
 /** Window showing a company's office. */
 struct OfficeWindow : public Window {
@@ -135,76 +96,51 @@ struct OfficeWindow : public Window {
 		}
 	}
 
+	/** Size versus cost of each office: desks, rent, cost to move and rent per desk, with the current one marked. */
 	void DrawOffice(const Rect &r) const
 	{
-		GfxFillRect(r.Shrink(WidgetDimensions::scaled.bevel), GetColourGradient(Colours::Grey, Shade::Darker));
-
+		Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+		const int line = GetCharacterHeight(FontSize::Normal);
 		const CompanyID company = this->GetCompany();
-		const uint8_t level = GetOfficeLevel(company);
-		const int n = level == 0 ? 4 : (level == 1 ? 6 : 9); // Floor size in tiles.
-		const int wall = ScaleGUITrad(level == 0 ? 22 : 30);
-		const int margin = ScaleGUITrad(10);
+		const uint8_t current = GetOfficeLevel(company);
+		const uint staff = CountEmployees(company);
 
-		int tw = std::min((r.Width() - 2 * margin) / n, (r.Height() - wall - 2 * margin) * 2 / n);
-		tw = std::max(8, tw & ~3);
-		OfficeIso iso{r.left + r.Width() / 2, r.top + margin + wall + (r.Height() - 2 * margin - wall - n * tw / 2) / 2, tw};
+		const int w = ir.Width();
+		const int x_desks = w * 26 / 100, x_rent = w * 38 / 100, x_move = w * 60 / 100, x_per = w * 82 / 100;
+		auto row = [&](int y, StringID name, std::string desks, std::string rent, std::string move, std::string per, TextColour tc) {
+			DrawString(ir.left, ir.left + x_desks - 4, y, name, tc);
+			DrawString(ir.left + x_desks, ir.left + x_rent - 4, y, desks, tc);
+			DrawString(ir.left + x_rent, ir.left + x_move - 4, y, rent, tc);
+			DrawString(ir.left + x_move, ir.left + x_per - 4, y, move, tc);
+			DrawString(ir.left + x_per, ir.right, y, per, tc);
+		};
 
-		/* Floor: concrete in the garage, wood in the loft, carpet on the office floor. */
-		const Colours floor = level == 0 ? Colours::Grey : (level == 1 ? Colours::Brown : Colours::DarkBlue);
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				const std::array<Point, 4> tile = {iso(i, j), iso(i + 1, j), iso(i + 1, j + 1), iso(i, j + 1)};
-				GfxFillPolygon(tile, GetColourGradient(floor, (i + j) % 2 == 0 ? Shade::Light : Shade::Normal));
-			}
+		int y = ir.top;
+		row(y, STR_OFFICE_COL_OFFICE, GetString(STR_OFFICE_COL_DESKS), GetString(STR_OFFICE_COL_RENT), GetString(STR_OFFICE_COL_MOVE), GetString(STR_OFFICE_COL_PER_DESK), TextColour::Black);
+		y += line + ScaleGUITrad(2);
+		GfxDrawLine(ir.left, y - ScaleGUITrad(1), ir.right, y - ScaleGUITrad(1), PC_DARK_GREY);
+
+		for (uint8_t level = 0; level <= MAX_OFFICE_LEVEL; level++) {
+			uint desks = GetOfficeDesks(level);
+			Money rent = GetOfficeRent(level);
+			bool here = level == current;
+			if (here) GfxFillRect(ir.left, y, ir.right, y + 2 * line, GetColourGradient(Colours::LightBlue, Shade::Dark));
+			TextColour tc = here ? TextColour::White : (level < current ? TextColour::Silver : TextColour::Black);
+			std::string move = level <= current ? GetString(level == current ? STR_OFFICE_HERE : STR_OFFICE_OUTGROWN) : GetString(STR_JUST_CURRENCY_LONG, GetOfficeUpgradeCost(level - 1));
+			row(y, STR_OFFICE_LEVEL_GARAGE + level, GetString(STR_JUST_COMMA, desks), GetString(STR_JUST_CURRENCY_LONG, rent), move, GetString(STR_JUST_CURRENCY_LONG, rent / std::max(desks, 1U)), tc);
+
+			/* Desk bar: filled desks of your team in this office. */
+			int by = y + line + ScaleGUITrad(3);
+			int bx1 = ir.left + x_rent - ScaleGUITrad(8);
+			GfxFillRect(ir.left, by, bx1, by + ScaleGUITrad(4), PC_BLACK);
+			int filled = ir.left + (bx1 - ir.left) * static_cast<int>(std::min(staff, desks)) / static_cast<int>(desks);
+			if (filled > ir.left) GfxFillRect(ir.left, by, filled, by + ScaleGUITrad(4), staff > desks ? PC_RED : (here ? PC_GREEN : PC_GREY));
+			DrawString(ir.left + x_rent, ir.right, y + line, GetString(staff <= desks ? STR_OFFICE_FITS : STR_OFFICE_TOO_SMALL, std::min(staff, desks), desks), tc, AlignmentH::Start, false, FontSize::Small);
+			y += 2 * line + ScaleGUITrad(6);
 		}
 
-		/* Back walls. */
-		DrawOfficeBox(iso, 0, 0, n, 0.15f, wall, Colours::Cream);
-		DrawOfficeBox(iso, 0, 0.15f, 0.15f, n - 0.15f, wall, Colours::Cream);
-
-		/* Board room in the front corner of the office floor, in company colour. */
-		const Company *c = Company::GetIfValid(company);
-		const bool board_room = level == MAX_OFFICE_LEVEL;
-		const float br = 3.0f; // Board room size.
-
-		/* Lay out desks in rows; each desk seats two. */
-		struct Desk { float i, j; };
-		std::vector<Desk> desks;
-		const uint seats = GetOfficeDesks(level);
-		for (float j = 0.9f; j + 1.1f <= n && desks.size() * 2 < seats; j += 1.5f) {
-			for (float i = 0.6f; i + 1.6f <= n && desks.size() * 2 < seats; i += 2.0f) {
-				if (board_room && i + 1.4f > n - br && j + 0.6f > n - br) continue;
-				desks.push_back({i, j});
-			}
-		}
-
-		/* Seat employees in pool order. */
-		struct Seat { float i, j; Colours colour; };
-		std::vector<Seat> people;
-		uint k = 0;
-		for (const Employee *e : Employee::Iterate()) {
-			if (e->company != company) continue;
-			const Desk &d = desks[std::min<size_t>(k / 2, desks.size() - 1)];
-			people.push_back({d.i + (k % 2 == 0 ? 0.35f : 1.05f), d.j + 0.95f, _role_colours[to_underlying(e->role)]});
-			k++;
-		}
-
-		/* Draw back to front so nearer things cover farther ones. */
-		struct Drawable { float depth; std::function<void()> draw; };
-		std::vector<Drawable> list;
-		const int desk_h = std::max(3, tw / 6);
-		for (const Desk &d : desks) list.push_back({d.i + d.j + 1.0f, [&iso, d, desk_h] { DrawOfficeBox(iso, d.i, d.j, 1.4f, 0.6f, desk_h, Colours::Brown); }});
-		for (const Seat &s : people) list.push_back({s.i + s.j, [&iso, s] { DrawOfficePerson(iso, s.i, s.j, s.colour); }});
-		if (board_room && c != nullptr) {
-			const Colours cc = c->colour;
-			list.push_back({2.0f * n, [&iso, n, br, wall, cc] { DrawOfficeBox(iso, n - br + 0.2f, n - br + 0.2f, br - 0.4f, br - 0.4f, wall * 2 / 3, cc); }});
-		}
-		std::ranges::sort(list, {}, &Drawable::depth);
-		for (const Drawable &dr : list) dr.draw();
-
-		if (people.empty()) {
-			DrawString(r.left, r.right, r.bottom - margin - GetCharacterHeight(FontSize::Normal), STR_OFFICE_EMPTY, TextColour::White, AlignmentH::Centre);
-		}
+		y += line / 2;
+		DrawStringMultiLine(ir.left, ir.right, y, ir.bottom, STR_OFFICE_TABLE_NOTE, TextColour::Black);
 	}
 
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override

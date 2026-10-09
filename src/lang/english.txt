@@ -4021,7 +4021,16 @@ STR_OFFICE_LEVEL_GARAGE                                         :Garage
 STR_OFFICE_LEVEL_LOFT                                           :Loft
 STR_OFFICE_LEVEL_FLOOR                                          :Office floor
 STR_OFFICE_SUMMARY                                              :{BLACK}{STRING} · {NUM} of {NUM} desks used · Rent {CURRENCY_LONG} per month
-STR_OFFICE_EMPTY                                                :Empty desks. Hire your team from the Team window
+STR_OFFICE_COL_OFFICE                                           :Office
+STR_OFFICE_COL_DESKS                                            :Desks
+STR_OFFICE_COL_RENT                                             :Rent/month
+STR_OFFICE_COL_MOVE                                             :Move cost
+STR_OFFICE_COL_PER_DESK                                         :Rent per desk
+STR_OFFICE_HERE                                                 :you are here
+STR_OFFICE_OUTGROWN                                             :outgrown
+STR_OFFICE_FITS                                                 :your team fills {NUM} of {NUM} desks
+STR_OFFICE_TOO_SMALL                                            :{RED}too small: {NUM} desks for your team
+STR_OFFICE_TABLE_NOTE                                           :Each step up costs more per desk, so stay small while you can. Move when the desks run out: hiring stops at a full office
 STR_OFFICE_UPGRADE                                              :{BLACK}Move to {STRING} ({CURRENCY_SHORT})
 STR_OFFICE_UPGRADE_MAX                                          :{BLACK}Largest office
 STR_OFFICE_UPGRADE_TOOLTIP                                      :{BLACK}Move to a bigger office with more desks. Rent goes up
