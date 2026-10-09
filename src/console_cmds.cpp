@@ -912,21 +912,38 @@ static bool ConRoadmap(std::span<std::string_view> argv)
 	return true;
 }
 
-/** Founder Mode: add a feature to the backlog. @copydoc IConsoleCmdProc */
-static bool ConFeature(std::span<std::string_view> argv)
+/** Founder Mode: list the work catalog. @copydoc IConsoleCmdProc */
+static bool ConCatalog(std::span<std::string_view> argv)
 {
-	static const std::string_view names[] = {"core", "mobile", "payments", "analytics", "integrations", "security"};
-	if (argv.size() != 2) {
-		IConsolePrint(CC_HELP, "Add a feature to your backlog. Usage: 'feature <core|mobile|payments|analytics|integrations|security>'.");
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "List the work catalog with ids and whether you can plan each item. Usage: 'catalog'.");
 		return true;
 	}
-	for (uint i = 0; i < std::size(names); i++) {
-		if (StrEqualsIgnoreCase(argv[1], names[i])) {
-			Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<FeatureCategory>(i));
-			return true;
+	static const std::string_view tracks[] = {"Engineering", "Business", "Sales"};
+	for (uint i = 0; i < GetWorkItemCount(); i++) {
+		const WorkItemSpec &spec = GetWorkItemSpec(i);
+		switch (GetWorkItemAvailability(_local_company, i)) {
+			case WorkItemAvailability::Planned: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): planned", i, tracks[to_underlying(spec.track)], spec.name, spec.effort); break;
+			case WorkItemAvailability::Available: IConsolePrint(CC_INFO, "{:2} {} - {} ({} pts): available", i, tracks[to_underlying(spec.track)], spec.name, spec.effort); break;
+			case WorkItemAvailability::Locked: IConsolePrint(CC_DEFAULT, "{:2} {} - {} ({} pts): needs {}", i, tracks[to_underlying(spec.track)], spec.name, spec.effort, GetWorkItemPrereqText(_local_company, i)); break;
 		}
 	}
-	IConsolePrint(CC_ERROR, "Unknown category '{}'.", argv[1]);
+	return true;
+}
+
+/** Founder Mode: add a catalog item to the roadmap. @copydoc IConsoleCmdProc */
+static bool ConPlan(std::span<std::string_view> argv)
+{
+	if (argv.size() != 2) {
+		IConsolePrint(CC_HELP, "Add a catalog item to your roadmap. Usage: 'plan <catalog id>'. See 'catalog'.");
+		return true;
+	}
+	auto id = ParseInteger(argv[1]);
+	if (!id.has_value() || *id >= GetWorkItemCount()) {
+		IConsolePrint(CC_ERROR, "Invalid catalog id.");
+		return true;
+	}
+	Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(*id));
 	return true;
 }
 
@@ -934,7 +951,7 @@ static bool ConFeature(std::span<std::string_view> argv)
 static bool ConAssign(std::span<std::string_view> argv)
 {
 	if (argv.size() != 3) {
-		IConsolePrint(CC_HELP, "Put engineers on a feature. Usage: 'assign <feature id> <engineers>'. Feature ids start at 0.");
+		IConsolePrint(CC_HELP, "Put people on a roadmap item. Usage: 'assign <roadmap id> <people>'. Roadmap ids start at 0 in the order items were planned.");
 		return true;
 	}
 	auto id = ParseInteger(argv[1]);
@@ -3213,7 +3230,8 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("office",                  ConOffice);
 	IConsole::CmdRegister("upgrade_office",          ConUpgradeOffice);
 	IConsole::CmdRegister("roadmap",                 ConRoadmap);
-	IConsole::CmdRegister("feature",                 ConFeature);
+	IConsole::CmdRegister("catalog",                 ConCatalog);
+	IConsole::CmdRegister("plan",                    ConPlan);
 	IConsole::CmdRegister("assign",                  ConAssign);
 	IConsole::CmdRegister("ship",                    ConShip);
 	IConsole::CmdRegister("payroll",                 ConPayroll);

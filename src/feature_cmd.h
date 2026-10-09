@@ -13,7 +13,7 @@
 #include "command_type.h"
 #include "feature_type.h"
 
-CommandCost CmdCreateFeature(DoCommandFlags flags, FeatureCategory category);
+CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec);
 CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t engineers);
 CommandCost CmdShipFeature(DoCommandFlags flags, FeatureID feature);
 

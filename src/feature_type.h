@@ -22,8 +22,26 @@ enum class FeatureCategory : uint8_t {
 	Analytics, ///< Reports and insights.
 	Integrations, ///< Connections to other tools.
 	Security, ///< Security and compliance.
+	Infrastructure, ///< Deployments and operations tooling.
+	End, ///< End marker; also "no category" for business and sales work.
+};
+
+/** Which part of the company does a piece of work, and which role staffs it. */
+enum class WorkTrack : uint8_t {
+	Engineering, ///< Features and deployments; staffed by engineers.
+	Business, ///< Company setup, legal and fundraising; staffed by operations.
+	Sales, ///< Go-to-market; staffed by sales.
 	End, ///< End marker.
 };
+
+/** Whether a company can plan a catalog item. */
+enum class WorkItemAvailability : uint8_t {
+	Locked, ///< Prerequisites not shipped yet.
+	Available, ///< Can be added to the roadmap.
+	Planned, ///< Already on the roadmap (or shipped).
+};
+
+static constexpr uint8_t INVALID_WORK_ITEM = 0xFF; ///< No catalog item / no prerequisite.
 
 /** Where a feature is on the roadmap. */
 enum class FeatureState : uint8_t {

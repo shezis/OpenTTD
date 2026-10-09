@@ -5,7 +5,7 @@
  * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <https://www.gnu.org/licenses/old-licenses/gpl-2.0>.
  */
 
-/** @file feature.cpp Founder Mode product features: planning, building and shipping. */
+/** @file feature.cpp Founder Mode work: a sequential catalog of engineering, business and sales items. */
 
 #include "stdafx.h"
 #include "feature_base.h"
@@ -28,40 +28,118 @@
 FeaturePool _feature_pool("Feature");
 INSTANTIATE_POOL_METHODS(Feature)
 
-/** Example feature names per category, indexed by #FeatureCategory. */
-static const std::array<std::array<std::string_view, 4>, to_underlying(FeatureCategory::End)> _feature_names = {{
-	{ "Onboarding v2", "Search", "Dark mode", "Team workspaces" },
-	{ "iOS app", "Android app", "Offline mode", "Push notifications" },
-	{ "Subscriptions", "Invoices", "Multi-currency", "Usage billing" },
-	{ "Dashboards", "CSV export", "Cohort reports", "Forecasting" },
-	{ "Slack integration", "Public API", "Webhooks", "Calendar sync" },
-	{ "Single sign-on", "Audit log", "Two-factor login", "Data encryption" },
-}};
+static constexpr uint8_t NONE = INVALID_WORK_ITEM;
 
-/** Base effort in points per category, indexed by #FeatureCategory. */
-static const uint16_t _feature_base_effort[] = { 24, 40, 32, 20, 28, 36 };
-static_assert(std::size(_feature_base_effort) == to_underlying(FeatureCategory::End));
-
-std::string Feature::GetName() const
-{
-	return std::string(_feature_names[to_underlying(this->category)][this->name_index % 4]);
-}
-
-/** Average skill and morale of a company's engineers. */
-struct EngineerStats {
-	uint count = 0; ///< Number of engineers.
-	uint skill = 0; ///< Average skill.
-	uint morale = 0; ///< Average morale.
-	uint designers = 0; ///< Number of designers.
+/**
+ * The work catalog. Order matters: indices are saved in savegames and used as prerequisites,
+ * so only ever append new items.
+ */
+static const WorkItemSpec _work_items[] = {
+	/* Engineering: features and deployments. */
+	/*  0 */ { WorkTrack::Engineering, FeatureCategory::Core,           20, "MVP prototype",             { NONE, NONE, NONE } },
+	/*  1 */ { WorkTrack::Engineering, FeatureCategory::Core,           16, "User accounts",             {    0, NONE, NONE } },
+	/*  2 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 12, "First cloud deployment",    {    0, NONE, NONE } },
+	/*  3 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 14, "CI/CD pipeline",            {    2, NONE, NONE } },
+	/*  4 */ { WorkTrack::Engineering, FeatureCategory::Core,           18, "Onboarding flow",           {    1, NONE, NONE } },
+	/*  5 */ { WorkTrack::Engineering, FeatureCategory::Payments,       30, "Payments and billing",      {    1, NONE, NONE } },
+	/*  6 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 16, "Monitoring and alerts",     {    3, NONE, NONE } },
+	/*  7 */ { WorkTrack::Engineering, FeatureCategory::Mobile,         40, "Mobile app",                {    4, NONE, NONE } },
+	/*  8 */ { WorkTrack::Engineering, FeatureCategory::Integrations,   28, "Public API",                {    1,    3, NONE } },
+	/*  9 */ { WorkTrack::Engineering, FeatureCategory::Analytics,      24, "Analytics dashboards",      {    5, NONE, NONE } },
+	/* 10 */ { WorkTrack::Engineering, FeatureCategory::Security,       26, "Single sign-on",            {    1,    6, NONE } },
+	/* 11 */ { WorkTrack::Engineering, FeatureCategory::Infrastructure, 36, "Multi-region deployment",   {    6, NONE, NONE } },
+	/* 12 */ { WorkTrack::Engineering, FeatureCategory::Security,       30, "Audit log and compliance",  {   10, NONE, NONE } },
+	/* Business: company setup, legal, fundraising. */
+	/* 13 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Incorporate the company",   { NONE, NONE, NONE } },
+	/* 14 */ { WorkTrack::Business,    FeatureCategory::End,             6, "Bank account and bookkeeping", { 13, NONE, NONE } },
+	/* 15 */ { WorkTrack::Business,    FeatureCategory::End,             8, "Terms of service and privacy", { 13, NONE, NONE } },
+	/* 16 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Payroll and HR setup",      {   14, NONE, NONE } },
+	/* 17 */ { WorkTrack::Business,    FeatureCategory::End,            10, "Pitch deck",                {   13, NONE, NONE } },
+	/* 18 */ { WorkTrack::Business,    FeatureCategory::End,            14, "Investor data room",        {   17,   14, NONE } },
+	/* 19 */ { WorkTrack::Business,    FeatureCategory::End,            12, "Hiring pipeline",           {   16, NONE, NONE } },
+	/* 20 */ { WorkTrack::Business,    FeatureCategory::End,            30, "SOC 2 readiness",           {   15,    6, NONE } },
+	/* Sales: go-to-market. */
+	/* 21 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "Pricing page",              {    0, NONE, NONE } },
+	/* 22 */ { WorkTrack::Sales,       FeatureCategory::End,            10, "Founder-led sales",         {   21, NONE, NONE } },
+	/* 23 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "CRM setup",                 {   22, NONE, NONE } },
+	/* 24 */ { WorkTrack::Sales,       FeatureCategory::End,            14, "Sales playbook",            {   23, NONE, NONE } },
+	/* 25 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Self-serve checkout",       {   21,    5, NONE } },
+	/* 26 */ { WorkTrack::Sales,       FeatureCategory::End,            16, "Customer success team",     {   24, NONE, NONE } },
+	/* 27 */ { WorkTrack::Sales,       FeatureCategory::End,            18, "Partner program",           {   24,    8, NONE } },
+	/* 28 */ { WorkTrack::Sales,       FeatureCategory::End,            24, "Enterprise contracts",      {   24,   15,   10 } },
 };
 
-static EngineerStats GetEngineerStats(CompanyID company)
+/** Role that staffs each track, indexed by #WorkTrack. */
+static const EmployeeRole _track_roles[] = { EmployeeRole::Engineer, EmployeeRole::Operations, EmployeeRole::Sales };
+static_assert(std::size(_track_roles) == to_underlying(WorkTrack::End));
+
+uint GetWorkItemCount() { return static_cast<uint>(std::size(_work_items)); }
+
+const WorkItemSpec &GetWorkItemSpec(uint8_t spec)
 {
-	EngineerStats s;
+	return _work_items[std::min<uint>(spec, GetWorkItemCount() - 1)];
+}
+
+std::string Feature::GetName() const { return std::string(GetWorkItemSpec(this->spec).name); }
+WorkTrack Feature::GetTrack() const { return GetWorkItemSpec(this->spec).track; }
+
+/** Find a company's roadmap entry for a catalog item, if any. */
+static const Feature *FindWorkItem(CompanyID company, uint8_t spec)
+{
+	for (const Feature *f : Feature::Iterate()) {
+		if (f->company == company && f->spec == spec) return f;
+	}
+	return nullptr;
+}
+
+bool HasShippedWorkItem(CompanyID company, uint8_t spec)
+{
+	const Feature *f = FindWorkItem(company, spec);
+	return f != nullptr && f->state == FeatureState::Shipped;
+}
+
+WorkItemAvailability GetWorkItemAvailability(CompanyID company, uint8_t spec)
+{
+	if (FindWorkItem(company, spec) != nullptr) return WorkItemAvailability::Planned;
+	for (uint8_t p : GetWorkItemSpec(spec).prereqs) {
+		if (p != NONE && !HasShippedWorkItem(company, p)) return WorkItemAvailability::Locked;
+	}
+	return WorkItemAvailability::Available;
+}
+
+/**
+ * Names of the prerequisites that are not shipped yet, joined by commas.
+ * @param company The company.
+ * @param spec Catalog item.
+ * @return Missing prerequisite names, empty when none.
+ */
+std::string GetWorkItemPrereqText(CompanyID company, uint8_t spec)
+{
+	std::string out;
+	for (uint8_t p : GetWorkItemSpec(spec).prereqs) {
+		if (p == NONE || HasShippedWorkItem(company, p)) continue;
+		if (!out.empty()) out += ", ";
+		out += GetWorkItemSpec(p).name;
+	}
+	return out;
+}
+
+/** Average skill and morale of the people staffing a track. */
+struct TrackStaffStats {
+	uint count = 0; ///< People in the track's role.
+	uint skill = 0; ///< Their average skill.
+	uint morale = 0; ///< Their average morale.
+	uint designers = 0; ///< Designers in the company (raise engineering quality).
+};
+
+static TrackStaffStats GetTrackStaffStats(CompanyID company, WorkTrack track)
+{
+	const EmployeeRole role = _track_roles[to_underlying(track)];
+	TrackStaffStats s;
 	for (const Employee *e : Employee::Iterate()) {
 		if (e->company != company) continue;
 		if (e->role == EmployeeRole::Designer) s.designers++;
-		if (e->role != EmployeeRole::Engineer) continue;
+		if (e->role != role) continue;
 		s.count++;
 		s.skill += e->skill;
 		s.morale += e->morale;
@@ -73,44 +151,40 @@ static EngineerStats GetEngineerStats(CompanyID company)
 	return s;
 }
 
-/**
- * Count engineers assigned to unshipped features.
- * @param company The company.
- * @return Assigned engineers.
- */
-uint CountAssignedEngineers(CompanyID company)
+uint CountTrackStaff(CompanyID company, WorkTrack track)
+{
+	return GetTrackStaffStats(company, track).count;
+}
+
+uint CountAssignedStaff(CompanyID company, WorkTrack track)
 {
 	uint n = 0;
 	for (const Feature *f : Feature::Iterate()) {
-		if (f->company == company && f->state != FeatureState::Shipped) n += f->assigned;
+		if (f->company == company && f->state != FeatureState::Shipped && f->GetTrack() == track) n += f->assigned;
 	}
 	return n;
 }
 
 /**
- * Daily progress, in hundredths of a point, that one engineer of average skill and morale adds.
+ * Daily progress, in hundredths of a point, of one person of average skill and morale.
  * Skill 50 at morale 75 gives half a point per day.
  */
-static uint GetProgressPerEngineer(const EngineerStats &s)
+static uint GetProgressPerPerson(const TrackStaffStats &s)
 {
 	return s.skill * s.morale / 75;
 }
 
-/**
- * Total daily progress of a company, in hundredths of a point.
- * @param company The company.
- * @return Daily velocity.
- */
-uint GetDailyVelocity(CompanyID company)
+uint GetDailyVelocity(CompanyID company, WorkTrack track)
 {
-	return CountAssignedEngineers(company) * GetProgressPerEngineer(GetEngineerStats(company));
+	return CountAssignedStaff(company, track) * GetProgressPerPerson(GetTrackStaffStats(company, track));
 }
 
-/** Ship a feature: set quality and bugs from how complete it is and who built it. */
-static void ShipFeature(Feature *f, const EngineerStats &s)
+/** Ship a work item: quality and bugs depend on how complete it is and who built it. */
+static void ShipFeature(Feature *f, const TrackStaffStats &s)
 {
 	uint pct = f->GetProgressPercent();
-	uint base = 40 + std::min<uint>(s.designers, 3) * 10 + s.skill * 3 / 10;
+	uint design_bonus = f->GetTrack() == WorkTrack::Engineering ? std::min<uint>(s.designers, 3) * 10 : 20;
+	uint base = 40 + design_bonus + s.skill * 3 / 10;
 	f->quality = static_cast<uint8_t>(Clamp<uint>(base * pct / 100, 1, 100));
 	f->bugs = static_cast<uint8_t>((100 - pct) / 8 + RandomRange(3));
 	f->state = FeatureState::Shipped;
@@ -119,18 +193,20 @@ static void ShipFeature(Feature *f, const EngineerStats &s)
 	InvalidateWindowData(WindowClass::Roadmap, f->company);
 }
 
-/** Every economy day, engineers make progress; finished features ship. */
+/** Every economy day, staff make progress on their track's work; finished items ship. */
 static const IntervalTimer<TimerGameEconomy> _economy_features_daily({TimerGameEconomy::Trigger::Day, TimerGameEconomy::Priority::Founder}, [](auto)
 {
 	if (!_settings_game.game_creation.founder_mode) return;
 
 	for (const Company *c : Company::Iterate()) {
-		EngineerStats s = GetEngineerStats(c->index);
-		uint per_engineer = GetProgressPerEngineer(s);
+		std::array<TrackStaffStats, to_underlying(WorkTrack::End)> stats;
+		for (uint t = 0; t < stats.size(); t++) stats[t] = GetTrackStaffStats(c->index, static_cast<WorkTrack>(t));
+
 		bool changed = false;
 		for (Feature *f : Feature::Iterate()) {
 			if (f->company != c->index || f->state != FeatureState::InProgress || f->assigned == 0) continue;
-			f->progress += f->assigned * per_engineer;
+			const TrackStaffStats &s = stats[to_underlying(f->GetTrack())];
+			f->progress += f->assigned * GetProgressPerPerson(s);
 			changed = true;
 			if (f->progress >= static_cast<uint32_t>(f->effort) * 100) ShipFeature(f, s);
 		}
@@ -139,7 +215,7 @@ static const IntervalTimer<TimerGameEconomy> _economy_features_daily({TimerGameE
 });
 
 /**
- * Move or remove features when a company is taken over or closed.
+ * Move or remove work items when a company is taken over or closed.
  * @param old_owner The company that is going away.
  * @param new_owner The company taking over, or #INVALID_OWNER when the company closes.
  */
@@ -147,7 +223,8 @@ void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner)
 {
 	for (Feature *f : Feature::Iterate()) {
 		if (f->company != old_owner) continue;
-		if (new_owner == INVALID_OWNER) {
+		/* The buyer keeps its own copy of an item it already has. */
+		if (new_owner == INVALID_OWNER || FindWorkItem(new_owner, f->spec) != nullptr) {
 			delete f;
 		} else {
 			f->company = new_owner;
@@ -159,16 +236,22 @@ void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner)
 }
 
 /**
- * Add a feature to the backlog.
+ * Add a catalog item to the roadmap. Its prerequisites must have shipped.
  * @param flags Type of operation.
- * @param category Kind of feature.
+ * @param spec Catalog item.
  * @return The cost of this operation or an error.
  */
-CommandCost CmdCreateFeature(DoCommandFlags flags, FeatureCategory category)
+CommandCost CmdCreateFeature(DoCommandFlags flags, uint8_t spec)
 {
 	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
-	if (category >= FeatureCategory::End) return CMD_ERROR;
+	if (spec >= GetWorkItemCount()) return CMD_ERROR;
 	if (!Company::IsValidID(_current_company)) return CMD_ERROR;
+
+	switch (GetWorkItemAvailability(_current_company, spec)) {
+		case WorkItemAvailability::Planned: return CommandCost(STR_ERROR_WORK_ITEM_PLANNED);
+		case WorkItemAvailability::Locked: return CommandCost(STR_ERROR_WORK_ITEM_LOCKED);
+		case WorkItemAvailability::Available: break;
+	}
 
 	uint open = 0;
 	for (const Feature *f : Feature::Iterate()) {
@@ -177,10 +260,8 @@ CommandCost CmdCreateFeature(DoCommandFlags flags, FeatureCategory category)
 	if (!Feature::CanAllocateItem() || open >= MAX_OPEN_FEATURES_PER_COMPANY) return CommandCost(STR_ERROR_ROADMAP_FULL);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
-		Feature *f = Feature::Create(_current_company, category);
-		uint16_t base = _feature_base_effort[to_underlying(category)];
-		f->name_index = RandomRange(4);
-		f->effort = base + RandomRange(base / 2 + 1);
+		Feature *f = Feature::Create(_current_company, spec);
+		f->effort = GetWorkItemSpec(spec).effort;
 		InvalidateWindowData(WindowClass::Roadmap, _current_company);
 	}
 
@@ -188,24 +269,25 @@ CommandCost CmdCreateFeature(DoCommandFlags flags, FeatureCategory category)
 }
 
 /**
- * Set how many engineers work on a feature.
+ * Set how many people work on an item. They come from the item's track role.
  * @param flags Type of operation.
- * @param feature The feature.
- * @param engineers Number of engineers.
+ * @param feature The item.
+ * @param people Number of people.
  * @return The cost of this operation or an error.
  */
-CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t engineers)
+CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t people)
 {
 	Feature *f = Feature::GetIfValid(feature);
 	if (f == nullptr || f->company != _current_company) return CMD_ERROR;
 	if (f->state == FeatureState::Shipped) return CommandCost(STR_ERROR_FEATURE_SHIPPED);
 
-	uint others = CountAssignedEngineers(_current_company) - f->assigned;
-	if (others + engineers > GetEngineerStats(_current_company).count) return CommandCost(STR_ERROR_NO_FREE_ENGINEER);
+	WorkTrack track = f->GetTrack();
+	uint others = CountAssignedStaff(_current_company, track) - f->assigned;
+	if (others + people > CountTrackStaff(_current_company, track)) return CommandCost(STR_ERROR_NO_FREE_STAFF);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
-		f->assigned = engineers;
-		if (engineers > 0 && f->state == FeatureState::Backlog) f->state = FeatureState::InProgress;
+		f->assigned = people;
+		if (people > 0 && f->state == FeatureState::Backlog) f->state = FeatureState::InProgress;
 		InvalidateWindowData(WindowClass::Roadmap, _current_company);
 	}
 
@@ -213,9 +295,9 @@ CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t en
 }
 
 /**
- * Ship a feature before it is finished. Unfinished work lowers quality and adds bugs.
+ * Ship an item before it is finished. Unfinished work lowers quality and adds bugs.
  * @param flags Type of operation.
- * @param feature The feature.
+ * @param feature The item.
  * @return The cost of this operation or an error.
  */
 CommandCost CmdShipFeature(DoCommandFlags flags, FeatureID feature)
@@ -225,7 +307,7 @@ CommandCost CmdShipFeature(DoCommandFlags flags, FeatureID feature)
 	if (f->state == FeatureState::Shipped) return CommandCost(STR_ERROR_FEATURE_SHIPPED);
 	if (f->GetProgressPercent() < SHIP_EARLY_MIN_PERCENT) return CommandCost(STR_ERROR_FEATURE_TOO_EARLY);
 
-	if (flags.Test(DoCommandFlag::Execute)) ShipFeature(f, GetEngineerStats(_current_company));
+	if (flags.Test(DoCommandFlag::Execute)) ShipFeature(f, GetTrackStaffStats(_current_company, f->GetTrack()));
 
 	return CommandCost();
 }

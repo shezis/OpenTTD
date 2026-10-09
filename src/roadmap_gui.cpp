@@ -11,7 +11,6 @@
 #include "roadmap_gui.h"
 #include "feature_base.h"
 #include "feature_cmd.h"
-#include "employee_base.h"
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
@@ -30,16 +29,13 @@
 
 #include "safeguards.h"
 
-/** Name of each category, indexed by #FeatureCategory. */
-static const StringID _feature_category_names[] = {
-	STR_FEATURE_CATEGORY_CORE,
-	STR_FEATURE_CATEGORY_MOBILE,
-	STR_FEATURE_CATEGORY_PAYMENTS,
-	STR_FEATURE_CATEGORY_ANALYTICS,
-	STR_FEATURE_CATEGORY_INTEGRATIONS,
-	STR_FEATURE_CATEGORY_SECURITY,
+/** Name of each track, indexed by #WorkTrack. */
+static const StringID _work_track_names[] = {
+	STR_WORK_TRACK_ENGINEERING,
+	STR_WORK_TRACK_BUSINESS,
+	STR_WORK_TRACK_SALES,
 };
-static_assert(std::size(_feature_category_names) == to_underlying(FeatureCategory::End));
+static_assert(std::size(_work_track_names) == to_underlying(WorkTrack::End));
 
 /** Window listing a company's features: in progress first, then backlog, then shipped. */
 struct RoadmapWindow : public Window {
@@ -97,12 +93,10 @@ struct RoadmapWindow : public Window {
 
 			case WID_RM_SUMMARY: {
 				CompanyID company = this->GetCompany();
-				uint engineers = 0;
-				for (const Employee *e : Employee::Iterate()) {
-					if (e->company == company && e->role == EmployeeRole::Engineer) engineers++;
-				}
-				uint v = GetDailyVelocity(company);
-				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_ROADMAP_SUMMARY, CountAssignedEngineers(company), engineers, v / 100, (v % 100) / 10));
+				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_ROADMAP_SUMMARY,
+						CountAssignedStaff(company, WorkTrack::Engineering), CountTrackStaff(company, WorkTrack::Engineering),
+						CountAssignedStaff(company, WorkTrack::Business), CountTrackStaff(company, WorkTrack::Business),
+						CountAssignedStaff(company, WorkTrack::Sales), CountTrackStaff(company, WorkTrack::Sales)));
 				break;
 			}
 		}
@@ -134,7 +128,7 @@ struct RoadmapWindow : public Window {
 				int ty = row.top + (row_h - text_h) / 2;
 
 				DrawString(row.left, row.left + x_cat - 4, ty, f->GetName(), tc);
-				DrawString(row.left + x_cat, row.left + x_bar - 4, ty, _feature_category_names[to_underlying(f->category)], tc);
+				DrawString(row.left + x_cat, row.left + x_bar - 4, ty, _work_track_names[to_underlying(f->GetTrack())], tc);
 
 				/* Progress bar. */
 				int bx0 = row.left + x_bar, bx1 = row.left + x_status - ScaleGUITrad(8);
@@ -177,10 +171,22 @@ struct RoadmapWindow : public Window {
 			}
 
 			case WID_RM_NEW: {
+				CompanyID company = this->GetCompany();
 				DropDownList list;
-				for (uint i = 0; i < std::size(_feature_category_names); i++) {
-					list.push_back(MakeDropDownListStringItem(_feature_category_names[i], i));
+				for (uint i = 0; i < GetWorkItemCount(); i++) {
+					const WorkItemSpec &spec = GetWorkItemSpec(i);
+					StringID track = _work_track_names[to_underlying(spec.track)];
+					switch (GetWorkItemAvailability(company, i)) {
+						case WorkItemAvailability::Planned: break;
+						case WorkItemAvailability::Available:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_ROADMAP_NEW_ITEM, track, spec.name, spec.effort), i));
+							break;
+						case WorkItemAvailability::Locked:
+							list.push_back(MakeDropDownListStringItem(GetString(STR_ROADMAP_NEW_ITEM_LOCKED, track, spec.name, GetWorkItemPrereqText(company, i)), i, true));
+							break;
+					}
 				}
+				if (list.empty()) list.push_back(MakeDropDownListStringItem(STR_ROADMAP_NEW_ALL_PLANNED, -1, true));
 				ShowDropDownList(this, std::move(list), -1, WID_RM_NEW);
 				break;
 			}
@@ -205,8 +211,8 @@ struct RoadmapWindow : public Window {
 
 	void OnDropdownSelect(WidgetID widget, int index, int) override
 	{
-		if (widget != WID_RM_NEW) return;
-		Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<FeatureCategory>(index));
+		if (widget != WID_RM_NEW || index < 0) return;
+		Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index));
 	}
 
 	void OnResize() override
