@@ -31,6 +31,7 @@
 #include "viewport_func.h"
 #include "palette_func.h"
 
+#include "core/backup_type.hpp"
 #include "timer/timer.h"
 #include "timer/timer_window.h"
 
@@ -89,6 +90,45 @@ void ShowFounderTab(FounderTab tab, CompanyID company)
 
 /* --- Getting started: pick the HQ town --- */
 
+/**
+ * Build the local company's HQ on the nearest free spot to a town centre, then show the team.
+ * @param town Town to open the HQ in.
+ * @return Whether the HQ was built.
+ */
+bool OpenFounderHQ(TownID town)
+{
+	const Town *t = Town::GetIfValid(town);
+	if (t == nullptr || !Company::IsValidID(_local_company)) return false;
+	for (TileIndex tile : SpiralTileSequence(t->xy, 20)) {
+		/* Test as the local company, so tiles it may not build on are skipped. */
+		bool ok;
+		{
+			AutoRestoreBackup cur_company(_current_company, _local_company);
+			ok = Command<Commands::BuildObject>::Do(DoCommandFlags{DoCommandFlag::Auto, DoCommandFlag::NoWater}, tile, OBJECT_HQ, 0).Succeeded();
+		}
+		if (!ok) continue;
+		if (!Command<Commands::BuildObject>::Post(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS, tile, OBJECT_HQ, 0)) return false;
+		ScrollMainWindowToTile(tile);
+		CloseWindowById(WindowClass::FounderStart, 0);
+		ShowFounderTab(FounderTab::Team, _local_company);
+		return true;
+	}
+	ShowErrorMessage(GetEncodedString(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS), GetEncodedString(STR_FOUNDER_START_NO_SPACE), WarningLevel::Info);
+	return false;
+}
+
+/**
+ * Towns ordered biggest first, as listed in the HQ picker.
+ * @return Towns by population, descending.
+ */
+std::vector<const Town *> GetTownsBySize()
+{
+	std::vector<const Town *> towns;
+	for (const Town *t : Town::Iterate()) towns.push_back(t);
+	std::ranges::sort(towns, std::greater{}, [](const Town *t) { return t->cache.population; });
+	return towns;
+}
+
 /** Docked panel shown at the start of a Founder game until the HQ exists. */
 struct FounderStartWindow : public Window {
 	Scrollbar *vscroll = nullptr; ///< Scrollbar of the town list.
@@ -113,14 +153,7 @@ struct FounderStartWindow : public Window {
 		Window::FindWindowPlacementAndResize(d.width, d.height, allow_resize);
 	}
 
-	/** Towns, biggest first. */
-	static std::vector<const Town *> GetTowns()
-	{
-		std::vector<const Town *> towns;
-		for (const Town *t : Town::Iterate()) towns.push_back(t);
-		std::ranges::sort(towns, std::greater{}, [](const Town *t) { return t->cache.population; });
-		return towns;
-	}
+	static std::vector<const Town *> GetTowns() { return GetTownsBySize(); }
 
 	void UpdateWidgetSize(WidgetID widget, Dimension &size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension &fill, [[maybe_unused]] Dimension &resize) override
 	{
@@ -185,23 +218,9 @@ struct FounderStartWindow : public Window {
 				break;
 			}
 
-			case WID_FS_BUILD: {
-				const Town *t = Town::GetIfValid(this->selected);
-				if (t == nullptr) break;
-				/* Nearest spot around the town centre where a 2x2 HQ fits. */
-				for (TileIndex tile : SpiralTileSequence(t->xy, 20)) {
-					if (Command<Commands::BuildObject>::Do(DoCommandFlags{}, tile, OBJECT_HQ, 0).Failed()) continue;
-					if (Command<Commands::BuildObject>::Post(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS, tile, OBJECT_HQ, 0)) {
-						ScrollMainWindowToTile(tile);
-						CompanyID company = _local_company;
-						this->Close();
-						ShowFounderTab(FounderTab::Team, company);
-					}
-					return;
-				}
-				ShowErrorMessage(GetEncodedString(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS), GetEncodedString(STR_FOUNDER_START_NO_SPACE), WarningLevel::Info);
+			case WID_FS_BUILD:
+				if (Town::IsValidID(this->selected)) OpenFounderHQ(this->selected);
 				break;
-			}
 		}
 	}
 
@@ -270,16 +289,23 @@ struct FounderSetupWindow : public Window {
 		this->InitNested(window_number);
 		this->DisableWidget(WID_FSU_SC_GOLIATH);
 		this->DisableWidget(WID_FSU_SC_TUTORIAL);
-		this->LowerWidget(WID_FSU_SC_SANDBOX);
+		this->MarkSelected(WID_FSU_SC_SANDBOX, true);
 		this->UpdateBackground();
+	}
+
+	/** Show a choice as selected: lowered and tinted, since grey bevels alone are hard to see. */
+	void MarkSelected(WidgetID widget, bool selected)
+	{
+		this->SetWidgetLoweredState(widget, selected);
+		this->GetWidget<NWidgetCore>(widget)->colour = selected ? Colours::LightBlue : FOUNDER_COLOUR;
 	}
 
 	void UpdateBackground()
 	{
 		uint8_t bg = _settings_newgame.game_creation.founder_background;
-		this->SetWidgetLoweredState(WID_FSU_BG_ENGINEER, bg == 0);
-		this->SetWidgetLoweredState(WID_FSU_BG_SELLER, bg == 1);
-		this->SetWidgetLoweredState(WID_FSU_BG_OPERATOR, bg == 2);
+		this->MarkSelected(WID_FSU_BG_ENGINEER, bg == 0);
+		this->MarkSelected(WID_FSU_BG_SELLER, bg == 1);
+		this->MarkSelected(WID_FSU_BG_OPERATOR, bg == 2);
 		this->SetDirty();
 	}
 

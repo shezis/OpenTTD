@@ -13,6 +13,7 @@
 #include "company_type.h"
 #include "gfx_type.h"
 #include "window_type.h"
+#include "town_type.h"
 
 /** Panel colour of Founder Mode windows: OpenTTD widgets, recoloured from the classic brown. */
 static constexpr Colours FOUNDER_COLOUR = Colours::Grey;
@@ -29,6 +30,8 @@ Dimension GetFounderPanelSize();
 void ShowFounderTab(FounderTab tab, CompanyID company);
 void CloseOtherFounderTabs(WindowClass keep, CompanyID company);
 bool ShowFounderStartIfNeeded();
+bool OpenFounderHQ(TownID town);
+std::vector<const struct Town *> GetTownsBySize();
 void ShowFounderSetupWindow();
 
 #endif /* FOUNDER_GUI_H */

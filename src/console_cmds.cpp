@@ -62,6 +62,8 @@
 #include "feature_base.h"
 #include "feature_cmd.h"
 #include "roadmap_gui.h"
+#include "founder_gui.h"
+#include "town.h"
 
 #include "safeguards.h"
 
@@ -977,6 +979,34 @@ static bool ConShip(std::span<std::string_view> argv)
 		return true;
 	}
 	Command<Commands::ShipFeature>::Post(STR_ERROR_CAN_T_SHIP_FEATURE, FeatureID(*id));
+	return true;
+}
+
+/** Founder Mode: open the HQ in the nth biggest town. @copydoc IConsoleCmdProc */
+static bool ConFounderHQ(std::span<std::string_view> argv)
+{
+	if (argv.size() != 2) {
+		IConsolePrint(CC_HELP, "Open your HQ in a town, by size rank as in the Getting started list. Usage: 'hq <1..n>'.");
+		return true;
+	}
+	auto n = ParseInteger(argv[1]);
+	auto towns = GetTownsBySize();
+	if (!n.has_value() || *n < 1 || *n > towns.size()) {
+		IConsolePrint(CC_ERROR, "Pick a number from 1 to {}.", towns.size());
+		return true;
+	}
+	OpenFounderHQ(towns[*n - 1]->index);
+	return true;
+}
+
+/** Founder Mode: open the setup window. @copydoc IConsoleCmdProc */
+static bool ConFounderSetup(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Open the Found your startup window. Usage: 'founder_setup'.");
+		return true;
+	}
+	ShowFounderSetupWindow();
 	return true;
 }
 
@@ -3230,6 +3260,8 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("office",                  ConOffice);
 	IConsole::CmdRegister("upgrade_office",          ConUpgradeOffice);
 	IConsole::CmdRegister("roadmap",                 ConRoadmap);
+	IConsole::CmdRegister("hq",                      ConFounderHQ);
+	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);
 	IConsole::CmdRegister("plan",                    ConPlan);
 	IConsole::CmdRegister("assign",                  ConAssign);
