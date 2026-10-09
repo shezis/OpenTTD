@@ -3848,6 +3848,36 @@ STR_FOUNDER_HUB_MONEY                                           :{BLACK}Money
 STR_FOUNDER_HUB_MONEY_TOOLTIP                                   :{BLACK}Cash, costs and loans
 STR_FOUNDER_HUB_RIVALS                                          :{BLACK}Rivals
 STR_FOUNDER_HUB_RIVALS_TOOLTIP                                  :{BLACK}How your startup ranks against rivals
+STR_CONFIG_SETTING_FOUNDER_BACKGROUND                           :Founder background: {STRING2}
+STR_CONFIG_SETTING_FOUNDER_BACKGROUND_HELPTEXT                  :Sets the starting team in Founder Mode. Applies to every company, rivals included
+STR_FOUNDER_BACKGROUND_ENGINEER                                 :Engineer
+STR_FOUNDER_BACKGROUND_SELLER                                   :Seller
+STR_FOUNDER_BACKGROUND_OPERATOR                                 :Operator
+STR_FOUNDER_SETUP_CAPTION                                       :{WHITE}Found your startup
+STR_FOUNDER_SETUP_BACKGROUND                                    :{BLACK}Founder background
+STR_FOUNDER_SETUP_BG_ENGINEER                                   :{BLACK}Engineer · start with two engineers
+STR_FOUNDER_SETUP_BG_SELLER                                     :{BLACK}Seller · start with a sales rep and an engineer
+STR_FOUNDER_SETUP_BG_OPERATOR                                   :{BLACK}Operator · start incorporated, with an operations hire
+STR_FOUNDER_SETUP_BG_TOOLTIP                                    :{BLACK}Your background sets your starting team. Rivals start the same way
+STR_FOUNDER_SETUP_SCENARIO                                      :{BLACK}Scenario
+STR_FOUNDER_SETUP_SC_GOLIATH                                    :{BLACK}David vs Goliath · recommended · arrives with AI rivals
+STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP                            :{BLACK}Disrupt an AI incumbent that owns most of the city. Available once AI rivals are built
+STR_FOUNDER_SETUP_SC_SANDBOX                                    :{BLACK}Sandbox · build at your own pace
+STR_FOUNDER_SETUP_SC_SANDBOX_TOOLTIP                            :{BLACK}No goals or rivals; try out the company systems
+STR_FOUNDER_SETUP_SC_TUTORIAL                                   :{BLACK}Tutorial · coming later
+STR_FOUNDER_SETUP_SC_TUTORIAL_TOOLTIP                           :{BLACK}A guided first year. Not built yet
+STR_FOUNDER_SETUP_MAP                                           :{BLACK}Map settings
+STR_FOUNDER_SETUP_MAP_TOOLTIP                                   :{BLACK}Choose map size, terrain and towns before founding
+STR_FOUNDER_SETUP_START                                         :{WHITE}Found company
+STR_FOUNDER_SETUP_START_TOOLTIP                                 :{BLACK}Generate a city and start your startup
+STR_FOUNDER_START_CAPTION                                       :{WHITE}Getting started
+STR_FOUNDER_START_INTRO                                         :{BLACK}Pick the town for your HQ. It opens as a garage with 6 desks. Bigger towns have more customers to win
+STR_FOUNDER_START_TOWN                                          :{TOWN} · {NUM} people
+STR_FOUNDER_START_LIST_TOOLTIP                                  :{BLACK}Towns, biggest first. Click one to look at it
+STR_FOUNDER_START_PICK                                          :{BLACK}Pick a town
+STR_FOUNDER_START_BUILD                                         :{BLACK}Open HQ in {TOWN}
+STR_FOUNDER_START_BUILD_TOOLTIP                                 :{BLACK}Build your HQ on the nearest free spot to the town centre
+STR_FOUNDER_START_NO_SPACE                                      :{WHITE}... no free space near the town centre. Try another town
 STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
 STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
 STR_FOUNDER_TAB_WORK                                            :{BLACK}Work

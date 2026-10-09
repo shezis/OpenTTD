@@ -58,5 +58,8 @@ uint CountAssignedStaff(CompanyID company, WorkTrack track);
 uint CountTrackStaff(CompanyID company, WorkTrack track);
 uint GetDailyVelocity(CompanyID company, WorkTrack track);
 void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner);
+void GrantShippedWorkItem(CompanyID company, uint8_t spec);
+
+static constexpr uint8_t FOUNDER_OPERATOR_HEAD_START = 13; ///< "Incorporate the company", already done for operator founders.
 
 #endif /* FEATURE_BASE_H */

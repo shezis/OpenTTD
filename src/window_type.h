@@ -761,6 +761,18 @@ enum class WindowClass : uint16_t {
 	 */
 	Roadmap,
 
+	/**
+	 * Founder Mode "pick your HQ town" panel; %Window numbers:
+	 *   - 0 = #FounderStartWidgets
+	 */
+	FounderStart,
+
+	/**
+	 * Founder Mode setup before a new game; %Window numbers:
+	 *   - 0 = #FounderSetupWidgets
+	 */
+	FounderSetup,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 

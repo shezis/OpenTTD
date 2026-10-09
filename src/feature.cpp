@@ -215,6 +215,21 @@ static const IntervalTimer<TimerGameEconomy> _economy_features_daily({TimerGameE
 });
 
 /**
+ * Mark a catalog item as already done for a company, e.g. as a starting bonus.
+ * @param company The company.
+ * @param spec Catalog item.
+ */
+void GrantShippedWorkItem(CompanyID company, uint8_t spec)
+{
+	if (spec >= GetWorkItemCount() || FindWorkItem(company, spec) != nullptr || !Feature::CanAllocateItem()) return;
+	Feature *f = Feature::Create(company, spec);
+	f->effort = GetWorkItemSpec(spec).effort;
+	f->progress = static_cast<uint32_t>(f->effort) * 100;
+	f->state = FeatureState::Shipped;
+	f->quality = 70;
+}
+
+/**
  * Move or remove work items when a company is taken over or closed.
  * @param old_owner The company that is going away.
  * @param new_owner The company taking over, or #INVALID_OWNER when the company closes.

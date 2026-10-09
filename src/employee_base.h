@@ -39,5 +39,6 @@ uint CountEmployees(CompanyID company);
 Money GetMonthlyPayroll(CompanyID company);
 void PayEmployees();
 void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner);
+void ApplyFounderBackground(CompanyID company);
 
 #endif /* EMPLOYEE_BASE_H */

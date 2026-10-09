@@ -28,5 +28,7 @@ Point GetFounderPanelPosition(int width);
 Dimension GetFounderPanelSize();
 void ShowFounderTab(FounderTab tab, CompanyID company);
 void CloseOtherFounderTabs(WindowClass keep, CompanyID company);
+bool ShowFounderStartIfNeeded();
+void ShowFounderSetupWindow();
 
 #endif /* FOUNDER_GUI_H */

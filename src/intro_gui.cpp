@@ -37,6 +37,8 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 
+#include "founder_gui.h"
+
 #include "safeguards.h"
 
 
@@ -279,6 +281,12 @@ struct SelectGameWindow : public Window {
 	{
 		switch (widget) {
 			case WID_SGI_NEW_STARTUP:
+				if (!_ctrl_pressed) {
+					_is_network_server = false;
+					ShowFounderSetupWindow();
+					break;
+				}
+				[[fallthrough]];
 			case WID_SGI_GENERATE_GAME:
 				_is_network_server = false;
 				_settings_newgame.game_creation.founder_mode = (widget == WID_SGI_NEW_STARTUP);

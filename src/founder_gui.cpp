@@ -16,6 +16,24 @@
 #include "window_func.h"
 #include "window_gui.h"
 #include "zoom_func.h"
+#include "command_func.h"
+#include "company_base.h"
+#include "company_func.h"
+#include "error.h"
+#include "genworld.h"
+#include "gui.h"
+#include "object_cmd.h"
+#include "object_type.h"
+#include "settings_type.h"
+#include "strings_func.h"
+#include "tilearea_spiral.h"
+#include "town.h"
+#include "viewport_func.h"
+#include "palette_func.h"
+
+#include "widgets/founder_widget.h"
+
+#include "table/strings.h"
 
 #include "safeguards.h"
 
@@ -64,4 +82,263 @@ void ShowFounderTab(FounderTab tab, CompanyID company)
 		case FounderTab::Office: ShowOfficeWindow(company); break;
 		case FounderTab::Work: ShowRoadmapWindow(company); break;
 	}
+}
+
+/* --- Getting started: pick the HQ town --- */
+
+/** Docked panel shown at the start of a Founder game until the HQ exists. */
+struct FounderStartWindow : public Window {
+	Scrollbar *vscroll = nullptr; ///< Scrollbar of the town list.
+	TownID selected = TownID::Invalid(); ///< Selected town.
+
+	FounderStartWindow(WindowDesc &desc, WindowNumber window_number) : Window(desc)
+	{
+		this->CreateNestedTree();
+		this->vscroll = this->GetScrollbar(WID_FS_SCROLLBAR);
+		this->FinishInitNested(window_number);
+		this->OnInvalidateData(0);
+	}
+
+	Point OnInitialPosition([[maybe_unused]] int16_t sm_width, [[maybe_unused]] int16_t sm_height, [[maybe_unused]] int window_number) override
+	{
+		return GetFounderPanelPosition(GetFounderPanelSize().width);
+	}
+
+	void FindWindowPlacementAndResize(int, int, bool allow_resize) override
+	{
+		Dimension d = GetFounderPanelSize();
+		Window::FindWindowPlacementAndResize(d.width, d.height, allow_resize);
+	}
+
+	/** Towns, biggest first. */
+	static std::vector<const Town *> GetTowns()
+	{
+		std::vector<const Town *> towns;
+		for (const Town *t : Town::Iterate()) towns.push_back(t);
+		std::ranges::sort(towns, std::greater{}, [](const Town *t) { return t->cache.population; });
+		return towns;
+	}
+
+	void UpdateWidgetSize(WidgetID widget, Dimension &size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension &fill, [[maybe_unused]] Dimension &resize) override
+	{
+		switch (widget) {
+			case WID_FS_INTRO:
+				size.height = 4 * GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.framerect.Vertical();
+				break;
+			case WID_FS_LIST:
+				resize.width = 1;
+				fill.height = resize.height = GetCharacterHeight(FontSize::Normal) + ScaleGUITrad(4);
+				size.height = 6 * resize.height;
+				break;
+		}
+	}
+
+	void DrawWidget(const Rect &r, WidgetID widget) const override
+	{
+		switch (widget) {
+			case WID_FS_INTRO:
+				DrawStringMultiLine(r.Shrink(WidgetDimensions::scaled.framerect), STR_FOUNDER_START_INTRO, TextColour::Black);
+				break;
+
+			case WID_FS_LIST: {
+				Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+				const int row_h = this->resize.step_height;
+				int pos = -this->vscroll->GetPosition();
+				for (const Town *t : GetTowns()) {
+					if (pos >= 0 && pos < this->vscroll->GetCapacity()) {
+						Rect row = ir.WithHeight(row_h);
+						bool sel = t->index == this->selected;
+						if (sel) GfxFillRect(row.left, row.top, row.right, row.bottom - 1, PC_DARK_GREY);
+						int ty = row.top + (row_h - GetCharacterHeight(FontSize::Normal)) / 2;
+						DrawString(row.left, row.right, ty, GetString(STR_FOUNDER_START_TOWN, t->index, t->cache.population), sel ? TextColour::White : TextColour::Black);
+						ir.top += row_h;
+					}
+					pos++;
+				}
+				break;
+			}
+		}
+	}
+
+	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
+	{
+		if (widget == WID_FS_BUILD) {
+			if (Town::IsValidID(this->selected)) return GetString(STR_FOUNDER_START_BUILD, this->selected);
+			return GetString(STR_FOUNDER_START_PICK);
+		}
+		return this->Window::GetWidgetString(widget, stringid);
+	}
+
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
+	{
+		switch (widget) {
+			case WID_FS_LIST: {
+				int row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_FS_LIST, WidgetDimensions::scaled.framerect.top);
+				auto towns = GetTowns();
+				if (row < 0 || row >= static_cast<int>(towns.size())) break;
+				this->selected = towns[row]->index;
+				ScrollMainWindowToTile(towns[row]->xy);
+				this->OnInvalidateData(0);
+				break;
+			}
+
+			case WID_FS_BUILD: {
+				const Town *t = Town::GetIfValid(this->selected);
+				if (t == nullptr) break;
+				/* Nearest spot around the town centre where a 2x2 HQ fits. */
+				for (TileIndex tile : SpiralTileSequence(t->xy, 20)) {
+					if (Command<Commands::BuildObject>::Do(DoCommandFlags{}, tile, OBJECT_HQ, 0).Failed()) continue;
+					if (Command<Commands::BuildObject>::Post(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS, tile, OBJECT_HQ, 0)) {
+						ScrollMainWindowToTile(tile);
+						CompanyID company = _local_company;
+						this->Close();
+						ShowFounderTab(FounderTab::Team, company);
+					}
+					return;
+				}
+				ShowErrorMessage(GetEncodedString(STR_ERROR_CAN_T_BUILD_COMPANY_HEADQUARTERS), GetEncodedString(STR_FOUNDER_START_NO_SPACE), WarningLevel::Info);
+				break;
+			}
+		}
+	}
+
+	void OnResize() override
+	{
+		this->vscroll->SetCapacityFromWidget(this, WID_FS_LIST, WidgetDimensions::scaled.framerect.Vertical());
+	}
+
+	void OnHundredthTick() override
+	{
+		/* Towns grow while the player decides; keep the list and order current. */
+		this->SetWidgetDirty(WID_FS_LIST);
+	}
+
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
+	{
+		if (!gui_scope) return;
+		this->vscroll->SetCount(Town::GetNumItems());
+		this->SetWidgetDisabledState(WID_FS_BUILD, !Town::IsValidID(this->selected));
+		this->SetDirty();
+	}
+};
+
+static constexpr std::initializer_list<NWidgetPart> _nested_founder_start_widgets = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_CLOSEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_CAPTION, FOUNDER_COLOUR, WID_FS_CAPTION), SetStringTip(STR_FOUNDER_START_CAPTION),
+	EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_FS_INTRO), SetResize(1, 0), EndContainer(),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_FS_LIST), SetToolTip(STR_FOUNDER_START_LIST_TOOLTIP), SetScrollbar(WID_FS_SCROLLBAR), SetResize(1, 1), EndContainer(),
+		NWidget(NWID_VSCROLLBAR, FOUNDER_COLOUR, WID_FS_SCROLLBAR),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_FS_BUILD), SetToolTip(STR_FOUNDER_START_BUILD_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
+	EndContainer(),
+};
+
+static WindowDesc _founder_start_desc(
+	WindowPosition::Manual, {}, 0, 0,
+	WindowClass::FounderStart, WindowClass::None,
+	{},
+	_nested_founder_start_widgets
+);
+
+/**
+ * Open the "pick your HQ town" panel if the local company has no HQ yet.
+ * @return Whether the panel was opened.
+ */
+bool ShowFounderStartIfNeeded()
+{
+	if (!_settings_game.game_creation.founder_mode) return false;
+	const Company *c = Company::GetIfValid(_local_company);
+	if (c == nullptr || c->location_of_HQ != INVALID_TILE) return false;
+	CloseOtherFounderTabs(WindowClass::Invalid, _local_company);
+	AllocateWindowDescFront<FounderStartWindow>(_founder_start_desc, 0);
+	return true;
+}
+
+/* --- Found your startup: background and scenario before the map is made --- */
+
+/** Setup window opened by "New Startup" on the title screen. */
+struct FounderSetupWindow : public Window {
+	FounderSetupWindow(WindowDesc &desc, WindowNumber window_number) : Window(desc)
+	{
+		this->InitNested(window_number);
+		this->DisableWidget(WID_FSU_SC_GOLIATH);
+		this->DisableWidget(WID_FSU_SC_TUTORIAL);
+		this->LowerWidget(WID_FSU_SC_SANDBOX);
+		this->UpdateBackground();
+	}
+
+	void UpdateBackground()
+	{
+		uint8_t bg = _settings_newgame.game_creation.founder_background;
+		this->SetWidgetLoweredState(WID_FSU_BG_ENGINEER, bg == 0);
+		this->SetWidgetLoweredState(WID_FSU_BG_SELLER, bg == 1);
+		this->SetWidgetLoweredState(WID_FSU_BG_OPERATOR, bg == 2);
+		this->SetDirty();
+	}
+
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
+	{
+		switch (widget) {
+			case WID_FSU_BG_ENGINEER:
+			case WID_FSU_BG_SELLER:
+			case WID_FSU_BG_OPERATOR:
+				_settings_newgame.game_creation.founder_background = static_cast<uint8_t>(widget - WID_FSU_BG_ENGINEER);
+				this->UpdateBackground();
+				break;
+
+			case WID_FSU_MAP:
+				_settings_newgame.game_creation.founder_mode = true;
+				this->Close();
+				ShowGenerateLandscape();
+				break;
+
+			case WID_FSU_START:
+				_settings_newgame.game_creation.founder_mode = true;
+				this->Close();
+				StartNewGameWithoutGUI(GENERATE_NEW_SEED);
+				break;
+		}
+	}
+};
+
+static constexpr std::initializer_list<NWidgetPart> _nested_founder_setup_widgets = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_CLOSEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_CAPTION, FOUNDER_COLOUR), SetStringTip(STR_FOUNDER_SETUP_CAPTION),
+	EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR),
+		NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0), SetPadding(WidgetDimensions::unscaled.sparse),
+			NWidget(WWT_LABEL, Colours::Invalid), SetStringTip(STR_FOUNDER_SETUP_BACKGROUND), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_BG_ENGINEER), SetStringTip(STR_FOUNDER_SETUP_BG_ENGINEER, STR_FOUNDER_SETUP_BG_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_BG_SELLER), SetStringTip(STR_FOUNDER_SETUP_BG_SELLER, STR_FOUNDER_SETUP_BG_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_BG_OPERATOR), SetStringTip(STR_FOUNDER_SETUP_BG_OPERATOR, STR_FOUNDER_SETUP_BG_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_LABEL, Colours::Invalid), SetStringTip(STR_FOUNDER_SETUP_SCENARIO), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_GOLIATH), SetStringTip(STR_FOUNDER_SETUP_SC_GOLIATH, STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_SANDBOX), SetStringTip(STR_FOUNDER_SETUP_SC_SANDBOX, STR_FOUNDER_SETUP_SC_SANDBOX_TOOLTIP), SetFill(1, 0),
+			NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_FSU_SC_TUTORIAL), SetStringTip(STR_FOUNDER_SETUP_SC_TUTORIAL, STR_FOUNDER_SETUP_SC_TUTORIAL_TOOLTIP), SetFill(1, 0),
+		EndContainer(),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_FSU_MAP), SetStringTip(STR_FOUNDER_SETUP_MAP, STR_FOUNDER_SETUP_MAP_TOOLTIP), SetFill(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::DarkBlue, WID_FSU_START), SetStringTip(STR_FOUNDER_SETUP_START, STR_FOUNDER_SETUP_START_TOOLTIP), SetFill(1, 0),
+	EndContainer(),
+};
+
+static WindowDesc _founder_setup_desc(
+	WindowPosition::Center, {}, 0, 0,
+	WindowClass::FounderSetup, WindowClass::None,
+	{},
+	_nested_founder_setup_widgets
+);
+
+/** Open the "found your startup" setup window. */
+void ShowFounderSetupWindow()
+{
+	CloseWindowByClass(WindowClass::FounderSetup);
+	new FounderSetupWindow(_founder_setup_desc, 0);
 }

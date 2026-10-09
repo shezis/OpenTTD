@@ -19,6 +19,7 @@ add_files(
     game_widget.h
     genworld_widget.h
     goal_widget.h
+    founder_widget.h
     office_widget.h
     roadmap_widget.h
     team_widget.h

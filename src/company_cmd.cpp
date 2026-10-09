@@ -49,6 +49,8 @@
 #include "table/strings.h"
 #include "table/company_face.h"
 
+#include "employee_base.h"
+
 #include "safeguards.h"
 
 void ClearEnginesHiddenFlagOfCompany(CompanyID cid);
@@ -665,6 +667,7 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = CompanyID::Invalid(
 
 	SetDefaultCompanySettings(c->index);
 	ClearEnginesHiddenFlagOfCompany(c->index);
+	if (_settings_game.game_creation.founder_mode) ApplyFounderBackground(c->index);
 
 	GeneratePresidentName(c);
 

@@ -76,6 +76,7 @@
 #include "dropdown_common_type.h"
 
 #include "team_gui.h"
+#include "founder_gui.h"
 #include "roadmap_gui.h"
 
 #include "safeguards.h"
@@ -2007,6 +2008,8 @@ static ToolbarButtonProc * const _toolbar_button_procs[] = {
 
 /** Main toolbar. */
 struct MainToolbarWindow : Window {
+	bool founder_start_checked = false; ///< Founder Mode: whether we already offered the HQ picker this game.
+
 	MainToolbarWindow(WindowDesc &desc) : Window(desc)
 	{
 		this->InitNested(0);
@@ -2022,6 +2025,15 @@ struct MainToolbarWindow : Window {
 	void FindWindowPlacementAndResize(int, int def_height, bool allow_resize) override
 	{
 		Window::FindWindowPlacementAndResize(_toolbar_width, def_height, allow_resize);
+	}
+
+	void OnRealtimeTick([[maybe_unused]] uint delta_ms) override
+	{
+		/* Founder Mode: once the game is running, offer the HQ picker from the GUI thread. */
+		if (this->founder_start_checked || _game_mode != GameMode::Normal || !_settings_game.game_creation.founder_mode) return;
+		if (!Company::IsValidID(_local_company)) return;
+		this->founder_start_checked = true;
+		ShowFounderStartIfNeeded();
 	}
 
 	void OnPaint() override
@@ -2047,8 +2059,8 @@ struct MainToolbarWindow : Window {
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		if (_game_mode != GameMode::Menu && widget == WID_TN_STATIONS && _settings_game.game_creation.founder_mode) {
-			/* In Founder Mode the stations button opens the team instead. */
-			ShowTeamWindow(_local_company);
+			/* In Founder Mode the stations button opens the company panel (or the HQ picker before there is an HQ). */
+			if (!ShowFounderStartIfNeeded()) ShowTeamWindow(_local_company);
 			return;
 		}
 		if (_game_mode != GameMode::Menu && widget == WID_TN_TRAINS && _settings_game.game_creation.founder_mode) {

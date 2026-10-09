@@ -430,6 +430,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeOffice, ///< Saveload version: 371, Founder Mode fork\n Office levels and rent.
 	FounderModeFeatures, ///< Saveload version: 372, Founder Mode fork\n Product features and roadmap.
 	FounderModeWorkTracks, ///< Saveload version: 373, Founder Mode fork\n Sequential engineering, business and sales work catalog.
+	FounderModeBackground, ///< Saveload version: 374, Founder Mode fork\n Founder background sets the starting team.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

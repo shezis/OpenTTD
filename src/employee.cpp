@@ -17,6 +17,7 @@
 #include "core/random_func.hpp"
 #include "debug.h"
 #include "office_func.h"
+#include "feature_base.h"
 #include "settings_type.h"
 #include "window_func.h"
 
@@ -132,6 +133,47 @@ void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner)
 }
 
 /**
+ * Create an employee with random name, skill and morale. Must run in a synced context (command or game loop).
+ * @param company Employer.
+ * @param role Role of the new employee.
+ * @return The new employee, or nullptr when the pool is full.
+ */
+static Employee *CreateEmployee(CompanyID company, EmployeeRole role)
+{
+	if (!Employee::CanAllocateItem()) return nullptr;
+	Employee *e = Employee::Create(company, role);
+	e->name_index = RandomRange(NUM_EMPLOYEE_NAMES);
+	e->skill = 30 + RandomRange(61);
+	e->morale = 60 + RandomRange(31);
+	e->salary = GetBaseSalary(role) * (50 + e->skill) / 100;
+	return e;
+}
+
+/**
+ * Give a new company its starting team from the founder background setting.
+ * Applies to every company, AI rivals included, so everyone plays by the same rules.
+ * @param company The new company.
+ */
+void ApplyFounderBackground(CompanyID company)
+{
+	switch (_settings_game.game_creation.founder_background) {
+		default:
+		case 0: // Engineer.
+			CreateEmployee(company, EmployeeRole::Engineer);
+			CreateEmployee(company, EmployeeRole::Engineer);
+			break;
+		case 1: // Seller.
+			CreateEmployee(company, EmployeeRole::Sales);
+			CreateEmployee(company, EmployeeRole::Engineer);
+			break;
+		case 2: // Operator.
+			CreateEmployee(company, EmployeeRole::Operations);
+			GrantShippedWorkItem(company, FOUNDER_OPERATOR_HEAD_START);
+			break;
+	}
+}
+
+/**
  * Hire a new employee. The recruiting fee is one month of the base salary.
  * @param flags Type of operation.
  * @param role Role of the new employee.
@@ -148,11 +190,7 @@ CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role)
 	Money base = GetBaseSalary(role);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
-		Employee *e = Employee::Create(_current_company, role);
-		e->name_index = RandomRange(NUM_EMPLOYEE_NAMES);
-		e->skill = 30 + RandomRange(61);
-		e->morale = 60 + RandomRange(31);
-		e->salary = base * (50 + e->skill) / 100;
+		CreateEmployee(_current_company, role);
 		InvalidateWindowData(WindowClass::Team, _current_company);
 		InvalidateWindowData(WindowClass::Office, _current_company);
 	}
