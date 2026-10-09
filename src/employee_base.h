@@ -48,6 +48,7 @@ Money GetMonthlyPayroll(CompanyID company);
 void PayEmployees();
 void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner);
 void ApplyFounderBackground(CompanyID company, uint8_t background);
+void ApplyIncumbentHeadStart(struct Company *c);
 Money GetLevelSalary(EmployeeRole role, EmployeeLevel level);
 uint GetLevelSpeedPercent(EmployeeLevel level);
 void SetEmployeeWork(Employee *e, FeatureID feature);

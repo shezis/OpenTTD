@@ -3860,8 +3860,8 @@ STR_FOUNDER_SETUP_BG_SELLER                                     :{BLACK}Seller �
 STR_FOUNDER_SETUP_BG_OPERATOR                                   :{BLACK}Operator · start incorporated, with an operations hire
 STR_FOUNDER_SETUP_BG_TOOLTIP                                    :{BLACK}Your background sets your starting team. Rivals start the same way
 STR_FOUNDER_SETUP_SCENARIO                                      :{BLACK}Scenario
-STR_FOUNDER_SETUP_SC_GOLIATH                                    :{BLACK}David vs Goliath · recommended · arrives with AI rivals
-STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP                            :{BLACK}Disrupt an AI incumbent that owns most of the city. Available once AI rivals are built
+STR_FOUNDER_SETUP_SC_GOLIATH                                    :{BLACK}David vs Goliath · recommended
+STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP                            :{BLACK}An established AI incumbent starts with 24 staff, an office floor, a mature product, a series A and £3m. It sells hard but ships slowly. Go public before it does
 STR_FOUNDER_SETUP_SC_SANDBOX                                    :{BLACK}Sandbox · build at your own pace
 STR_FOUNDER_SETUP_SC_SANDBOX_TOOLTIP                            :{BLACK}No goals or rivals; try out the company systems
 STR_FOUNDER_SETUP_SC_TUTORIAL                                   :{BLACK}Tutorial · coming later
@@ -3875,6 +3875,10 @@ STR_CONFIG_SETTING_FOUNDER_TRANSIT                              :City transit op
 STR_CONFIG_SETTING_FOUNDER_TRANSIT_HELPTEXT                     :Number of AI transit operators that run city transport in Founder Mode, funded by a city budget
 STR_CONFIG_SETTING_FOUNDER_RIVALS                               :Rival startups: {STRING2}
 STR_CONFIG_SETTING_FOUNDER_RIVALS_HELPTEXT                      :Computer-run startups that compete with you for customers. They follow the same rules as you
+STR_CONFIG_SETTING_FOUNDER_SCENARIO                             :Startup scenario: {STRING2}
+STR_CONFIG_SETTING_FOUNDER_SCENARIO_HELPTEXT                    :Sandbox has no goal beyond the IPO. In David vs Goliath the first rival is an established incumbent, and the first startup to go public wins
+STR_CONFIG_SETTING_FOUNDER_SCENARIO_SANDBOX                     :Sandbox
+STR_CONFIG_SETTING_FOUNDER_SCENARIO_GOLIATH                     :David vs Goliath
 STR_FOUNDER_SETUP_MAP                                           :{BLACK}Map settings
 STR_FOUNDER_SETUP_MAP_TOOLTIP                                   :{BLACK}Choose map size, terrain and towns before founding
 STR_FOUNDER_SETUP_START                                         :{WHITE}Found company
@@ -3976,6 +3980,8 @@ STR_NEWS_FOUNDER_POACHED_FROM_YOU                               :{BIG_FONT}{BLAC
 STR_NEWS_FOUNDER_POACHED_BY_YOU                                 :{BIG_FONT}{BLACK}{RAW_STRING} joined you from {COMPANY}
 STR_POACH_QUERY_CAPTION                                         :{WHITE}Poaching offer
 STR_POACH_QUERY                                                 :{YELLOW}{COMPANY} offered {RAW_STRING} ({STRING} {STRING}) {CURRENCY_LONG}/month, up from {CURRENCY_LONG}.{}Match the offer to keep them? If you don't, they leave within a month
+STR_NEWS_FOUNDER_GOLIATH_WON                                    :{BIG_FONT}{BLACK}David beats Goliath! {COMPANY} went public before the incumbent
+STR_NEWS_FOUNDER_GOLIATH_LOST                                   :{BIG_FONT}{BLACK}{COMPANY} went public first. The race to IPO is lost, but your company plays on
 STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
 STR_NEWS_FOUNDER_RUNWAY_LOW                                     :{BIG_FONT}{BLACK}Runway under 6 months: about {NUM} month{P "" s} of cash left at the current burn
 STR_NEWS_FOUNDER_OUT_OF_CASH                                    :{BIG_FONT}{BLACK}Out of cash! Raise money or cut costs before the bank closes the company

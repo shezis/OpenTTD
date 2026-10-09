@@ -613,3 +613,37 @@ CommandCost CmdRespondPoachOffer(DoCommandFlags flags, EmployeeID employee, bool
 	}
 	return CommandCost();
 }
+
+/**
+ * David vs Goliath: the incumbent starts as an established company.
+ * An office floor of mostly mid and senior staff, a mature product, seed and series A raised, and cash in the bank.
+ * @param c The incumbent.
+ */
+void ApplyIncumbentHeadStart(Company *c)
+{
+	c->office_level = 2;
+	static constexpr std::pair<EmployeeRole, EmployeeLevel> team[] = {
+		{EmployeeRole::Engineer, EmployeeLevel::Senior}, {EmployeeRole::Engineer, EmployeeLevel::Senior}, {EmployeeRole::Engineer, EmployeeLevel::Senior},
+		{EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Mid},
+		{EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Junior}, {EmployeeRole::Engineer, EmployeeLevel::Junior},
+		{EmployeeRole::Sales, EmployeeLevel::Senior}, {EmployeeRole::Sales, EmployeeLevel::Senior}, {EmployeeRole::Sales, EmployeeLevel::Mid},
+		{EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid},
+		{EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Junior},
+		{EmployeeRole::Sales, EmployeeLevel::Junior}, {EmployeeRole::Operations, EmployeeLevel::Senior}, {EmployeeRole::Operations, EmployeeLevel::Mid},
+		{EmployeeRole::Operations, EmployeeLevel::Mid}, {EmployeeRole::Designer, EmployeeLevel::Mid}, {EmployeeRole::Designer, EmployeeLevel::Mid},
+	};
+	for (const auto &[role, level] : team) CreateEmployee(c->index, role, level);
+
+	/* A mature product, built the slow, sales-led way. */
+	static constexpr uint8_t shipped[] = { 0, 1, 2, 3, 4, 5, 6, 9, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 30, 38, 39 };
+	for (uint8_t item : shipped) GrantShippedWorkItem(c->index, item);
+
+	/* Seed and series A taken. */
+	c->founder_stage = 2;
+	c->founder_round_amount = {250000, 2000000, 0, 0};
+	c->founder_round_equity = {200, 250, 0, 0};
+	c->founder_round_investor = {1, 3, 0, 0};
+	c->founder_equity = 600;
+	c->founder_valuation = 40000000;
+	c->money = 3000000;
+}

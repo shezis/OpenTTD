@@ -224,7 +224,11 @@ uint8_t AssignFounderAIRole(Company *c)
 	}
 	c->founder_operator = operators < _settings_game.game_creation.founder_transit_operators;
 
-	RivalPersonality personality = static_cast<RivalPersonality>(rivals % to_underlying(RivalPersonality::Incumbent));
+	/* David vs Goliath: the first rival is the incumbent; the others play as usual. */
+	bool goliath = _settings_game.game_creation.founder_scenario == 1;
+	bool incumbent = goliath && !c->founder_operator && rivals == 0;
+	uint style = goliath && rivals > 0 ? rivals - 1 : rivals;
+	RivalPersonality personality = incumbent ? RivalPersonality::Incumbent : static_cast<RivalPersonality>(style % to_underlying(RivalPersonality::Incumbent));
 	auto config = std::make_unique<AIConfig>();
 	if (c->founder_operator) {
 		config->Change(FOUNDER_OPERATOR_AI);
@@ -238,6 +242,8 @@ uint8_t AssignFounderAIRole(Company *c)
 		if (config->HasScript()) config->SetSetting("personality", to_underlying(personality));
 	}
 	if (config->HasScript()) c->ai_config = std::move(config);
+
+	if (incumbent) ApplyIncumbentHeadStart(c);
 
 	switch (personality) {
 		case RivalPersonality::Bootstrapper: return 0; // Engineer.

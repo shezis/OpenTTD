@@ -297,9 +297,7 @@ struct FounderSetupWindow : public Window {
 	FounderSetupWindow(WindowDesc &desc, WindowNumber window_number) : Window(desc)
 	{
 		this->InitNested(window_number);
-		this->DisableWidget(WID_FSU_SC_GOLIATH);
 		this->DisableWidget(WID_FSU_SC_TUTORIAL);
-		this->MarkSelected(WID_FSU_SC_SANDBOX, true);
 		this->UpdateBackground();
 	}
 
@@ -320,6 +318,9 @@ struct FounderSetupWindow : public Window {
 		this->MarkSelected(WID_FSU_TR_NONE, tr == 0);
 		this->MarkSelected(WID_FSU_TR_TWO, tr > 0 && tr <= 2);
 		this->MarkSelected(WID_FSU_TR_FOUR, tr > 2);
+		uint8_t sc = _settings_newgame.game_creation.founder_scenario;
+		this->MarkSelected(WID_FSU_SC_SANDBOX, sc == 0);
+		this->MarkSelected(WID_FSU_SC_GOLIATH, sc == 1);
 		this->SetDirty();
 	}
 
@@ -330,6 +331,18 @@ struct FounderSetupWindow : public Window {
 			case WID_FSU_BG_SELLER:
 			case WID_FSU_BG_OPERATOR:
 				_settings_newgame.game_creation.founder_background = static_cast<uint8_t>(widget - WID_FSU_BG_ENGINEER);
+				this->UpdateBackground();
+				break;
+
+			case WID_FSU_SC_SANDBOX:
+				_settings_newgame.game_creation.founder_scenario = 0;
+				this->UpdateBackground();
+				break;
+
+			case WID_FSU_SC_GOLIATH:
+				/* The incumbent is the first rival, so there must be at least one. */
+				_settings_newgame.game_creation.founder_scenario = 1;
+				_settings_newgame.game_creation.founder_rivals = std::max<uint8_t>(_settings_newgame.game_creation.founder_rivals, 1);
 				this->UpdateBackground();
 				break;
 

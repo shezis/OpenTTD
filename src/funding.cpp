@@ -182,8 +182,16 @@ void UpdateFunding(CompanyID company, int64_t mrr)
 
 	/* Going public: the win condition. */
 	if (!c->founder_ipo && c->founder_valuation >= IPO_VALUATION) {
+		/* David vs Goliath: the first startup to go public wins the race. */
+		bool first = true;
+		for (const Company *o : Company::Iterate()) {
+			if (o != c && o->founder_ipo) first = false;
+		}
 		c->founder_ipo = true;
 		c->founder_offer_stage = 0;
+		if (_settings_game.game_creation.founder_scenario == 1 && first && Company::IsValidID(_local_company)) {
+			AddNewsItem(GetEncodedString(company == _local_company ? STR_NEWS_FOUNDER_GOLIATH_WON : STR_NEWS_FOUNDER_GOLIATH_LOST, company), NewsType::CompanyInfo, NewsStyle::Normal, {});
+		}
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} went public at {}", company + 1, c->founder_valuation);
 		AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_IPO, company, c->founder_valuation), NewsType::CompanyInfo, NewsStyle::Normal, {});
 		InvalidateWindowData(WindowClass::Board, company);
