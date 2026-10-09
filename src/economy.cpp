@@ -12,6 +12,7 @@
 #include "company_func.h"
 #include "employee_base.h"
 #include "feature_base.h"
+#include "market_func.h"
 #include "command_func.h"
 #include "industry.h"
 #include "town.h"
@@ -334,6 +335,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	if (_networking) NetworkClientsToSpectators(old_owner);
 	ChangeEmployeeOwnership(old_owner, new_owner);
 	ChangeFeatureOwnership(old_owner, new_owner);
+	ClearSponsorships(old_owner);
 	if (old_owner == _local_company) {
 		/* Single player cheated to AI company.
 		 * There are no spectators in singleplayer mode, so we must pick some other company. */

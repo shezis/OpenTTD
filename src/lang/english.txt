@@ -3893,6 +3893,14 @@ STR_MARKET_STATUS_OPPORTUNITY                                   :{NUM}% · oppor
 STR_MARKET_STATUS_OUT_OF_RANGE                                  :{NUM}% · out of range
 STR_MARKET_STATUS_NONE                                          :{NUM}%
 STR_MARKET_STATUS_HUB                                           :{NUM}% · your hub
+STR_MARKET_SUMMARY_SPONSOR                                      :{BLACK}{NUM} customer{P "" s} · MRR {CURRENCY_LONG} · sponsoring {COMPANY} for {CURRENCY_SHORT}/month
+STR_MARKET_SPONSOR                                              :{BLACK}Sponsor transit
+STR_MARKET_SPONSOR_TOOLTIP                                      :{BLACK}Sponsor a transit operator: its vehicles take your colours, and towns on its network that also reach your HQ or a hub get extra reach
+STR_MARKET_SPONSOR_ITEM                                         :{COMPANY} · {CURRENCY_SHORT} a month
+STR_MARKET_SPONSOR_END                                          :End sponsorship
+STR_MARKET_SPONSOR_NONE                                         :No transit operators in this game
+STR_ERROR_CAN_T_SPONSOR                                         :{WHITE}Can't sponsor this operator...
+STR_ERROR_OPERATOR_TAKEN                                        :{WHITE}... another startup already sponsors it
 STR_MARKET_OPEN_HUB                                             :{BLACK}Open hub ({CURRENCY_SHORT})
 STR_MARKET_CLOSE_HUB                                            :{BLACK}Close hub
 STR_MARKET_HUB_TOOLTIP_PLAIN                                    :{BLACK}A sales hub adds presence in its town and lets reps reach towns near it. Each hub pays monthly rent

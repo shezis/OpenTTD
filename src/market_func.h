@@ -43,5 +43,11 @@ Money GetOperatorTransitBudget(CompanyID company);
 static constexpr std::string_view FOUNDER_OPERATOR_AI = "SimpleAI"; ///< Bundled AI that runs transit operators.
 static constexpr Money OPERATOR_BUDGET_PER_RESIDENT = 1; ///< Monthly city transit budget per resident of a served town.
 static constexpr Money OPERATOR_BUDGET_CAP = 40000; ///< Monthly city transit budget cap per operator.
+static constexpr std::array<Money, 3> SPONSOR_TIERS = {2000, 5000, 10000}; ///< Monthly sponsorship amounts.
+
+CompanyID GetOperatorSponsor(CompanyID op);
+bool OperatorServesTown(CompanyID op, TownID town);
+void ApplyOperatorLivery(CompanyID op);
+void ClearSponsorships(CompanyID company);
 
 #endif /* MARKET_FUNC_H */

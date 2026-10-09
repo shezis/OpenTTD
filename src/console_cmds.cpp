@@ -1046,6 +1046,20 @@ static bool ConHub(std::span<std::string_view> argv)
 	return true;
 }
 
+/** Founder Mode: sponsor a transit operator. @copydoc IConsoleCmdProc */
+static bool ConSponsor(std::span<std::string_view> argv)
+{
+	if (argv.size() != 3) {
+		IConsolePrint(CC_HELP, "Sponsor a transit operator. Usage: 'sponsor <company number> <2000|5000|10000|0>'. 0 ends the sponsorship.");
+		return true;
+	}
+	auto num = ParseInteger(argv[1]);
+	auto amount = ParseInteger(argv[2]);
+	if (!num.has_value() || !amount.has_value() || *num < 1 || *num > MAX_COMPANIES) return true;
+	Command<Commands::SponsorOperator>::Post(STR_ERROR_CAN_T_SPONSOR, CompanyID(static_cast<uint8_t>(*num - 1)), Money(*amount));
+	return true;
+}
+
 /** Founder Mode: assign the nth sales rep to a town. @copydoc IConsoleCmdProc */
 static bool ConAssignRep(std::span<std::string_view> argv)
 {
@@ -3326,6 +3340,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("market_window",           [](std::span<std::string_view> argv) { if (!argv.empty()) ShowMarketWindow(_local_company); return true; });
 	IConsole::CmdRegister("assign_rep",              ConAssignRep);
 	IConsole::CmdRegister("hub",                     ConHub);
+	IConsole::CmdRegister("sponsor",                 ConSponsor);
 	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);
 	IConsole::CmdRegister("plan",                    ConPlan);

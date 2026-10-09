@@ -89,6 +89,8 @@ struct CompanyProperties {
 	uint8_t money_fraction = 0; ///< Fraction of money of the company, too small to represent in #money.
 	Money current_loan = 0; ///< Amount of money borrowed from the bank.
 	uint8_t office_level = 0; ///< Founder Mode office size, see #MAX_OFFICE_LEVEL.
+	CompanyID founder_sponsoring = CompanyID::Invalid(); ///< Founder Mode: transit operator this startup sponsors.
+	Money founder_sponsor_monthly = 0; ///< Founder Mode: monthly sponsorship paid to that operator.
 	Money max_loan = COMPANY_MAX_LOAN_DEFAULT; ///< Max allowed amount of the loan or COMPANY_MAX_LOAN_DEFAULT.
 
 	Colours colour = Colours::Begin; ///< Company colour.

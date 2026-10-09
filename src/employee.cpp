@@ -285,3 +285,37 @@ CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open)
 	}
 	return CommandCost(ExpensesType::Construction, open ? HUB_OPEN_COST : Money(0));
 }
+
+/**
+ * Sponsor a transit operator, change the amount, or end the sponsorship (amount 0).
+ * Each operator has at most one sponsor; a startup sponsors at most one operator.
+ * @param flags Type of operation.
+ * @param op The transit operator.
+ * @param monthly Monthly amount, one of #SPONSOR_TIERS, or 0 to end.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdSponsorOperator(DoCommandFlags flags, CompanyID op, Money monthly)
+{
+	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
+	Company *c = Company::GetIfValid(_current_company);
+	if (c == nullptr || IsFounderOperator(c->index)) return CMD_ERROR;
+
+	if (monthly == 0) {
+		if (!Company::IsValidID(c->founder_sponsoring)) return CMD_ERROR;
+	} else {
+		if (std::ranges::find(SPONSOR_TIERS, monthly) == SPONSOR_TIERS.end()) return CMD_ERROR;
+		if (!IsFounderOperator(op)) return CMD_ERROR;
+		CompanyID current = GetOperatorSponsor(op);
+		if (current != CompanyID::Invalid() && current != c->index) return CommandCost(STR_ERROR_OPERATOR_TAKEN);
+	}
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		CompanyID previous = c->founder_sponsoring;
+		c->founder_sponsoring = monthly == 0 ? CompanyID::Invalid() : op;
+		c->founder_sponsor_monthly = monthly;
+		if (Company::IsValidID(previous)) ApplyOperatorLivery(previous);
+		if (monthly != 0) ApplyOperatorLivery(op);
+		InvalidateWindowData(WindowClass::Market, c->index);
+	}
+	return CommandCost();
+}

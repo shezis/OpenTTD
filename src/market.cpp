@@ -23,6 +23,8 @@
 #include "ai/ai_config.hpp"
 #include "station_base.h"
 #include "vehicle_base.h"
+#include "vehicle_func.h"
+#include "livery.h"
 #include "strings_func.h"
 #include "viewport_func.h"
 
@@ -180,7 +182,8 @@ void ConfigureFounderOperators()
 	uint8_t n = _settings_newgame.game_creation.founder_transit_operators;
 	_settings_newgame.difficulty.max_no_competitors = n;
 	_settings_newgame.difficulty.competitors_interval = MIN_COMPETITORS_INTERVAL;
-	for (uint i = 1; i <= n && i < MAX_COMPANIES; i++) {
+	/* Every slot: AIs may take any free company slot, e.g. slot 0 in a dedicated server. */
+	for (uint i = 0; i < MAX_COMPANIES; i++) {
 		AIConfig *config = AIConfig::GetConfig(CompanyID(i), AIConfig::ScriptSettingSource::ForceNewGame);
 		config->Change(FOUNDER_OPERATOR_AI);
 		if (!config->HasScript()) continue; // Bundled AI missing; OpenTTD falls back to a random one.
@@ -218,6 +221,59 @@ Money GetOperatorTransitBudget(CompanyID company)
 	return std::min(budget, OPERATOR_BUDGET_CAP);
 }
 
+/** Startup sponsoring a transit operator, or invalid. */
+CompanyID GetOperatorSponsor(CompanyID op)
+{
+	for (const Company *c : Company::Iterate()) {
+		if (c->founder_sponsoring == op) return c->index;
+	}
+	return CompanyID::Invalid();
+}
+
+/** Whether a transit operator has a station in a town. */
+bool OperatorServesTown(CompanyID op, TownID town)
+{
+	for (const Station *st : Station::Iterate()) {
+		if (st->owner == op && st->town != nullptr && st->town->index == town) return true;
+	}
+	return false;
+}
+
+/**
+ * Paint an operator's vehicles in its sponsor's colour, or back in its own.
+ * @param op The transit operator.
+ */
+void ApplyOperatorLivery(CompanyID op)
+{
+	Company *c = Company::GetIfValid(op);
+	if (c == nullptr) return;
+	const Company *sponsor = Company::GetIfValid(GetOperatorSponsor(op));
+	c->livery[LiveryScheme::Default].colour1 = sponsor != nullptr ? sponsor->colour : c->colour;
+	UpdateCompanyLiveries(c);
+	Debug(Facility::Misc, Severity::Info, "Founder Mode: operator {} livery colour {} ({})", op + 1, to_underlying(c->livery[LiveryScheme::Default].colour1), sponsor != nullptr ? "sponsor colour" : "own colour");
+	ResetVehicleColourMap();
+	MarkWholeScreenDirty();
+}
+
+/**
+ * End sponsorships involving a company that is going away.
+ * @param company The company.
+ */
+void ClearSponsorships(CompanyID company)
+{
+	for (Company *c : Company::Iterate()) {
+		if (c->index == company && Company::IsValidID(c->founder_sponsoring)) {
+			CompanyID op = c->founder_sponsoring;
+			c->founder_sponsoring = CompanyID::Invalid();
+			c->founder_sponsor_monthly = 0;
+			ApplyOperatorLivery(op);
+		} else if (c->founder_sponsoring == company) {
+			c->founder_sponsoring = CompanyID::Invalid();
+			c->founder_sponsor_monthly = 0;
+		}
+	}
+}
+
 /** Potential customers in a town. */
 uint GetTownMarketSize(TownID town)
 {
@@ -243,6 +299,19 @@ uint GetCompanyStrength(CompanyID company, TownID town)
 	}
 	if (GetCompanyHQTown(company) == town) reach += 40;
 	if (t->founder_hubs.Test(company)) reach += 30;
+
+	/* Sponsored transit: presence along the operator's network, if it also reaches your HQ or a hub. */
+	const Company *sponsor = Company::Get(company);
+	if (IsFounderOperator(sponsor->founder_sponsoring) && OperatorServesTown(sponsor->founder_sponsoring, town)) {
+		bool linked = false;
+		for (const Town *base : Town::Iterate()) {
+			if ((base->founder_hubs.Test(company) || GetCompanyHQTown(company) == base->index) && OperatorServesTown(sponsor->founder_sponsoring, base->index)) {
+				linked = true;
+				break;
+			}
+		}
+		if (linked) reach += static_cast<uint>(sponsor->founder_sponsor_monthly / 200);
+	}
 
 	/* Word of mouth: existing customers here and in nearby towns. */
 	reach += t->founder_users[company] / 50;
@@ -318,6 +387,10 @@ static const IntervalTimer<TimerGameEconomy> _economy_market_monthly({TimerGameE
 		}
 		Money mrr = GetCompanyMRR(c->index);
 		if (mrr > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -mrr));
+		if (IsFounderOperator(c->founder_sponsoring) && c->founder_sponsor_monthly > 0) {
+			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, c->founder_sponsor_monthly));
+			SubtractMoneyFromCompany(c->founder_sponsoring, CommandCost(ExpensesType::Other, -c->founder_sponsor_monthly));
+		}
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} has {} users, MRR {}", c->index + 1, GetCompanyUsers(c->index), mrr);
 		InvalidateWindowData(WindowClass::Market, c->index);
 	}

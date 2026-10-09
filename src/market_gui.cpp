@@ -24,6 +24,8 @@
 #include "window_func.h"
 #include "window_gui.h"
 #include "zoom_func.h"
+#include "dropdown_type.h"
+#include "dropdown_func.h"
 
 #include "widgets/market_widget.h"
 
@@ -84,7 +86,14 @@ struct MarketWindow : public Window {
 		CompanyID company = this->GetCompany();
 		switch (widget) {
 			case WID_MK_SUMMARY:
-				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_MARKET_SUMMARY, GetCompanyUsers(company), GetCompanyMRR(company), GetCompanyPricePerUser(company)));
+				{
+					const Company *c = Company::Get(company);
+					if (Company::IsValidID(c->founder_sponsoring)) {
+						DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_MARKET_SUMMARY_SPONSOR, GetCompanyUsers(company), GetCompanyMRR(company), c->founder_sponsoring, c->founder_sponsor_monthly));
+					} else {
+						DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_MARKET_SUMMARY, GetCompanyUsers(company), GetCompanyMRR(company), GetCompanyPricePerUser(company)));
+					}
+				}
 				break;
 
 			case WID_MK_LIST: {
@@ -177,6 +186,23 @@ struct MarketWindow : public Window {
 				if (Town::IsValidID(this->selected)) ScrollMainWindowToTile(Town::Get(this->selected)->xy);
 				break;
 
+			case WID_MK_SPONSOR: {
+				DropDownList list;
+				const Company *me = Company::Get(company);
+				for (const Company *op : Company::Iterate()) {
+					if (!IsFounderOperator(op->index)) continue;
+					CompanyID sponsor = GetOperatorSponsor(op->index);
+					bool taken = sponsor != CompanyID::Invalid() && sponsor != company;
+					for (uint tier = 0; tier < SPONSOR_TIERS.size(); tier++) {
+						list.push_back(MakeDropDownListStringItem(GetString(STR_MARKET_SPONSOR_ITEM, op->index, SPONSOR_TIERS[tier]), op->index.base() * 4 + static_cast<int>(tier), taken));
+					}
+				}
+				if (Company::IsValidID(me->founder_sponsoring)) list.push_back(MakeDropDownListStringItem(STR_MARKET_SPONSOR_END, -2));
+				if (list.empty()) list.push_back(MakeDropDownListStringItem(STR_MARKET_SPONSOR_NONE, -1, true));
+				ShowDropDownList(this, std::move(list), -1, WID_MK_SPONSOR);
+				break;
+			}
+
 			case WID_MK_HUB:
 				if (Town::IsValidID(this->selected)) {
 					bool open = !HasHubInTown(company, this->selected);
@@ -184,6 +210,16 @@ struct MarketWindow : public Window {
 				}
 				break;
 		}
+	}
+
+	void OnDropdownSelect(WidgetID widget, int index, int) override
+	{
+		if (widget != WID_MK_SPONSOR || index == -1) return;
+		if (index == -2) {
+			Command<Commands::SponsorOperator>::Post(STR_ERROR_CAN_T_SPONSOR, CompanyID::Invalid(), Money(0));
+			return;
+		}
+		Command<Commands::SponsorOperator>::Post(STR_ERROR_CAN_T_SPONSOR, CompanyID(static_cast<uint8_t>(index / 4)), SPONSOR_TIERS[index % 4]);
 	}
 
 	void OnResize() override
@@ -223,6 +259,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_market_widgets = {
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_REMOVE_REP), SetStringTip(STR_MARKET_REMOVE_REP, STR_MARKET_REMOVE_REP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_HUB), SetToolTip(STR_MARKET_HUB_TOOLTIP_PLAIN), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_MK_SHOW), SetStringTip(STR_MARKET_SHOW, STR_MARKET_SHOW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_MK_SPONSOR), SetStringTip(STR_MARKET_SPONSOR, STR_MARKET_SPONSOR_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),
 };

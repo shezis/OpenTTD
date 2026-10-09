@@ -434,6 +434,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeMarket, ///< Saveload version: 375, Founder Mode fork\n Customers per town and sales rep assignments.
 	FounderModeHubs, ///< Saveload version: 376, Founder Mode fork\n Sales hubs in towns.
 	FounderModeTransit, ///< Saveload version: 377, Founder Mode fork\n Transit operators setting.
+	FounderModeSponsor, ///< Saveload version: 378, Founder Mode fork\n Transit sponsorship.
 
 	MaxVersion, ///< Highest possible saveload version.
 };
