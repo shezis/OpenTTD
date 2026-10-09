@@ -77,6 +77,7 @@
 
 #include "team_gui.h"
 #include "founder_gui.h"
+#include "market_func.h"
 #include "roadmap_gui.h"
 
 #include "safeguards.h"
@@ -2071,6 +2072,7 @@ struct MainToolbarWindow : Window {
 		if (_game_mode != GameMode::Menu && _settings_game.game_creation.founder_mode && _local_company != COMPANY_SPECTATOR) {
 			/* Money and Rivals hubs go straight to the local company's screens. */
 			if (widget == WID_TN_FINANCES) { ShowCompanyFinances(_local_company); return; }
+			if (widget == WID_TN_SMALL_MAP) { ShowMarketWindow(_local_company); return; }
 			if (widget == WID_TN_LEAGUE) { ShowFirstLeagueTable(); return; }
 		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
@@ -2341,7 +2343,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_toolbar_founder_widg
 		NWidget(WWT_PANEL, Colours::Grey), SetMinimalSize(12, 0), SetFill(0, 1), EndContainer(),
 		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_STATIONS), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_FOUNDER_HUB_COMPANY, STR_FOUNDER_HUB_COMPANY_TOOLTIP),
 		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_TRAINS), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_GOAL, STR_FOUNDER_HUB_WORK, STR_FOUNDER_HUB_WORK_TOOLTIP),
-		NWidget(WWT_IMGTEXTBTN, Colours::Grey, WID_TN_SMALL_MAP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SMALLMAP, STR_FOUNDER_HUB_MARKET, STR_FOUNDER_HUB_MARKET_TOOLTIP),
+		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_SMALL_MAP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SMALLMAP, STR_FOUNDER_HUB_MARKET, STR_FOUNDER_HUB_MARKET_TOOLTIP),
 		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_FINANCES), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_FINANCE, STR_FOUNDER_HUB_MONEY, STR_FOUNDER_HUB_MONEY_TOOLTIP),
 		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_LEAGUE), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_LEAGUE, STR_FOUNDER_HUB_RIVALS, STR_FOUNDER_HUB_RIVALS_TOOLTIP),
 		NWidget(WWT_PANEL, Colours::Grey), SetMinimalSize(12, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),

@@ -70,6 +70,8 @@
 #include "table/strings.h"
 #include "table/town_land.h"
 
+#include "market_func.h"
+
 #include "safeguards.h"
 
 /* Initialize the town-pool */
@@ -385,7 +387,9 @@ void Town::UpdateVirtCoord()
 	if (this->cache.sign.kdtree_valid) _viewport_sign_kdtree.Remove(ViewportSignKdtreeItem::MakeTown(this->index));
 
 	std::string town_string;
-	if (this->larger_town) {
+	if (_settings_game.game_creation.founder_mode) {
+		town_string = GetFounderTownLabel(this->index, _settings_client.gui.population_in_label);
+	} else if (this->larger_town) {
 		town_string = GetString(_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_CITY_POP : STR_VIEWPORT_TOWN_CITY, this->index, this->cache.population);
 	} else {
 		town_string = GetString(_settings_client.gui.population_in_label ? STR_VIEWPORT_TOWN_POP : STR_TOWN_NAME, this->index, this->cache.population);

@@ -100,6 +100,9 @@
 #include "table/strings.h"
 #include "table/string_colours.h"
 
+#include "market_func.h"
+#include "company_base.h"
+
 #include "safeguards.h"
 
 Point _tile_fract_coords;
@@ -1381,6 +1384,14 @@ static void ViewportAddTownStrings(DrawPixelInfo *dpi, const std::vector<const T
 	}
 
 	for (const Town *t : towns) {
+		if (_settings_game.game_creation.founder_mode) {
+			/* Founder Mode: label in the colour of the market leader, with your share. */
+			CompanyID leader = GetTownMarketLeader(t->index);
+			Colours colour = Company::IsValidID(leader) ? Company::Get(leader)->colour : Colours::Invalid;
+			std::string *str = ViewportAddString(dpi, &t->cache.sign, flags, colour);
+			if (str != nullptr) *str = GetFounderTownLabel(t->index, !small && _settings_client.gui.population_in_label);
+			continue;
+		}
 		std::string *str = ViewportAddString(dpi, &t->cache.sign, flags, Colours::Invalid);
 		if (str == nullptr) continue;
 

@@ -3308,6 +3308,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("roadmap",                 ConRoadmap);
 	IConsole::CmdRegister("hq",                      ConFounderHQ);
 	IConsole::CmdRegister("market",                  ConMarket);
+	IConsole::CmdRegister("market_window",           [](std::span<std::string_view> argv) { if (!argv.empty()) ShowMarketWindow(_local_company); return true; });
 	IConsole::CmdRegister("assign_rep",              ConAssignRep);
 	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);

@@ -20,6 +20,10 @@
 #include "timer/timer_game_economy.h"
 #include "town.h"
 #include "window_func.h"
+#include "strings_func.h"
+#include "viewport_func.h"
+
+#include "table/strings.h"
 
 #include "safeguards.h"
 
@@ -84,6 +88,63 @@ bool IsTownInRepRange(CompanyID company, TownID town)
 	const Town *t = Town::GetIfValid(town);
 	if (c == nullptr || t == nullptr || c->location_of_HQ == INVALID_TILE) return false;
 	return DistanceManhattan(c->location_of_HQ, t->xy) <= REP_RANGE_TILES;
+}
+
+/** Number of a company's sales reps working a town. */
+uint CountRepsInTown(CompanyID company, TownID town)
+{
+	uint n = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == company && e->role == EmployeeRole::Sales && e->town == town) n++;
+	}
+	return n;
+}
+
+/**
+ * Opportunity: word of mouth has brought customers here, but nobody from the company works the town.
+ * @param company The company.
+ * @param town The town.
+ * @return True when the town is worth a rep or a hub.
+ */
+bool IsTownOpportunity(CompanyID company, TownID town)
+{
+	const Town *t = Town::GetIfValid(town);
+	if (t == nullptr || !Company::IsValidID(company)) return false;
+	return t->founder_users[company] > 0 && CountRepsInTown(company, town) == 0 && GetCompanyHQTown(company) != town;
+}
+
+/** Company with the most customers in a town, or invalid when nobody has any. */
+CompanyID GetTownMarketLeader(TownID town)
+{
+	const Town *t = Town::GetIfValid(town);
+	CompanyID leader = CompanyID::Invalid();
+	uint best = 0;
+	if (t == nullptr) return leader;
+	for (const Company *c : Company::Iterate()) {
+		if (t->founder_users[c->index] > best) {
+			best = t->founder_users[c->index];
+			leader = c->index;
+		}
+	}
+	return leader;
+}
+
+/**
+ * Map label of a town in Founder Mode: name, optionally population, your share and opportunity.
+ * @param town The town.
+ * @param with_population Include the population, as the normal label setting does.
+ * @return Label text.
+ */
+std::string GetFounderTownLabel(TownID town, bool with_population)
+{
+	const Town *t = Town::Get(town);
+	uint size = GetTownMarketSize(town);
+	uint share = 0;
+	if (Company::IsValidID(_local_company) && size > 0) share = t->founder_users[_local_company] * 100 / size;
+	StringID str = IsTownOpportunity(_local_company, town)
+			? (with_population ? STR_VIEWPORT_TOWN_FOUNDER_POP_OPPORTUNITY : STR_VIEWPORT_TOWN_FOUNDER_OPPORTUNITY)
+			: (with_population ? STR_VIEWPORT_TOWN_FOUNDER_POP : STR_VIEWPORT_TOWN_FOUNDER);
+	return GetString(str, town, t->cache.population, share);
 }
 
 /** Potential customers in a town. */
@@ -178,4 +239,8 @@ static const IntervalTimer<TimerGameEconomy> _economy_market_monthly({TimerGameE
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} has {} users, MRR {}", c->index + 1, GetCompanyUsers(c->index), mrr);
 		InvalidateWindowData(WindowClass::Market, c->index);
 	}
+
+	/* Shares changed: refresh town labels on the map. */
+	UpdateAllTownVirtCoords();
+	MarkWholeScreenDirty();
 });

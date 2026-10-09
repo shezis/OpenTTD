@@ -3878,6 +3878,22 @@ STR_FOUNDER_START_PICK                                          :{BLACK}Pick a t
 STR_FOUNDER_START_BUILD                                         :{BLACK}Open HQ in {TOWN}
 STR_FOUNDER_START_BUILD_TOOLTIP                                 :{BLACK}Build your HQ on the nearest free spot to the town centre
 STR_FOUNDER_START_NO_SPACE                                      :{WHITE}... no free space near the town centre. Try another town
+STR_MARKET_CAPTION                                              :{WHITE}{COMPANY} Market
+STR_MARKET_LIST_TOOLTIP                                         :{BLACK}Towns, biggest first. Bar colours show each company's customers. Double-click to look at a town
+STR_MARKET_TOWN                                                 :{TOWN}: {NUM} of {NUM}
+STR_MARKET_STATUS_HQ                                            :{NUM}% · your HQ town
+STR_MARKET_STATUS_OPPORTUNITY                                   :{NUM}% · opportunity
+STR_MARKET_STATUS_OUT_OF_RANGE                                  :{NUM}% · out of range
+STR_MARKET_STATUS_NONE                                          :{NUM}%
+STR_MARKET_WANTS                                                :wants {STRING} and {STRING} · {NUM} rep{P "" s} here
+STR_MARKET_SUMMARY                                              :{BLACK}{NUM} customer{P "" s} · MRR {CURRENCY_LONG} · {CURRENCY_SHORT} per customer per month
+STR_MARKET_ADD_REP                                              :{BLACK}Add rep here
+STR_MARKET_ADD_REP_TOOLTIP                                      :{BLACK}Send a free sales rep to the selected town. Reps reach towns near your HQ
+STR_MARKET_REMOVE_REP                                           :{BLACK}Remove rep
+STR_MARKET_REMOVE_REP_TOOLTIP                                   :{BLACK}Take one sales rep off the selected town
+STR_MARKET_SHOW                                                 :{BLACK}Show on map
+STR_MARKET_SHOW_TOOLTIP                                         :{BLACK}Scroll the map to the selected town
+STR_MARKET_NO_FREE_REP                                          :{WHITE}... every sales rep already has a town. Hire one or move a rep
 STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
 STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
 STR_FOUNDER_TAB_WORK                                            :{BLACK}Work
@@ -6133,6 +6149,10 @@ STR_SAVEGAME_NAME_SPECTATOR                                     :Spectator, {1:S
 
 # Viewport strings
 STR_VIEWPORT_TOWN_POP                                           :{TOWN} ({COMMA})
+STR_VIEWPORT_TOWN_FOUNDER                                       :{TOWN} · {NUM}%
+STR_VIEWPORT_TOWN_FOUNDER_POP                                   :{TOWN} ({COMMA}) · you {NUM}%
+STR_VIEWPORT_TOWN_FOUNDER_OPPORTUNITY                           :{TOWN} · {NUM}% · opportunity
+STR_VIEWPORT_TOWN_FOUNDER_POP_OPPORTUNITY                       :{TOWN} ({COMMA}) · you {NUM}% · opportunity
 STR_VIEWPORT_TOWN_CITY                                          :{TOWN} {CITY_ICON}
 STR_VIEWPORT_TOWN_CITY_POP                                      :{TOWN} ({COMMA}) {CITY_ICON}
 STR_VIEWPORT_STATION                                            :{STATION} {STATION_FEATURES}

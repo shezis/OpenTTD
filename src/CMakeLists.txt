@@ -369,6 +369,7 @@ add_files(
     founder_gui.cpp
     market.cpp
     market_func.h
+    market_gui.cpp
     founder_gui.h
     feature_base.h
     feature_cmd.h

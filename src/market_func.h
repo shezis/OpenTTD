@@ -26,5 +26,10 @@ Money GetCompanyPricePerUser(CompanyID company);
 Money GetCompanyMRR(CompanyID company);
 TownID GetCompanyHQTown(CompanyID company);
 bool IsTownInRepRange(CompanyID company, TownID town);
+bool IsTownOpportunity(CompanyID company, TownID town);
+uint CountRepsInTown(CompanyID company, TownID town);
+CompanyID GetTownMarketLeader(TownID town);
+std::string GetFounderTownLabel(TownID town, bool with_population);
+void ShowMarketWindow(CompanyID company);
 
 #endif /* MARKET_FUNC_H */

@@ -20,6 +20,7 @@ add_files(
     genworld_widget.h
     goal_widget.h
     founder_widget.h
+    market_widget.h
     office_widget.h
     roadmap_widget.h
     team_widget.h
