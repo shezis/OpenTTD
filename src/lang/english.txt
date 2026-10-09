@@ -3873,6 +3873,8 @@ STR_FOUNDER_SETUP_TR_FOUR                                       :{BLACK}4 operat
 STR_FOUNDER_SETUP_TR_TOOLTIP                                    :{BLACK}AI transit operators build buses and trains between towns, paid by the city. Served towns grow faster. More operators use more CPU
 STR_CONFIG_SETTING_FOUNDER_TRANSIT                              :City transit operators: {STRING2}
 STR_CONFIG_SETTING_FOUNDER_TRANSIT_HELPTEXT                     :Number of AI transit operators that run city transport in Founder Mode, funded by a city budget
+STR_CONFIG_SETTING_FOUNDER_RIVALS                               :Rival startups: {STRING2}
+STR_CONFIG_SETTING_FOUNDER_RIVALS_HELPTEXT                      :Computer-run startups that compete with you for customers. They follow the same rules as you
 STR_FOUNDER_SETUP_MAP                                           :{BLACK}Map settings
 STR_FOUNDER_SETUP_MAP_TOOLTIP                                   :{BLACK}Choose map size, terrain and towns before founding
 STR_FOUNDER_SETUP_START                                         :{WHITE}Found company

@@ -152,13 +152,13 @@ static Employee *CreateEmployee(CompanyID company, EmployeeRole role)
 }
 
 /**
- * Give a new company its starting team from the founder background setting.
- * Applies to every company, AI rivals included, so everyone plays by the same rules.
+ * Give a new startup its starting team. Rival startups pick a background like the player does.
  * @param company The new company.
+ * @param background 0 engineer, 1 seller, 2 operator.
  */
-void ApplyFounderBackground(CompanyID company)
+void ApplyFounderBackground(CompanyID company, uint8_t background)
 {
-	switch (_settings_game.game_creation.founder_background) {
+	switch (background) {
 		default:
 		case 0: // Engineer.
 			CreateEmployee(company, EmployeeRole::Engineer);

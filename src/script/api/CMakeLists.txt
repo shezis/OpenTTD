@@ -158,6 +158,7 @@ add_files(
     script_client.hpp
     script_clientlist.hpp
     script_company.hpp
+    script_founder.hpp
     script_companymode.hpp
     script_controller.hpp
     script_date.hpp
@@ -232,6 +233,7 @@ add_files(
     script_client.cpp
     script_clientlist.cpp
     script_company.cpp
+    script_founder.cpp
     script_companymode.cpp
     script_controller.cpp
     script_date.cpp

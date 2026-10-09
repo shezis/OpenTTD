@@ -531,6 +531,7 @@ static const SaveLoad _company_desc[] = {
 	SaveLoad::Array<VarFileType::U8, 4>("founder_round_investor", SLE_OBJECT_ADDRESS(CompanyProperties, founder_round_investor), SaveLoadVersion::FounderModeFunding),
 	SaveLoad::Variable<VarFileType::Bool>("founder_ipo", SLE_OBJECT_ADDRESS(CompanyProperties, founder_ipo), SaveLoadVersion::FounderModeIPO),
 	SaveLoad::Variable<VarFileType::U8>("founder_runway_warning", SLE_OBJECT_ADDRESS(CompanyProperties, founder_runway_warning), SaveLoadVersion::FounderModeIPO),
+	SaveLoad::Variable<VarFileType::Bool>("founder_operator", SLE_OBJECT_ADDRESS(CompanyProperties, founder_operator), SaveLoadVersion::FounderModeRivals),
 
 	SaveLoad::Variable<VarFileType::U8>("colour", SLE_OBJECT_ADDRESS(CompanyProperties, colour)),
 	SaveLoad::Variable<VarFileType::U8>("money_fraction", SLE_OBJECT_ADDRESS(CompanyProperties, money_fraction)),

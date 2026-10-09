@@ -50,6 +50,7 @@
 #include "table/company_face.h"
 
 #include "employee_base.h"
+#include "market_func.h"
 
 #include "safeguards.h"
 
@@ -667,7 +668,10 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = CompanyID::Invalid(
 
 	SetDefaultCompanySettings(c->index);
 	ClearEnginesHiddenFlagOfCompany(c->index);
-	if (_settings_game.game_creation.founder_mode && !is_ai) ApplyFounderBackground(c->index);
+	if (_settings_game.game_creation.founder_mode) {
+		uint8_t background = is_ai ? AssignFounderAIRole(c) : _settings_game.game_creation.founder_background;
+		if (!c->founder_operator) ApplyFounderBackground(c->index, background);
+	}
 
 	GeneratePresidentName(c);
 

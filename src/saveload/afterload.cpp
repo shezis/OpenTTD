@@ -3427,6 +3427,11 @@ bool AfterLoadGame()
 		}
 	}
 
+	/* Founder Mode: before rival startups, every AI company was a transit operator. */
+	if (IsSavegameVersionBefore(SaveLoadVersion::FounderModeRivals)) {
+		for (Company *c : Company::Iterate()) c->founder_operator = c->is_ai;
+	}
+
 	AfterLoadLabelMaps();
 	AfterLoadCompanyStats();
 	AfterLoadStoryBook();

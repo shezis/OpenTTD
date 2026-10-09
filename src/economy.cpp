@@ -557,8 +557,10 @@ static void CompanyCheckBankrupt(Company *c)
 	/* If "Infinite money" setting is on, companies should not go bankrupt. */
 	if (_settings_game.difficulty.infinite_money) return;
 
-	/*  If the company has money again, it does not go bankrupt */
-	if (c->money - c->current_loan >= -c->GetMaxLoan()) {
+	/* If the company has money again, it does not go bankrupt.
+	 * Founder Mode startups pay monthly costs whatever their cash, so they are insolvent as soon as it is negative. */
+	bool solvent = _settings_game.game_creation.founder_mode && !c->founder_operator ? c->money >= 0 : c->money - c->current_loan >= -c->GetMaxLoan();
+	if (solvent) {
 		int previous_months_of_bankruptcy = CeilDiv(c->months_of_bankruptcy, 3);
 		c->months_of_bankruptcy = 0;
 		c->bankrupt_asked = CompanyMask{};

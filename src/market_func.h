@@ -38,9 +38,19 @@ std::string GetFounderTownLabel(TownID town, bool with_population);
 void ShowMarketWindow(CompanyID company);
 void ConfigureFounderOperators();
 bool IsFounderOperator(CompanyID company);
+uint8_t AssignFounderAIRole(struct Company *c);
+
+/** How a rival startup AI plays. */
+enum class RivalPersonality : uint8_t {
+	Bootstrapper, ///< Grows slowly near break-even.
+	Blitzscaler, ///< Raises early and expands fast.
+	Copycat, ///< Opens hubs in the leader's best towns.
+	Incumbent, ///< Starts big, ships slowly; set up by scenarios.
+};
 Money GetOperatorTransitBudget(CompanyID company);
 
 static constexpr std::string_view FOUNDER_OPERATOR_AI = "SimpleAI"; ///< Bundled AI that runs transit operators.
+static constexpr std::string_view FOUNDER_RIVAL_AI = "FounderRival"; ///< Bundled AI that runs rival startups.
 static constexpr Money OPERATOR_BUDGET_PER_RESIDENT = 1; ///< Monthly city transit budget per resident of a served town.
 static constexpr Money OPERATOR_BUDGET_CAP = 40000; ///< Monthly city transit budget cap per operator.
 static constexpr std::array<Money, 3> SPONSOR_TIERS = {2000, 5000, 10000}; ///< Monthly sponsorship amounts.

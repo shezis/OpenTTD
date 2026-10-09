@@ -452,6 +452,7 @@ struct GameCreationSettings {
 	bool founder_mode; ///< Founder Mode: play a startup instead of a transport company
 	uint8_t founder_background; ///< Founder Mode: founder background, sets the starting team (0 engineer, 1 seller, 2 operator)
 	uint8_t founder_transit_operators; ///< Founder Mode: number of AI transit operators running city transport
+	uint8_t founder_rivals; ///< Founder Mode: number of AI rival startups
 	uint8_t oil_refinery_limit; ///< distance oil refineries allowed from map edge
 	uint8_t snow_line_height; ///< the configured snow line height (deduced from "snow_coverage")
 	uint8_t snow_coverage; ///< the amount of snow coverage on the map

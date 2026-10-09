@@ -182,7 +182,7 @@ std::string GetFounderTownLabel(TownID town, bool with_population)
 void ConfigureFounderOperators()
 {
 	uint8_t n = _settings_newgame.game_creation.founder_transit_operators;
-	_settings_newgame.difficulty.max_no_competitors = n;
+	_settings_newgame.difficulty.max_no_competitors = n + _settings_newgame.game_creation.founder_rivals;
 	_settings_newgame.difficulty.competitors_interval = MIN_COMPETITORS_INTERVAL;
 	/* Every slot: AIs may take any free company slot, e.g. slot 0 in a dedicated server. */
 	for (uint i = 0; i < MAX_COMPANIES; i++) {
@@ -196,14 +196,56 @@ void ConfigureFounderOperators()
 }
 
 /**
- * Transit operators are the AI companies. (Rival startups, also AI, arrive in phase 6 and will be told apart then.)
+ * Is the company a transit operator? The other AI companies are rival startups.
  * @param company The company.
  * @return True for a transit operator.
  */
 bool IsFounderOperator(CompanyID company)
 {
 	const Company *c = Company::GetIfValid(company);
-	return c != nullptr && c->is_ai;
+	return c != nullptr && c->founder_operator;
+}
+
+/**
+ * Decide what a new AI company is: transit operators fill their configured number first, then rival startups.
+ * Deterministic from game state, so every client agrees; the AI script is only chosen where AIs run.
+ * @param c The new AI company.
+ * @return The founder background for a rival startup's starting team.
+ */
+uint8_t AssignFounderAIRole(Company *c)
+{
+	uint operators = 0;
+	uint rivals = 0;
+	for (const Company *o : Company::Iterate()) {
+		if (o == c || !o->is_ai) continue;
+		if (o->founder_operator) {
+			operators++;
+		} else {
+			rivals++;
+		}
+	}
+	c->founder_operator = operators < _settings_game.game_creation.founder_transit_operators;
+
+	RivalPersonality personality = static_cast<RivalPersonality>(rivals % to_underlying(RivalPersonality::Incumbent));
+	auto config = std::make_unique<AIConfig>();
+	if (c->founder_operator) {
+		config->Change(FOUNDER_OPERATOR_AI);
+		if (config->HasScript()) {
+			config->SetSetting("use_trains", 1);
+			config->SetSetting("use_roadvehs", 1);
+			config->SetSetting("use_aircraft", 0);
+		}
+	} else {
+		config->Change(FOUNDER_RIVAL_AI);
+		if (config->HasScript()) config->SetSetting("personality", to_underlying(personality));
+	}
+	if (config->HasScript()) c->ai_config = std::move(config);
+
+	switch (personality) {
+		case RivalPersonality::Bootstrapper: return 0; // Engineer.
+		case RivalPersonality::Incumbent: return 2; // Operator.
+		default: return 1; // Seller.
+	}
 }
 
 /**

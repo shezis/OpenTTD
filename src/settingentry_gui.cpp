@@ -792,6 +792,7 @@ SettingsContainer &GetSettingsTree()
 			genworld->Add(new SettingEntry("game_creation.founder_mode"));
 			genworld->Add(new SettingEntry("game_creation.founder_background"));
 			genworld->Add(new SettingEntry("game_creation.founder_transit_operators"));
+			genworld->Add(new SettingEntry("game_creation.founder_rivals"));
 			genworld->Add(new SettingEntry("game_creation.landscape"));
 			genworld->Add(new SettingEntry("game_creation.land_generator"));
 			genworld->Add(new SettingEntry("difficulty.terrain_type"));
