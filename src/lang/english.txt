@@ -1612,6 +1612,8 @@ STR_CONFIG_SETTING_SHOW_CARGO_IN_LISTS_HELPTEXT                 :If enabled, the
 STR_CONFIG_SETTING_LANDSCAPE                                    :Landscape: {STRING2}
 STR_CONFIG_SETTING_LANDSCAPE_HELPTEXT                           :Landscapes define basic gameplay scenarios with different cargoes and town growth requirements. NewGRF and Game Scripts allow finer control though
 
+STR_CONFIG_SETTING_FOUNDER_MODE                                 :Founder Mode: {STRING2}
+STR_CONFIG_SETTING_FOUNDER_MODE_HELPTEXT                        :Play as the founder of a startup instead of running a transport company. Transport construction and vehicles are switched off for the whole game
 STR_CONFIG_SETTING_LAND_GENERATOR                               :Land generator: {STRING2}
 STR_CONFIG_SETTING_LAND_GENERATOR_HELPTEXT                      :The original generator depends on the base graphics set, and composes fixed landscape shapes. TerraGenesis is a Perlin noise based generator with finer control settings
 ###length 2
@@ -2256,10 +2258,11 @@ STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :no compatible G
 STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :GPU driver crashed the game. Hardware acceleration disabled
 
 # Intro window
-STR_INTRO_CAPTION                                               :{WHITE}OpenTTD
+STR_INTRO_CAPTION                                               :{WHITE}Founder Mode · built on OpenTTD
 STR_INTRO_VERSION                                               :OpenTTD {REV}
 
 STR_INTRO_NEW_GAME                                              :{BLACK}New Game
+STR_INTRO_NEW_STARTUP                                           :{BLACK}New Startup
 STR_INTRO_LOAD_GAME                                             :{BLACK}Load Game
 STR_INTRO_PLAY_SCENARIO                                         :{BLACK}Play Scenario
 STR_INTRO_PLAY_HEIGHTMAP                                        :{BLACK}Play Heightmap
@@ -2273,6 +2276,7 @@ STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Online C
 STR_INTRO_QUIT                                                  :{BLACK}Exit
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Start a new game. Ctrl+Click skips map configuration
+STR_INTRO_TOOLTIP_NEW_STARTUP                                   :{BLACK}Start a new game in Founder Mode. Ctrl+Click skips map configuration
 STR_INTRO_TOOLTIP_LOAD_GAME                                     :{BLACK}Load a saved game
 STR_INTRO_TOOLTIP_PLAY_HEIGHTMAP                                :{BLACK}Start a new game, using a heightmap as landscape
 STR_INTRO_TOOLTIP_PLAY_SCENARIO                                 :{BLACK}Start a new game, using a customised scenario

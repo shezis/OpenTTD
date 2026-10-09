@@ -2033,6 +2033,11 @@ struct MainToolbarWindow : Window {
 		this->SetWidgetDisabledState(WID_TN_GOAL, Goal::GetNumItems() == 0);
 		this->SetWidgetDisabledState(WID_TN_STORY, StoryPage::GetNumItems() == 0);
 
+		/* Founder Mode has no transport network, so switch off everything that builds or lists one. */
+		if (_settings_game.game_creation.founder_mode) {
+			this->SetWidgetsDisabledState(true, WID_TN_RAILS, WID_TN_ROADS, WID_TN_TRAMS, WID_TN_WATER, WID_TN_AIR, WID_TN_STATIONS, WID_TN_TRAINS, WID_TN_ROADVEHS, WID_TN_SHIPS, WID_TN_AIRCRAFT);
+		}
+
 		this->DrawWidgets();
 	}
 
@@ -2049,6 +2054,15 @@ struct MainToolbarWindow : Window {
 
 	EventState OnHotkey(int hotkey) override
 	{
+		if (_settings_game.game_creation.founder_mode) {
+			switch (hotkey) {
+				case MTHK_BUILD_RAIL: case MTHK_BUILD_ROAD: case MTHK_BUILD_TRAM: case MTHK_BUILD_DOCKS: case MTHK_BUILD_AIRPORT:
+				case MTHK_STATIONS: case MTHK_TRAIN_LIST: case MTHK_ROADVEH_LIST: case MTHK_SHIP_LIST: case MTHK_AIRCRAFT_LIST:
+					return EventState::Handled;
+				default: break;
+			}
+		}
+
 		CallBackFunction cbf = CallBackFunction::None;
 		switch (hotkey) {
 			case MTHK_PAUSE: ToolbarPauseClick(this); break;

@@ -789,6 +789,7 @@ SettingsContainer &GetSettingsTree()
 
 		SettingsPage *genworld = main->Add(new SettingsPage(STR_CONFIG_SETTING_GENWORLD));
 		{
+			genworld->Add(new SettingEntry("game_creation.founder_mode"));
 			genworld->Add(new SettingEntry("game_creation.landscape"));
 			genworld->Add(new SettingEntry("game_creation.land_generator"));
 			genworld->Add(new SettingEntry("difficulty.terrain_type"));
