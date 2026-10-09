@@ -44,6 +44,8 @@
 #include "table/strings.h"
 #include "table/object_land.h"
 
+#include "team_gui.h"
+
 #include "safeguards.h"
 
 ObjectPool _object_pool("Object");
@@ -738,7 +740,11 @@ static bool ClickTile_Object(TileIndex tile)
 {
 	if (!IsObjectType(tile, OBJECT_HQ)) return false;
 
-	ShowCompany(GetTileOwner(tile));
+	if (_settings_game.game_creation.founder_mode) {
+		ShowTeamWindow(GetTileOwner(tile));
+	} else {
+		ShowCompany(GetTileOwner(tile));
+	}
 	return true;
 }
 

@@ -53,6 +53,10 @@
 
 #include "table/strings.h"
 
+#include "employee_base.h"
+#include "employee_cmd.h"
+#include "team_gui.h"
+
 #include "safeguards.h"
 
 /* scriptfile handling */
@@ -829,6 +833,56 @@ static bool ConBanList(std::span<std::string_view> argv)
 		i++;
 	}
 
+	return true;
+}
+
+/** Founder Mode: hire an employee. @copydoc IConsoleCmdProc */
+static bool ConHire(std::span<std::string_view> argv)
+{
+	if (argv.size() != 2) {
+		IConsolePrint(CC_HELP, "Hire an employee in Founder Mode. Usage: 'hire <engineer|designer|sales|operations>'.");
+		return true;
+	}
+	if (_game_mode != GameMode::Normal || !_settings_game.game_creation.founder_mode) {
+		IConsolePrint(CC_ERROR, "This command is only available in a Founder Mode game.");
+		return true;
+	}
+
+	static const std::pair<std::string_view, EmployeeRole> roles[] = {
+		{"engineer", EmployeeRole::Engineer}, {"designer", EmployeeRole::Designer},
+		{"sales", EmployeeRole::Sales}, {"operations", EmployeeRole::Operations},
+	};
+	for (const auto &[name, role] : roles) {
+		if (StrEqualsIgnoreCase(argv[1], name)) {
+			Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role);
+			return true;
+		}
+	}
+	IConsolePrint(CC_ERROR, "Unknown role '{}'.", argv[1]);
+	return true;
+}
+
+/** Founder Mode: open the team window. @copydoc IConsoleCmdProc */
+static bool ConTeam(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Open your team window in Founder Mode. Usage: 'team'.");
+		return true;
+	}
+	ShowTeamWindow(_local_company);
+	return true;
+}
+
+/** Founder Mode: print headcount and payroll. @copydoc IConsoleCmdProc */
+static bool ConPayroll(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Print headcount and monthly payroll for each company. Usage: 'payroll'.");
+		return true;
+	}
+	for (const Company *c : Company::Iterate()) {
+		IConsolePrint(CC_DEFAULT, "Company {}: {} employees, payroll {} per month, cash {}.", c->index + 1, CountEmployees(c->index), GetMonthlyPayroll(c->index), c->money);
+	}
 	return true;
 }
 
@@ -3064,6 +3118,9 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("banlist",                 ConBanList,          ConHookServerOnly);
 
 	IConsole::CmdRegister("pause",                   ConPauseGame,        ConHookServerOrNoNetwork);
+	IConsole::CmdRegister("hire",                    ConHire);
+	IConsole::CmdRegister("team",                    ConTeam);
+	IConsole::CmdRegister("payroll",                 ConPayroll);
 	IConsole::CmdRegister("unpause",                 ConUnpauseGame,      ConHookServerOrNoNetwork);
 
 	IConsole::CmdRegister("authorized_key", ConNetworkAuthorizedKey, ConHookServerOnly);

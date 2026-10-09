@@ -15,6 +15,7 @@ add_files(
     engine_sl.cpp
     game_sl.cpp
     gamelog_sl.cpp
+    employee_sl.cpp
     goal_sl.cpp
     group_sl.cpp
     industry_sl.cpp

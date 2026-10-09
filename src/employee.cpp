@@ -1,0 +1,176 @@
+/*
+ * This file is part of OpenTTD.
+ * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
+ * OpenTTD is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <https://www.gnu.org/licenses/old-licenses/gpl-2.0>.
+ */
+
+/** @file employee.cpp Founder Mode employees: hiring, letting go and payroll. */
+
+#include "stdafx.h"
+#include "employee_base.h"
+#include "employee_cmd.h"
+#include "company_base.h"
+#include "company_func.h"
+#include "command_func.h"
+#include "core/pool_func.hpp"
+#include "core/random_func.hpp"
+#include "debug.h"
+#include "settings_type.h"
+#include "window_func.h"
+
+#include "table/strings.h"
+
+#include "safeguards.h"
+
+EmployeePool _employee_pool("Employee");
+INSTANTIATE_POOL_METHODS(Employee)
+
+static const std::string_view _first_names[] = {
+	"Priya", "Marco", "Lena", "Sam", "Ada", "Tom", "Mei", "Jonas", "Amara", "Diego", "Noor", "Felix",
+	"Sofia", "Kwame", "Ingrid", "Ravi", "Chloe", "Mateo", "Yuki", "Omar", "Hannah", "Luca", "Zara", "Ethan",
+};
+
+static const std::string_view _last_names[] = {
+	"Shah", "Ruiz", "Ko", "Okafor", "Byrne", "Lind", "Chen", "Weber", "Mensah", "Silva", "Haddad", "Novak",
+	"Rossi", "Boateng", "Larsen", "Iyer", "Martin", "Lopez", "Tanaka", "Farouk", "Schmidt", "Bianchi", "Khan", "Walsh",
+};
+
+static constexpr uint NUM_EMPLOYEE_NAMES = std::size(_first_names) * std::size(_last_names);
+
+/**
+ * Get the display name of this employee.
+ * @return First and last name.
+ */
+std::string Employee::GetName() const
+{
+	uint first = this->name_index % std::size(_first_names);
+	uint last = (this->name_index / std::size(_first_names)) % std::size(_last_names);
+	return fmt::format("{} {}", _first_names[first], _last_names[last]);
+}
+
+/**
+ * Typical monthly salary for a role, before skill is applied.
+ * @param role The role.
+ * @return Base monthly salary.
+ */
+static Money GetBaseSalary(EmployeeRole role)
+{
+	switch (role) {
+		case EmployeeRole::Engineer: return 6000;
+		case EmployeeRole::Designer: return 5000;
+		case EmployeeRole::Sales: return 4500;
+		case EmployeeRole::Operations: return 4000;
+		default: NOT_REACHED();
+	}
+}
+
+/**
+ * Count the employees of a company.
+ * @param company The company.
+ * @return Number of employees.
+ */
+uint CountEmployees(CompanyID company)
+{
+	uint count = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == company) count++;
+	}
+	return count;
+}
+
+/**
+ * Sum the monthly salaries of a company's employees.
+ * @param company The company.
+ * @return Total monthly payroll.
+ */
+Money GetMonthlyPayroll(CompanyID company)
+{
+	Money total = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == company) total += e->salary;
+	}
+	return total;
+}
+
+/** Charge every company its monthly payroll. Called from the monthly company loop. */
+void PayEmployees()
+{
+	for (const Company *c : Company::Iterate()) {
+		Money payroll = GetMonthlyPayroll(c->index);
+		if (payroll == 0) continue;
+
+		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, payroll));
+		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} paid payroll {}, cash now {}", c->index + 1, payroll, c->money);
+		InvalidateWindowData(WindowClass::Team, c->index);
+	}
+}
+
+/**
+ * Move or remove employees when a company is taken over or closed.
+ * @param old_owner The company that is going away.
+ * @param new_owner The company taking over, or #INVALID_OWNER when the company closes.
+ */
+void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner)
+{
+	for (Employee *e : Employee::Iterate()) {
+		if (e->company != old_owner) continue;
+
+		if (new_owner == INVALID_OWNER) {
+			delete e;
+		} else {
+			e->company = new_owner;
+		}
+	}
+	InvalidateWindowData(WindowClass::Team, old_owner);
+	if (new_owner != INVALID_OWNER) InvalidateWindowData(WindowClass::Team, new_owner);
+}
+
+/**
+ * Hire a new employee. The recruiting fee is one month of the base salary.
+ * @param flags Type of operation.
+ * @param role Role of the new employee.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role)
+{
+	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
+	if (role >= EmployeeRole::End) return CMD_ERROR;
+	if (!Company::IsValidID(_current_company)) return CMD_ERROR;
+	if (!Employee::CanAllocateItem() || CountEmployees(_current_company) >= MAX_EMPLOYEES_PER_COMPANY) return CommandCost(STR_ERROR_TEAM_FULL);
+
+	Money base = GetBaseSalary(role);
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		Employee *e = Employee::Create(_current_company, role);
+		e->name_index = RandomRange(NUM_EMPLOYEE_NAMES);
+		e->skill = 30 + RandomRange(61);
+		e->morale = 60 + RandomRange(31);
+		e->salary = base * (50 + e->skill) / 100;
+		InvalidateWindowData(WindowClass::Team, _current_company);
+	}
+
+	return CommandCost(ExpensesType::Other, base);
+}
+
+/**
+ * Let an employee go. Severance is one month of their salary.
+ * @param flags Type of operation.
+ * @param employee The employee to let go.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee)
+{
+	Employee *e = Employee::GetIfValid(employee);
+	if (e == nullptr || e->company != _current_company) return CMD_ERROR;
+
+	CommandCost cost(ExpensesType::Other, e->salary);
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		CompanyID company = e->company;
+		delete e;
+		InvalidateWindowData(WindowClass::Team, company);
+	}
+
+	return cost;
+}

@@ -1,0 +1,226 @@
+/*
+ * This file is part of OpenTTD.
+ * OpenTTD is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
+ * OpenTTD is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OpenTTD. If not, see <https://www.gnu.org/licenses/old-licenses/gpl-2.0>.
+ */
+
+/** @file team_gui.cpp Founder Mode team window: list, hire and let go employees. */
+
+#include "stdafx.h"
+#include "team_gui.h"
+#include "employee_base.h"
+#include "employee_cmd.h"
+#include "command_func.h"
+#include "company_base.h"
+#include "company_func.h"
+#include "gfx_func.h"
+#include "strings_func.h"
+#include "window_func.h"
+#include "window_gui.h"
+#include "zoom_func.h"
+
+#include "widgets/team_widget.h"
+
+#include "table/strings.h"
+
+#include "safeguards.h"
+
+/** Name of each role, indexed by #EmployeeRole. */
+static const StringID _employee_role_names[] = {
+	STR_TEAM_ROLE_ENGINEER,
+	STR_TEAM_ROLE_DESIGNER,
+	STR_TEAM_ROLE_SALES,
+	STR_TEAM_ROLE_OPERATIONS,
+};
+static_assert(std::size(_employee_role_names) == to_underlying(EmployeeRole::End));
+
+/** Window listing a company's employees. */
+struct TeamWindow : public Window {
+	Scrollbar *vscroll = nullptr; ///< Scrollbar of the employee list.
+	EmployeeID selected = EmployeeID::Invalid(); ///< Currently selected employee.
+
+	TeamWindow(WindowDesc &desc, WindowNumber window_number) : Window(desc)
+	{
+		this->CreateNestedTree();
+		this->vscroll = this->GetScrollbar(WID_TEAM_SCROLLBAR);
+		this->FinishInitNested(window_number);
+		this->owner = static_cast<Owner>(this->window_number);
+		this->OnInvalidateData(0);
+	}
+
+	/** Collect this company's employees in pool order. */
+	std::vector<const Employee *> GetEmployees() const
+	{
+		std::vector<const Employee *> list;
+		for (const Employee *e : Employee::Iterate()) {
+			if (e->company == this->window_number) list.push_back(e);
+		}
+		return list;
+	}
+
+	bool IsOwnCompany() const
+	{
+		return this->window_number == _local_company;
+	}
+
+	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
+	{
+		if (widget == WID_TEAM_CAPTION) return GetString(STR_TEAM_CAPTION, this->window_number);
+		return this->Window::GetWidgetString(widget, stringid);
+	}
+
+	void UpdateWidgetSize(WidgetID widget, Dimension &size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension &fill, [[maybe_unused]] Dimension &resize) override
+	{
+		switch (widget) {
+			case WID_TEAM_LIST: {
+				resize.width = 1;
+				fill.height = resize.height = GetCharacterHeight(FontSize::Normal);
+				size.height = 8 * resize.height + WidgetDimensions::scaled.framerect.Vertical();
+				size.width = std::max<uint>(size.width, ScaleGUITrad(460));
+				break;
+			}
+
+			case WID_TEAM_SUMMARY:
+				size.height = GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.framerect.Vertical();
+				break;
+		}
+	}
+
+	void DrawWidget(const Rect &r, WidgetID widget) const override
+	{
+		switch (widget) {
+			case WID_TEAM_LIST: this->DrawList(r); break;
+
+			case WID_TEAM_SUMMARY: {
+				CompanyID company = static_cast<CompanyID>(this->window_number);
+				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_TEAM_SUMMARY, CountEmployees(company), GetMonthlyPayroll(company)));
+				break;
+			}
+		}
+	}
+
+	void DrawList(const Rect &r) const
+	{
+		Rect ir = r.Shrink(WidgetDimensions::scaled.framerect);
+		const int line = GetCharacterHeight(FontSize::Normal);
+		const auto employees = this->GetEmployees();
+
+		if (employees.empty()) {
+			DrawString(ir, STR_TEAM_NONE);
+			return;
+		}
+
+		/* Columns as fractions of the width: name, role, skill, salary, morale. */
+		const int w = ir.Width();
+		const int x_role = w * 34 / 100, x_skill = w * 54 / 100, x_salary = w * 68 / 100, x_morale = w * 86 / 100;
+
+		int pos = -this->vscroll->GetPosition();
+		const int cap = this->vscroll->GetCapacity();
+		for (const Employee *e : employees) {
+			if (pos >= 0 && pos < cap) {
+				Rect row = ir.WithHeight(line);
+				bool sel = e->index == this->selected;
+				if (sel) GfxFillRect(row.left, row.top, row.right, row.bottom, PC_DARK_GREY);
+				TextColour tc = sel ? TextColour::White : TextColour::Black;
+
+				DrawString(row.left, row.left + x_role - 4, row.top, e->GetName(), tc);
+				DrawString(row.left + x_role, row.left + x_skill - 4, row.top, _employee_role_names[to_underlying(e->role)], tc);
+				DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, GetString(STR_TEAM_SKILL, e->skill), tc);
+				DrawString(row.left + x_salary, row.left + x_morale - 4, row.top, GetString(STR_TEAM_SALARY, e->salary), tc);
+				TextColour mood = e->morale >= 70 ? TextColour::Green : (e->morale >= 45 ? TextColour::Yellow : TextColour::Red);
+				DrawString(row.left + x_morale, row.right, row.top, GetString(STR_TEAM_MORALE, e->morale), sel ? TextColour::White : mood);
+				ir.top += line;
+			}
+			pos++;
+		}
+	}
+
+	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
+	{
+		switch (widget) {
+			case WID_TEAM_LIST: {
+				int row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_TEAM_LIST, WidgetDimensions::scaled.framerect.top);
+				const auto employees = this->GetEmployees();
+				this->selected = (row >= 0 && row < static_cast<int>(employees.size())) ? employees[row]->index : EmployeeID::Invalid();
+				this->OnInvalidateData(0);
+				break;
+			}
+
+			case WID_TEAM_HIRE_ENGINEER:
+			case WID_TEAM_HIRE_DESIGNER:
+			case WID_TEAM_HIRE_SALES:
+			case WID_TEAM_HIRE_OPERATIONS: {
+				EmployeeRole role = static_cast<EmployeeRole>(widget - WID_TEAM_HIRE_ENGINEER);
+				Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role);
+				break;
+			}
+
+			case WID_TEAM_FIRE:
+				if (this->selected != EmployeeID::Invalid()) {
+					Command<Commands::FireEmployee>::Post(STR_ERROR_CAN_T_LET_GO, this->selected);
+				}
+				break;
+		}
+	}
+
+	void OnResize() override
+	{
+		this->vscroll->SetCapacityFromWidget(this, WID_TEAM_LIST, WidgetDimensions::scaled.framerect.Vertical());
+	}
+
+	void OnInvalidateData([[maybe_unused]] int data = 0, [[maybe_unused]] bool gui_scope = true) override
+	{
+		if (!gui_scope) return;
+
+		if (!Employee::IsValidID(this->selected) || Employee::Get(this->selected)->company != this->window_number) {
+			this->selected = EmployeeID::Invalid();
+		}
+
+		this->vscroll->SetCount(this->GetEmployees().size());
+		bool own = this->IsOwnCompany();
+		this->SetWidgetsDisabledState(!own, WID_TEAM_HIRE_ENGINEER, WID_TEAM_HIRE_DESIGNER, WID_TEAM_HIRE_SALES, WID_TEAM_HIRE_OPERATIONS);
+		this->SetWidgetDisabledState(WID_TEAM_FIRE, !own || this->selected == EmployeeID::Invalid());
+		this->SetDirty();
+	}
+};
+
+static constexpr std::initializer_list<NWidgetPart> _nested_team_widgets = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_CLOSEBOX, Colours::Brown),
+		NWidget(WWT_CAPTION, Colours::Brown, WID_TEAM_CAPTION),
+		NWidget(WWT_SHADEBOX, Colours::Brown),
+		NWidget(WWT_DEFSIZEBOX, Colours::Brown),
+		NWidget(WWT_STICKYBOX, Colours::Brown),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PANEL, Colours::Brown, WID_TEAM_LIST), SetToolTip(STR_TEAM_LIST_TOOLTIP), SetScrollbar(WID_TEAM_SCROLLBAR), SetResize(1, 1), EndContainer(),
+		NWidget(NWID_VSCROLLBAR, Colours::Brown, WID_TEAM_SCROLLBAR),
+	EndContainer(),
+	NWidget(WWT_PANEL, Colours::Brown, WID_TEAM_SUMMARY), SetResize(1, 0), EndContainer(),
+	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_ENGINEER), SetStringTip(STR_TEAM_HIRE_ENGINEER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_DESIGNER), SetStringTip(STR_TEAM_HIRE_DESIGNER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_FIRE), SetStringTip(STR_TEAM_LET_GO, STR_TEAM_LET_GO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_RESIZEBOX, Colours::Brown),
+	EndContainer(),
+};
+
+static WindowDesc _team_desc(
+	WindowPosition::Automatic, "founder_team", 500, 220,
+	WindowClass::Team, WindowClass::None,
+	{},
+	_nested_team_widgets
+);
+
+/**
+ * Open the team window of a company.
+ * @param company The company whose team to show.
+ */
+void ShowTeamWindow(CompanyID company)
+{
+	if (!Company::IsValidID(company)) return;
+	AllocateWindowDescFront<TeamWindow>(_team_desc, company);
+}

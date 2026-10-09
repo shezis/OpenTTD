@@ -75,6 +75,8 @@
 
 #include "dropdown_common_type.h"
 
+#include "team_gui.h"
+
 #include "safeguards.h"
 
 
@@ -2035,7 +2037,7 @@ struct MainToolbarWindow : Window {
 
 		/* Founder Mode has no transport network, so switch off everything that builds or lists one. */
 		if (_settings_game.game_creation.founder_mode) {
-			this->SetWidgetsDisabledState(true, WID_TN_RAILS, WID_TN_ROADS, WID_TN_TRAMS, WID_TN_WATER, WID_TN_AIR, WID_TN_STATIONS, WID_TN_TRAINS, WID_TN_ROADVEHS, WID_TN_SHIPS, WID_TN_AIRCRAFT);
+			this->SetWidgetsDisabledState(true, WID_TN_RAILS, WID_TN_ROADS, WID_TN_TRAMS, WID_TN_WATER, WID_TN_AIR, WID_TN_TRAINS, WID_TN_ROADVEHS, WID_TN_SHIPS, WID_TN_AIRCRAFT);
 		}
 
 		this->DrawWidgets();
@@ -2043,6 +2045,11 @@ struct MainToolbarWindow : Window {
 
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
+		if (_game_mode != GameMode::Menu && widget == WID_TN_STATIONS && _settings_game.game_creation.founder_mode) {
+			/* In Founder Mode the stations button opens the team instead. */
+			ShowTeamWindow(_local_company);
+			return;
+		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
 	}
 
@@ -2057,7 +2064,7 @@ struct MainToolbarWindow : Window {
 		if (_settings_game.game_creation.founder_mode) {
 			switch (hotkey) {
 				case MTHK_BUILD_RAIL: case MTHK_BUILD_ROAD: case MTHK_BUILD_TRAM: case MTHK_BUILD_DOCKS: case MTHK_BUILD_AIRPORT:
-				case MTHK_STATIONS: case MTHK_TRAIN_LIST: case MTHK_ROADVEH_LIST: case MTHK_SHIP_LIST: case MTHK_AIRCRAFT_LIST:
+				case MTHK_TRAIN_LIST: case MTHK_ROADVEH_LIST: case MTHK_SHIP_LIST: case MTHK_AIRCRAFT_LIST:
 					return EventState::Handled;
 				default: break;
 			}
@@ -2073,7 +2080,13 @@ struct MainToolbarWindow : Window {
 			case MTHK_SMALLMAP: ShowSmallMap(); break;
 			case MTHK_TOWNDIRECTORY: ShowTownDirectory(); break;
 			case MTHK_SUBSIDIES: ShowSubsidiesList(); break;
-			case MTHK_STATIONS: ShowCompanyStations(_local_company); break;
+			case MTHK_STATIONS:
+				if (_settings_game.game_creation.founder_mode) {
+					ShowTeamWindow(_local_company);
+				} else {
+					ShowCompanyStations(_local_company);
+				}
+				break;
 			case MTHK_FINANCES: ShowCompanyFinances(_local_company); break;
 			case MTHK_COMPANIES: ShowCompany(_local_company); break;
 			case MTHK_STORY: ShowStoryBook(_local_company); break;

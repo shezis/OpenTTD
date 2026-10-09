@@ -380,6 +380,9 @@ enum class Commands : uint8_t {
 	UpdateLeagueTableElementScore, ///< update the score of a league table element
 	RemoveLeagueTableElement, ///< remove a league table element
 
+	HireEmployee, ///< Founder Mode: hire an employee
+	FireEmployee, ///< Founder Mode: let an employee go
+
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };
 

@@ -3838,6 +3838,29 @@ STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_EXCLUSIVE_TRANSPORT_MINUTES  :{PUSH_COLOUR}{Y
 STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_BRIBE                        :{PUSH_COLOUR}{YELLOW}Bribe the local authority to increase your rating and abort a competitor's exclusive transport rights, at the risk of a severe penalty if caught.{}{POP_COLOUR}Cost: {CURRENCY_LONG}
 
 # Goal window
+STR_TEAM_CAPTION                                                :{WHITE}{COMPANY} Team
+STR_TEAM_NONE                                                   :{ORANGE}- No employees yet. Hire your first person below -
+STR_TEAM_LIST_TOOLTIP                                           :{BLACK}Your employees. Click a person to select them
+STR_TEAM_ROLE_ENGINEER                                          :Engineer
+STR_TEAM_ROLE_DESIGNER                                          :Designer
+STR_TEAM_ROLE_SALES                                             :Sales
+STR_TEAM_ROLE_OPERATIONS                                        :Operations
+STR_TEAM_SKILL                                                  :Skill {NUM}
+STR_TEAM_SALARY                                                 :{CURRENCY_LONG}/month
+STR_TEAM_MORALE                                                 :Morale {NUM}%
+STR_TEAM_SUMMARY                                                :{BLACK}{NUM} {P person people} · Payroll {CURRENCY_LONG} per month
+STR_TEAM_HIRE_ENGINEER                                          :{BLACK}Hire engineer
+STR_TEAM_HIRE_DESIGNER                                          :{BLACK}Hire designer
+STR_TEAM_HIRE_SALES                                             :{BLACK}Hire sales
+STR_TEAM_HIRE_OPERATIONS                                        :{BLACK}Hire operations
+STR_TEAM_HIRE_TOOLTIP                                           :{BLACK}Hire a new person for this role. The recruiting fee is one month of the role's base salary
+STR_TEAM_LET_GO                                                 :{BLACK}Let go
+STR_TEAM_LET_GO_TOOLTIP                                         :{BLACK}Let the selected person go. Severance is one month of their salary
+STR_ERROR_CAN_T_HIRE                                            :{WHITE}Can't hire...
+STR_ERROR_CAN_T_LET_GO                                          :{WHITE}Can't let this person go...
+STR_ERROR_FOUNDER_MODE_ONLY                                     :{WHITE}... only available in Founder Mode
+STR_ERROR_TEAM_FULL                                             :{WHITE}... the team is full
+
 STR_GOALS_CAPTION                                               :{WHITE}{COMPANY} Goals
 STR_GOALS_SPECTATOR_CAPTION                                     :{WHITE}Global Goals
 STR_GOALS_SPECTATOR                                             :Global Goals

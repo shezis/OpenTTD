@@ -211,6 +211,10 @@ add_files(
     gfx_type.h
     gfxinit.cpp
     gfxinit.h
+    employee.cpp
+    employee_base.h
+    employee_cmd.h
+    employee_type.h
     goal.cpp
     goal_base.h
     goal_cmd.h
@@ -504,6 +508,8 @@ add_files(
     survey.cpp
     survey.h
     tar_type.h
+    team_gui.cpp
+    team_gui.h
     terraform_cmd.cpp
     terraform_cmd.h
     terraform_gui.cpp

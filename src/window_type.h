@@ -743,6 +743,12 @@ enum class WindowClass : uint16_t {
 	 */
 	Help,
 
+	/**
+	 * Founder Mode team window; %Window numbers:
+	 *   - #CompanyID = #TeamWidgets
+	 */
+	Team,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 

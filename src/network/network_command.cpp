@@ -40,6 +40,7 @@
 #include "../station_cmd.h"
 #include "../string_func.h"
 #include "../story_cmd.h"
+#include "../employee_cmd.h"
 #include "../subsidy_cmd.h"
 #include "../terraform_cmd.h"
 #include "../timetable_cmd.h"

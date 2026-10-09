@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include <ranges>
 #include "company_func.h"
+#include "employee_base.h"
 #include "command_func.h"
 #include "industry.h"
 #include "town.h"
@@ -330,6 +331,7 @@ void ChangeOwnershipOfCompanyItems(Owner old_owner, Owner new_owner)
 	AutoRestoreBackup cur_company(_current_company, old_owner);
 	/* In all cases, make spectators of clients connected to that company */
 	if (_networking) NetworkClientsToSpectators(old_owner);
+	ChangeEmployeeOwnership(old_owner, new_owner);
 	if (old_owner == _local_company) {
 		/* Single player cheated to AI company.
 		 * There are no spectators in singleplayer mode, so we must pick some other company. */
@@ -1978,6 +1980,7 @@ static const IntervalTimer<TimerGameEconomy> _economy_companies_monthly({ TimerG
 {
 	CompaniesGenStatistics();
 	CompaniesPayInterest();
+	PayEmployees();
 	HandleEconomyFluctuations();
 });
 
