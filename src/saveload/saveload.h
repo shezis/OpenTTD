@@ -436,6 +436,7 @@ enum class SaveLoadVersion : uint16_t {
 	FounderModeTransit, ///< Saveload version: 377, Founder Mode fork\n Transit operators setting.
 	FounderModeSponsor, ///< Saveload version: 378, Founder Mode fork\n Transit sponsorship.
 	FounderModeFunding, ///< Saveload version: 379, Founder Mode fork\n Valuation, funding rounds and cap table.
+	FounderModeIPO, ///< Saveload version: 380, Founder Mode fork\n IPO and runway warnings.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

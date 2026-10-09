@@ -45,6 +45,7 @@ static constexpr Money OPERATOR_BUDGET_PER_RESIDENT = 1; ///< Monthly city trans
 static constexpr Money OPERATOR_BUDGET_CAP = 40000; ///< Monthly city transit budget cap per operator.
 static constexpr std::array<Money, 3> SPONSOR_TIERS = {2000, 5000, 10000}; ///< Monthly sponsorship amounts.
 
+Money GetCompanyMonthlyCosts(CompanyID company);
 CompanyID GetOperatorSponsor(CompanyID op);
 bool OperatorServesTown(CompanyID op, TownID town);
 void ApplyOperatorLivery(CompanyID op);

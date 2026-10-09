@@ -21,6 +21,7 @@
 #include "town.h"
 #include "window_func.h"
 #include "funding_func.h"
+#include "office_func.h"
 #include "ai/ai_config.hpp"
 #include "station_base.h"
 #include "vehicle_base.h"
@@ -220,6 +221,13 @@ Money GetOperatorTransitBudget(CompanyID company)
 	Money budget = 0;
 	for (TownID t : served) budget += OPERATOR_BUDGET_PER_RESIDENT * Town::Get(t)->cache.population;
 	return std::min(budget, OPERATOR_BUDGET_CAP);
+}
+
+/** Monthly costs of a startup: payroll, office and hub rent, and sponsorship. */
+Money GetCompanyMonthlyCosts(CompanyID company)
+{
+	const Company *c = Company::Get(company);
+	return GetMonthlyPayroll(company) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(company) + c->founder_sponsor_monthly;
 }
 
 /** Startup sponsoring a transit operator, or invalid. */

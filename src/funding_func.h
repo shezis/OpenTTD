@@ -15,6 +15,7 @@
 #include "strings_type.h"
 
 static constexpr uint8_t MAX_FUNDING_STAGE = 4; ///< Seed, A, B, C.
+static constexpr int64_t IPO_VALUATION = 1000000000; ///< Valuation at which a startup goes public.
 
 /** One funding round's requirements and terms. */
 struct FundingRoundSpec {

@@ -3921,6 +3921,13 @@ STR_MARKET_SHOW_TOOLTIP                                         :{BLACK}Scroll t
 STR_MARKET_NO_FREE_REP                                          :{WHITE}... every sales rep already has a town. Hire one or move a rep
 STR_BOARD_CAPTION                                               :{WHITE}{COMPANY} Board
 STR_BOARD_NO_ROUNDS                                             :no rounds yet
+STR_BOARD_PUBLIC                                                :public company
+STR_BOARD_INSOLVENT                                             :Insolvent for {NUM} month{P "" s} · raise money now
+STR_BOARD_IPO_REPORT                                            :You took the company public. Your founders' stake of {NUM}.{NUM}% is worth {CURRENCY_LONG}. Raised {CURRENCY_LONG} over {NUM} round{P "" s}; {NUM} customers today
+STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
+STR_NEWS_FOUNDER_RUNWAY_LOW                                     :{BIG_FONT}{BLACK}Runway under 6 months: about {NUM} month{P "" s} of cash left at the current burn
+STR_NEWS_FOUNDER_OUT_OF_CASH                                    :{BIG_FONT}{BLACK}Out of cash! Raise money or cut costs before the bank closes the company
+STR_NEWS_FOUNDER_RUNWAY_CRITICAL                                :{BIG_FONT}{BLACK}Runway critical: about {NUM} month{P "" s} of cash left. Raise money or cut costs
 STR_BOARD_VALUATION                                             :Valuation {CURRENCY_LONG} · {STRING}
 STR_BOARD_REVENUE                                               :MRR {CURRENCY_LONG} · {NUM} customer{P "" s}
 STR_BOARD_BURN                                                  :Costs {CURRENCY_LONG}/month · net burn {CURRENCY_LONG}/month
@@ -3959,7 +3966,7 @@ STR_FOUNDER_TAB_WORK                                            :{BLACK}Work
 STR_FOUNDER_TAB_TOOLTIP                                         :{BLACK}Switch the company panel
 STR_STATUSBAR_FOUNDER                                           :MRR {CURRENCY_SHORT} · Runway {RAW_STRING} · Burn {CURRENCY_SHORT}/mo · Team {NUM}/{NUM} · Work {NUM}.{NUM}/day
 STR_STATUSBAR_FOUNDER_MONTHS                                    :{NUM}.{NUM} mo
-STR_STATUSBAR_FOUNDER_NO_BURN                                   :no costs yet
+STR_STATUSBAR_FOUNDER_NO_BURN                                   :profitable
 STR_STATUSBAR_FOUNDER_OUT_OF_CASH                               :out of cash
 STR_TEAM_CAPTION                                                :{WHITE}{COMPANY} Team
 STR_TEAM_NONE                                                   :{ORANGE}- No employees yet. Hire your first person below -

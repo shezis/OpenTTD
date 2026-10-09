@@ -18,6 +18,8 @@
 #include "market_func.h"
 #include "settings_type.h"
 #include "window_func.h"
+#include "news_func.h"
+#include "strings_func.h"
 
 #include "table/strings.h"
 
@@ -67,6 +69,30 @@ void UpdateFunding(CompanyID company, int64_t mrr)
 	c->founder_valuation = std::max<int64_t>(c->founder_valuation, mrr * 12 * multiple);
 	c->founder_last_mrr = mrr;
 
+	/* Going public: the win condition. */
+	if (!c->founder_ipo && c->founder_valuation >= IPO_VALUATION) {
+		c->founder_ipo = true;
+		c->founder_offer_stage = 0;
+		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} went public at {}", company + 1, c->founder_valuation);
+		AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_IPO, company, c->founder_valuation), NewsType::CompanyInfo, NewsStyle::Normal, {});
+		InvalidateWindowData(WindowClass::Board, company);
+		if (company == _local_company) ShowBoardWindow(company);
+	}
+
+	/* Runway warnings, once per level; reset when runway recovers. */
+	int64_t net = static_cast<int64_t>(GetCompanyMonthlyCosts(company)) - mrr;
+	uint8_t level = 0;
+	if (net > 0) {
+		int64_t months = std::max<int64_t>(0, static_cast<int64_t>(c->money)) / net;
+		level = months < 3 ? 2 : (months < 6 ? 1 : 0);
+		if (level > c->founder_runway_warning && company == _local_company) {
+			Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} runway warning level {} ({} months)", company + 1, level, months);
+			EncodedString msg = months == 0 ? GetEncodedString(STR_NEWS_FOUNDER_OUT_OF_CASH) : GetEncodedString(level == 2 ? STR_NEWS_FOUNDER_RUNWAY_CRITICAL : STR_NEWS_FOUNDER_RUNWAY_LOW, months);
+			AddNewsItem(std::move(msg), NewsType::CompanyInfo, NewsStyle::Small, {});
+		}
+	}
+	c->founder_runway_warning = level;
+
 	if (c->founder_offer_stage != 0) {
 		if (--c->founder_offer_months == 0) {
 			c->founder_offer_stage = 0;
@@ -74,7 +100,7 @@ void UpdateFunding(CompanyID company, int64_t mrr)
 		}
 		return;
 	}
-	if (c->founder_stage >= MAX_FUNDING_STAGE) return;
+	if (c->founder_ipo || c->founder_stage >= MAX_FUNDING_STAGE) return;
 
 	const FundingRoundSpec &spec = _funding_rounds[c->founder_stage];
 	if (mrr < spec.min_mrr || GetCompanyUsers(company) < spec.min_users) return;

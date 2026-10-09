@@ -76,16 +76,18 @@ struct BoardWindow : public Window {
 		const int line = GetCharacterHeight(FontSize::Normal);
 		switch (widget) {
 			case WID_BD_REPORT: {
-				StringID stage = c->founder_stage == 0 ? STR_BOARD_NO_ROUNDS : GetFundingRoundSpec(c->founder_stage - 1).name;
-				DrawString(ir, GetString(STR_BOARD_VALUATION, c->founder_valuation, stage), TextColour::Black);
+				StringID stage = c->founder_ipo ? STR_BOARD_PUBLIC : (c->founder_stage == 0 ? STR_BOARD_NO_ROUNDS : GetFundingRoundSpec(c->founder_stage - 1).name);
+				DrawString(ir, GetString(STR_BOARD_VALUATION, c->founder_valuation, stage), c->founder_ipo ? TextColour::DarkGreen : TextColour::Black);
 				ir.top += line;
 				DrawString(ir, GetString(STR_BOARD_REVENUE, GetCompanyMRR(c->index), GetCompanyUsers(c->index)), TextColour::Black);
 				ir.top += line;
-				Money burn = GetMonthlyPayroll(c->index) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index) + c->founder_sponsor_monthly;
+				Money burn = GetCompanyMonthlyCosts(c->index);
 				Money net = burn - GetCompanyMRR(c->index);
 				DrawString(ir, GetString(STR_BOARD_BURN, burn, net > 0 ? net : Money(0)), TextColour::Black);
 				ir.top += line;
-				if (net <= 0) {
+				if (c->money < 0) {
+					DrawString(ir, GetString(STR_BOARD_INSOLVENT, std::max<uint>(c->months_of_bankruptcy, 1)), TextColour::Red);
+				} else if (net <= 0) {
 					DrawString(ir, STR_BOARD_RUNWAY_PROFITABLE, TextColour::DarkGreen);
 				} else {
 					int64_t tenths = std::max<int64_t>(0, static_cast<int64_t>(c->money) * 10 / static_cast<int64_t>(net));
@@ -108,7 +110,12 @@ struct BoardWindow : public Window {
 			}
 
 			case WID_BD_OFFER: {
-				if (c->founder_offer_stage != 0) {
+				if (c->founder_ipo) {
+					Money raised = 0;
+					for (uint8_t round = 0; round < c->founder_stage; round++) raised += c->founder_round_amount[round];
+					Money stake = c->founder_valuation / 1000 * c->founder_equity;
+					DrawStringMultiLine(ir, GetString(STR_BOARD_IPO_REPORT, c->founder_equity / 10, c->founder_equity % 10, stake, raised, c->founder_stage, GetCompanyUsers(c->index)), TextColour::DarkGreen);
+				} else if (c->founder_offer_stage != 0) {
 					int64_t post = c->founder_offer_amount * 1000 / std::max<uint16_t>(c->founder_offer_equity, 1);
 					DrawStringMultiLine(ir, GetString(STR_BOARD_OFFER, GetInvestorName(c->founder_offer_investor), GetFundingRoundSpec(c->founder_offer_stage - 1).name,
 							c->founder_offer_amount, c->founder_offer_equity / 10, c->founder_offer_equity % 10, post, c->founder_offer_months), TextColour::Black);

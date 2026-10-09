@@ -176,16 +176,17 @@ struct StatusBarWindow : Window {
 	static void DrawFounderStatus(const Rect &tr)
 	{
 		const Company *c = Company::Get(_local_company);
-		Money burn = GetMonthlyPayroll(c->index) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index);
+		Money burn = GetCompanyMonthlyCosts(c->index);
+		Money net = burn - GetCompanyMRR(c->index);
 		std::string runway;
 		TextColour colour = TextColour::White;
 		if (c->money <= 0) {
 			runway = GetString(STR_STATUSBAR_FOUNDER_OUT_OF_CASH);
 			colour = TextColour::Red;
-		} else if (burn <= 0) {
+		} else if (net <= 0) {
 			runway = GetString(STR_STATUSBAR_FOUNDER_NO_BURN);
 		} else {
-			int64_t tenths = static_cast<int64_t>(c->money) * 10 / static_cast<int64_t>(burn);
+			int64_t tenths = static_cast<int64_t>(c->money) * 10 / static_cast<int64_t>(net);
 			runway = GetString(STR_STATUSBAR_FOUNDER_MONTHS, tenths / 10, tenths % 10);
 			if (tenths < 30) colour = TextColour::Red; else if (tenths < 60) colour = TextColour::Yellow;
 		}

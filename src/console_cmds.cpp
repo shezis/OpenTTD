@@ -3343,6 +3343,12 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("hub",                     ConHub);
 	IConsole::CmdRegister("sponsor",                 ConSponsor);
 	IConsole::CmdRegister("board",                   [](std::span<std::string_view> argv) { if (!argv.empty()) ShowBoardWindow(_local_company); return true; });
+	IConsole::CmdRegister("fm_debug_valuation",      [](std::span<std::string_view> argv) {
+		if (argv.size() != 2 || _networking) { IConsolePrint(CC_HELP, "Developer tool, single player only: set your valuation. Usage: 'fm_debug_valuation <amount>'."); return true; }
+		auto v = ParseInteger<int64_t>(argv[1]);
+		if (v.has_value() && Company::IsValidID(_local_company)) Company::Get(_local_company)->founder_valuation = *v;
+		return true;
+	});
 	IConsole::CmdRegister("offer",                   [](std::span<std::string_view> argv) {
 		if (argv.size() != 2) { IConsolePrint(CC_HELP, "Answer the investor offer. Usage: 'offer accept|decline'."); return true; }
 		Command<Commands::RespondFundingOffer>::Post(STR_ERROR_CAN_T_RESPOND_OFFER, StrEqualsIgnoreCase(argv[1], "accept"));
