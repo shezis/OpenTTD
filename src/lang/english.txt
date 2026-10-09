@@ -3888,6 +3888,9 @@ STR_ROADMAP_SUMMARY                                             :{BLACK}Assigned
 STR_ROADMAP_STATUS_BACKLOG                                      :Backlog · {NUM} points
 STR_ROADMAP_STATUS_PROGRESS                                     :{NUM}% · {NUM} {P person people}
 STR_ROADMAP_STATUS_SHIPPED                                      :Shipped · quality {NUM} · {NUM} bug{P "" s}
+STR_ROADMAP_VIEW_LIST                                           :{BLACK}List
+STR_ROADMAP_VIEW_TREE                                           :{BLACK}Tree
+STR_ROADMAP_VIEW_TOOLTIP                                        :{BLACK}Switch between the work tree and a list. In the tree, click an item to plan it or to select it
 STR_ROADMAP_NEW                                                 :{BLACK}New work
 STR_ROADMAP_NEW_TOOLTIP                                         :{BLACK}Add an item from the catalog. Greyed-out items need other work finished first
 STR_ROADMAP_NEW_ITEM                                            :{STRING} · {RAW_STRING} · {NUM} points

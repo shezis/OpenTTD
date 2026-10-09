@@ -18,6 +18,8 @@ enum RoadmapWidgets : WidgetID {
 	WID_RM_TAB_WORK, ///< Company panel tab: work.
 	WID_RM_LIST, ///< List of features.
 	WID_RM_SCROLLBAR, ///< Scrollbar of the list.
+	WID_RM_HSCROLLBAR, ///< Horizontal scrollbar of the tree (by column).
+	WID_RM_VIEW, ///< Switch between tree and list.
 	WID_RM_SUMMARY, ///< Engineers and velocity line.
 	WID_RM_NEW, ///< Add a feature (dropdown of categories).
 	WID_RM_ADD_ENGINEER, ///< Put one more engineer on the selected feature.
