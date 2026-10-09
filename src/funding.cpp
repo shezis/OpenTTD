@@ -30,7 +30,7 @@
 /** Rounds by stage: seed, A, B, C. */
 static const FundingRoundSpec _funding_rounds[MAX_FUNDING_STAGE] = {
 	{ STR_FUNDING_ROUND_SEED,       250000,     1000000,      0,  300, 17 }, // Needs the Pitch deck.
-	{ STR_FUNDING_ROUND_A,         2000000,     6000000,  20000,    0, 18 }, // Needs the Investor data room.
+	{ STR_FUNDING_ROUND_A,         2000000,     6000000,  12000,    0, 18 }, // Needs the Investor data room.
 	{ STR_FUNDING_ROUND_B,         8000000,    30000000,  80000,    0, 0xFF },
 	{ STR_FUNDING_ROUND_C,        25000000,   120000000, 250000,    0, 0xFF },
 };

@@ -36,6 +36,7 @@ uint CountRepsInTown(CompanyID company, TownID town);
 CompanyID GetTownMarketLeader(TownID town);
 std::string GetFounderTownLabel(TownID town, bool with_population);
 void ShowMarketWindow(CompanyID company);
+void ShowStartupLeague();
 void ConfigureFounderOperators();
 bool IsFounderOperator(CompanyID company);
 uint8_t AssignFounderAIRole(struct Company *c);

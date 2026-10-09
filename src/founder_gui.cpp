@@ -69,9 +69,18 @@ Point GetFounderPanelPosition(int width)
  */
 void CloseOtherFounderTabs(WindowClass keep, CompanyID company)
 {
-	for (WindowClass wc : { WindowClass::Team, WindowClass::Office, WindowClass::Roadmap, WindowClass::Market, WindowClass::Board, WindowClass::FounderStart }) {
+	for (WindowClass wc : { WindowClass::Team, WindowClass::Office, WindowClass::Roadmap, WindowClass::Market, WindowClass::Board, WindowClass::FounderStart, WindowClass::StartupLeague }) {
 		if (wc == keep) continue;
-		CloseWindowById(wc, wc == WindowClass::FounderStart ? WindowNumber{0} : WindowNumber{company});
+		if (wc == WindowClass::FounderStart || wc == WindowClass::StartupLeague) {
+			CloseWindowById(wc, WindowNumber{0});
+			continue;
+		}
+		/* Board windows of other companies, opened from the league, close too. */
+		if (wc == WindowClass::Board) {
+			CloseWindowByClass(wc);
+			continue;
+		}
+		CloseWindowById(wc, WindowNumber{company});
 	}
 }
 

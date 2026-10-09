@@ -370,6 +370,7 @@ add_files(
     funding.cpp
     funding_func.h
     board_gui.cpp
+    rivals_gui.cpp
     market.cpp
     market_func.h
     market_gui.cpp

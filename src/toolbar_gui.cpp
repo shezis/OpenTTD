@@ -2074,7 +2074,7 @@ struct MainToolbarWindow : Window {
 			/* Money and Rivals hubs go straight to the local company's screens. */
 			if (widget == WID_TN_FINANCES) { ShowBoardWindow(_local_company); return; }
 			if (widget == WID_TN_SMALL_MAP) { ShowMarketWindow(_local_company); return; }
-			if (widget == WID_TN_LEAGUE) { ShowFirstLeagueTable(); return; }
+			if (widget == WID_TN_LEAGUE) { ShowStartupLeague(); return; }
 		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
 	}

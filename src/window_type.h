@@ -785,6 +785,12 @@ enum class WindowClass : uint16_t {
 	 */
 	Board,
 
+	/**
+	 * Founder Mode startup league; %Window numbers:
+	 *   - 0 = #StartupLeagueWidgets
+	 */
+	StartupLeague,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 

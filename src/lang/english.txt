@@ -3928,7 +3928,29 @@ STR_MARKET_SHOW                                                 :{BLACK}Show on 
 STR_MARKET_SHOW_TOOLTIP                                         :{BLACK}Scroll the map to the selected town
 STR_MARKET_NO_FREE_REP                                          :{WHITE}... every sales rep already has a town. Hire one or move a rep
 STR_BOARD_CAPTION                                               :{WHITE}{COMPANY} Board
-STR_BOARD_NO_ROUNDS                                             :no rounds yet
+STR_BOARD_NO_ROUNDS                                             :pre-seed
+STR_LEAGUE_CAPTION                                              :{WHITE}Startup league
+STR_LEAGUE_LIST_TOOLTIP                                         :{BLACK}Every startup in the game by valuation. Transit operators are not startups. Click a startup to select it
+STR_LEAGUE_RANK                                                 :#{NUM}
+STR_LEAGUE_STYLE_YOU                                            :You
+STR_LEAGUE_STYLE_RIVAL                                          :Rival startup
+STR_LEAGUE_VALUE                                                :{CURRENCY_LONG} · {STRING}
+STR_LEAGUE_DETAIL                                               :{STRING} · {NUM} customers · MRR {CURRENCY_LONG} · cash {CURRENCY_LONG}
+STR_LEAGUE_STYLE_BOOTSTRAPPER                                   :Bootstrapper
+STR_LEAGUE_STYLE_BLITZSCALER                                    :Blitzscaler
+STR_LEAGUE_STYLE_COPYCAT                                        :Copycat
+STR_LEAGUE_STYLE_INCUMBENT                                      :Incumbent
+STR_LEAGUE_ABOUT_BOOTSTRAPPER                                   :{}Grows slowly and stays near break-even; takes money only when it must
+STR_LEAGUE_ABOUT_BLITZSCALER                                    :{}Raises early, hires seniors and opens hubs fast; can run out of cash
+STR_LEAGUE_ABOUT_COPYCAT                                        :{}Opens hubs in the towns other startups lead; defend your best towns
+STR_LEAGUE_ABOUT_INCUMBENT                                      :{}Starts big and owns much of the market, but ships slowly
+STR_LEAGUE_ABOUT_NONE                                           :
+STR_LEAGUE_SUMMARY                                              :{BLACK}{COMPANY} is {NUM}% of the way to an IPO at {CURRENCY_LONG} · {NUM} sales hub{P "" s}{STRING}
+STR_LEAGUE_SUMMARY_NONE                                         :{BLACK}The first startup to reach {CURRENCY_SHORT} goes public
+STR_LEAGUE_SHOW                                                 :{BLACK}Show HQ
+STR_LEAGUE_SHOW_TOOLTIP                                         :{BLACK}Scroll the map to the selected startup's HQ
+STR_LEAGUE_BOARD                                                :{BLACK}Board
+STR_LEAGUE_BOARD_TOOLTIP                                        :{BLACK}Open the selected startup's board: numbers, costs and cap table
 STR_BOARD_PUBLIC                                                :public company
 STR_BOARD_COSTS_BREAKDOWN                                       :Salaries {CURRENCY_LONG} · Office {CURRENCY_LONG} · Hubs {CURRENCY_LONG} ({NUM}) · Field sales {CURRENCY_LONG} ({NUM} rep{P "" s}) · Running costs {CURRENCY_LONG} · Sponsorship {CURRENCY_LONG}
 STR_BOARD_INSOLVENT                                             :Insolvent for {NUM} month{P "" s} · raise money now
