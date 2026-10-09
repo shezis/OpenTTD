@@ -3845,7 +3845,7 @@ STR_FOUNDER_HUB_WORK_TOOLTIP                                    :{BLACK}Plan and
 STR_FOUNDER_HUB_MARKET                                          :{BLACK}Market
 STR_FOUNDER_HUB_MARKET_TOOLTIP                                  :{BLACK}Map views of towns, customers and coverage
 STR_FOUNDER_HUB_MONEY                                           :{BLACK}Money
-STR_FOUNDER_HUB_MONEY_TOOLTIP                                   :{BLACK}Cash, costs and loans
+STR_FOUNDER_HUB_MONEY_TOOLTIP                                   :{BLACK}Board: valuation, runway, cap table and investor offers
 STR_FOUNDER_HUB_RIVALS                                          :{BLACK}Rivals
 STR_FOUNDER_HUB_RIVALS_TOOLTIP                                  :{BLACK}How your startup ranks against rivals
 STR_CONFIG_SETTING_FOUNDER_BACKGROUND                           :Founder background: {STRING2}
@@ -3919,6 +3919,40 @@ STR_MARKET_REMOVE_REP_TOOLTIP                                   :{BLACK}Take one
 STR_MARKET_SHOW                                                 :{BLACK}Show on map
 STR_MARKET_SHOW_TOOLTIP                                         :{BLACK}Scroll the map to the selected town
 STR_MARKET_NO_FREE_REP                                          :{WHITE}... every sales rep already has a town. Hire one or move a rep
+STR_BOARD_CAPTION                                               :{WHITE}{COMPANY} Board
+STR_BOARD_NO_ROUNDS                                             :no rounds yet
+STR_BOARD_VALUATION                                             :Valuation {CURRENCY_LONG} · {STRING}
+STR_BOARD_REVENUE                                               :MRR {CURRENCY_LONG} · {NUM} customer{P "" s}
+STR_BOARD_BURN                                                  :Costs {CURRENCY_LONG}/month · net burn {CURRENCY_LONG}/month
+STR_BOARD_RUNWAY                                                :Runway {NUM}.{NUM} months
+STR_BOARD_RUNWAY_PROFITABLE                                     :Profitable: revenue covers costs
+STR_BOARD_CAPTABLE_TITLE                                        :Cap table
+STR_BOARD_CAPTABLE_FOUNDERS                                     :  Founders · {NUM}.{NUM}%
+STR_BOARD_CAPTABLE_ROUND                                        :  {STRING} · {STRING} · {CURRENCY_SHORT} · {NUM}.{NUM}%
+STR_BOARD_OFFER                                                 :{BLACK}{STRING} offers a {STRING}: {CURRENCY_LONG} for {NUM}.{NUM}% (post-money {CURRENCY_LONG}). The offer expires in {NUM} month{P "" s}
+STR_BOARD_NEXT                                                  :{BLACK}Next: a {STRING} needs MRR of {CURRENCY_SHORT} and {NUM} customer{P "" s}
+STR_BOARD_NEXT_WITH_WORK                                        :{BLACK}Next: a {STRING} needs MRR of {CURRENCY_SHORT}, {NUM} customer{P "" s} and {RAW_STRING} done
+STR_BOARD_NEXT_MRR                                              :{BLACK}Next: a {STRING} needs MRR of {CURRENCY_SHORT}
+STR_BOARD_NEXT_MRR_WITH_WORK                                    :{BLACK}Next: a {STRING} needs MRR of {CURRENCY_SHORT} and {RAW_STRING} done
+STR_BOARD_ALL_ROUNDS                                            :{BLACK}All funding rounds closed. Grow to a $1B valuation to go public
+STR_BOARD_ACCEPT                                                :{WHITE}Accept
+STR_BOARD_ACCEPT_TOOLTIP                                        :{BLACK}Take the money and give the investor their share of the company
+STR_BOARD_DECLINE                                               :{BLACK}Decline
+STR_BOARD_DECLINE_TOOLTIP                                       :{BLACK}Turn the offer down. A new one comes when you meet the milestones again next month
+STR_BOARD_FINANCES                                              :{BLACK}Finances
+STR_BOARD_FINANCES_TOOLTIP                                      :{BLACK}Open the full finances window
+STR_FUNDING_ROUND_SEED                                          :seed round
+STR_FUNDING_ROUND_A                                             :Series A
+STR_FUNDING_ROUND_B                                             :Series B
+STR_FUNDING_ROUND_C                                             :Series C
+STR_FUNDING_INVESTOR_0                                          :Northwind Ventures
+STR_FUNDING_INVESTOR_1                                          :Lumen Capital
+STR_FUNDING_INVESTOR_2                                          :Harbor Partners
+STR_FUNDING_INVESTOR_3                                          :Summit Growth
+STR_FUNDING_INVESTOR_4                                          :Atlas Fund
+STR_FUNDING_INVESTOR_5                                          :Beacon Ventures
+STR_ERROR_CAN_T_RESPOND_OFFER                                   :{WHITE}Can't answer this offer...
+STR_ERROR_NO_FUNDING_OFFER                                      :{WHITE}... there is no offer on the table
 STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
 STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
 STR_FOUNDER_TAB_WORK                                            :{BLACK}Work

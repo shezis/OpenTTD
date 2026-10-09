@@ -78,6 +78,7 @@
 #include "team_gui.h"
 #include "founder_gui.h"
 #include "market_func.h"
+#include "funding_func.h"
 #include "roadmap_gui.h"
 
 #include "safeguards.h"
@@ -2071,7 +2072,7 @@ struct MainToolbarWindow : Window {
 		}
 		if (_game_mode != GameMode::Menu && _settings_game.game_creation.founder_mode && _local_company != COMPANY_SPECTATOR) {
 			/* Money and Rivals hubs go straight to the local company's screens. */
-			if (widget == WID_TN_FINANCES) { ShowCompanyFinances(_local_company); return; }
+			if (widget == WID_TN_FINANCES) { ShowBoardWindow(_local_company); return; }
 			if (widget == WID_TN_SMALL_MAP) { ShowMarketWindow(_local_company); return; }
 			if (widget == WID_TN_LEAGUE) { ShowFirstLeagueTable(); return; }
 		}

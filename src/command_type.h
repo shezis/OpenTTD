@@ -389,6 +389,7 @@ enum class Commands : uint8_t {
 	AssignRep, ///< Founder Mode: assign a sales rep to a town
 	SetHub, ///< Founder Mode: open or close a sales hub
 	SponsorOperator, ///< Founder Mode: sponsor a transit operator
+	RespondFundingOffer, ///< Founder Mode: accept or decline an investor offer
 
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };

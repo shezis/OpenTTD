@@ -20,6 +20,7 @@
 #include "timer/timer_game_economy.h"
 #include "town.h"
 #include "window_func.h"
+#include "funding_func.h"
 #include "ai/ai_config.hpp"
 #include "station_base.h"
 #include "vehicle_base.h"
@@ -387,6 +388,7 @@ static const IntervalTimer<TimerGameEconomy> _economy_market_monthly({TimerGameE
 		}
 		Money mrr = GetCompanyMRR(c->index);
 		if (mrr > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -mrr));
+		UpdateFunding(c->index, static_cast<int64_t>(mrr));
 		if (IsFounderOperator(c->founder_sponsoring) && c->founder_sponsor_monthly > 0) {
 			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, c->founder_sponsor_monthly));
 			SubtractMoneyFromCompany(c->founder_sponsoring, CommandCost(ExpensesType::Other, -c->founder_sponsor_monthly));

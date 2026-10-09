@@ -91,6 +91,18 @@ struct CompanyProperties {
 	uint8_t office_level = 0; ///< Founder Mode office size, see #MAX_OFFICE_LEVEL.
 	CompanyID founder_sponsoring = CompanyID::Invalid(); ///< Founder Mode: transit operator this startup sponsors.
 	Money founder_sponsor_monthly = 0; ///< Founder Mode: monthly sponsorship paid to that operator.
+	uint16_t founder_equity = 1000; ///< Founder Mode: founders' ownership in permille.
+	uint8_t founder_stage = 0; ///< Founder Mode: funding rounds closed (0 none, 1 seed, 2 A, 3 B, 4 C).
+	int64_t founder_last_mrr = 0; ///< Founder Mode: MRR last month, for growth.
+	int64_t founder_valuation = 0; ///< Founder Mode: current valuation.
+	uint8_t founder_offer_stage = 0; ///< Founder Mode: stage of the pending offer, 0 for none.
+	uint8_t founder_offer_months = 0; ///< Founder Mode: months until the pending offer expires.
+	uint8_t founder_offer_investor = 0; ///< Founder Mode: investor making the pending offer.
+	int64_t founder_offer_amount = 0; ///< Founder Mode: cash in the pending offer.
+	uint16_t founder_offer_equity = 0; ///< Founder Mode: equity asked for, permille of the company after the round.
+	std::array<int64_t, 4> founder_round_amount{}; ///< Founder Mode: cash raised per closed round.
+	std::array<uint16_t, 4> founder_round_equity{}; ///< Founder Mode: equity sold per round, permille at the time.
+	std::array<uint8_t, 4> founder_round_investor{}; ///< Founder Mode: investor per round.
 	Money max_loan = COMPANY_MAX_LOAN_DEFAULT; ///< Max allowed amount of the loan or COMPANY_MAX_LOAN_DEFAULT.
 
 	Colours colour = Colours::Begin; ///< Company colour.

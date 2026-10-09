@@ -21,11 +21,13 @@ CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee);
 CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town);
 CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open);
 CommandCost CmdSponsorOperator(DoCommandFlags flags, CompanyID op, Money monthly);
+CommandCost CmdRespondFundingOffer(DoCommandFlags flags, bool accept);
 
 DEF_CMD_TRAIT(Commands::HireEmployee, CmdHireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::FireEmployee, CmdFireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::AssignRep, CmdAssignRep, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::SetHub, CmdSetHub, {}, CommandType::OtherManagement)
-DEF_CMD_TRAIT(Commands::SponsorOperator, CmdSponsorOperator, {}, CommandType::MoneyManagement)
+DEF_CMD_TRAIT(Commands::SponsorOperator, CmdSponsorOperator, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::RespondFundingOffer, CmdRespondFundingOffer, {}, CommandType::OtherManagement)
 
 #endif /* EMPLOYEE_CMD_H */

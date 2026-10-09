@@ -64,6 +64,7 @@
 #include "roadmap_gui.h"
 #include "founder_gui.h"
 #include "market_func.h"
+#include "funding_func.h"
 #include "town.h"
 
 #include "safeguards.h"
@@ -3341,6 +3342,12 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("assign_rep",              ConAssignRep);
 	IConsole::CmdRegister("hub",                     ConHub);
 	IConsole::CmdRegister("sponsor",                 ConSponsor);
+	IConsole::CmdRegister("board",                   [](std::span<std::string_view> argv) { if (!argv.empty()) ShowBoardWindow(_local_company); return true; });
+	IConsole::CmdRegister("offer",                   [](std::span<std::string_view> argv) {
+		if (argv.size() != 2) { IConsolePrint(CC_HELP, "Answer the investor offer. Usage: 'offer accept|decline'."); return true; }
+		Command<Commands::RespondFundingOffer>::Post(STR_ERROR_CAN_T_RESPOND_OFFER, StrEqualsIgnoreCase(argv[1], "accept"));
+		return true;
+	});
 	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);
 	IConsole::CmdRegister("plan",                    ConPlan);

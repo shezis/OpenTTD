@@ -69,7 +69,7 @@ Point GetFounderPanelPosition(int width)
  */
 void CloseOtherFounderTabs(WindowClass keep, CompanyID company)
 {
-	for (WindowClass wc : { WindowClass::Team, WindowClass::Office, WindowClass::Roadmap, WindowClass::Market, WindowClass::FounderStart }) {
+	for (WindowClass wc : { WindowClass::Team, WindowClass::Office, WindowClass::Roadmap, WindowClass::Market, WindowClass::Board, WindowClass::FounderStart }) {
 		if (wc == keep) continue;
 		CloseWindowById(wc, wc == WindowClass::FounderStart ? WindowNumber{0} : WindowNumber{company});
 	}

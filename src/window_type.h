@@ -779,6 +779,12 @@ enum class WindowClass : uint16_t {
 	 */
 	Market,
 
+	/**
+	 * Founder Mode board window; %Window numbers:
+	 *   - #CompanyID = #BoardWidgets
+	 */
+	Board,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 
