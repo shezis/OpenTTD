@@ -311,6 +311,7 @@ static const SaveLoad _town_desc[] = {
 	SaveLoad::Variable<VarFileType::U16>("have_ratings", SLE_OBJECT_ADDRESS(Town, have_ratings), SaveLoadVersion::MoreCompanies),
 	SaveLoad::Array<VarFileType::I16, 8>("ratings", SLE_OBJECT_ADDRESS(Town, ratings), SaveLoadVersion::MinVersion, SaveLoadVersion::MoreCompanies),
 	SaveLoad::Array<VarFileType::I16, MAX_COMPANIES>("ratings", SLE_OBJECT_ADDRESS(Town, ratings), SaveLoadVersion::MoreCompanies),
+	SaveLoad::Array<VarFileType::U32, MAX_COMPANIES>("founder_users", SLE_OBJECT_ADDRESS(Town, founder_users), SaveLoadVersion::FounderModeMarket),
 	SaveLoad::Array<VarFileType::I8, 8>("unwanted", SLE_OBJECT_ADDRESS(Town, unwanted), SaveLoadVersion::TownTolerancePauseMode, SaveLoadVersion::MoreCompanies),
 	SaveLoad::Array<VarFileType::I8, MAX_COMPANIES>("unwanted", SLE_OBJECT_ADDRESS(Town, unwanted), SaveLoadVersion::MoreCompanies),
 

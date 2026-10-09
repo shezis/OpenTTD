@@ -386,6 +386,7 @@ enum class Commands : uint8_t {
 	CreateFeature, ///< Founder Mode: add a feature to the backlog
 	AssignFeature, ///< Founder Mode: set engineers on a feature
 	ShipFeature, ///< Founder Mode: ship a feature early
+	AssignRep, ///< Founder Mode: assign a sales rep to a town
 
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };

@@ -12,11 +12,14 @@
 
 #include "command_type.h"
 #include "employee_type.h"
+#include "town_type.h"
 
 CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role);
 CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee);
+CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town);
 
 DEF_CMD_TRAIT(Commands::HireEmployee, CmdHireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::FireEmployee, CmdFireEmployee, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::AssignRep, CmdAssignRep, {}, CommandType::OtherManagement)
 
 #endif /* EMPLOYEE_CMD_H */

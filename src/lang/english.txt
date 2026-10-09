@@ -3882,7 +3882,7 @@ STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
 STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
 STR_FOUNDER_TAB_WORK                                            :{BLACK}Work
 STR_FOUNDER_TAB_TOOLTIP                                         :{BLACK}Switch the company panel
-STR_STATUSBAR_FOUNDER                                           :Runway {RAW_STRING} · Burn {CURRENCY_SHORT}/mo · Team {NUM}/{NUM} · Work {NUM}.{NUM}/day
+STR_STATUSBAR_FOUNDER                                           :MRR {CURRENCY_SHORT} · Runway {RAW_STRING} · Burn {CURRENCY_SHORT}/mo · Team {NUM}/{NUM} · Work {NUM}.{NUM}/day
 STR_STATUSBAR_FOUNDER_MONTHS                                    :{NUM}.{NUM} mo
 STR_STATUSBAR_FOUNDER_NO_BURN                                   :no costs yet
 STR_STATUSBAR_FOUNDER_OUT_OF_CASH                               :out of cash
@@ -3893,6 +3893,10 @@ STR_TEAM_ROLE_ENGINEER                                          :Engineer
 STR_TEAM_ROLE_DESIGNER                                          :Designer
 STR_TEAM_ROLE_SALES                                             :Sales
 STR_TEAM_ROLE_OPERATIONS                                        :Operations
+STR_TEAM_ROLE_REP                                               :Sales · {TOWN}
+STR_ERROR_CAN_T_ASSIGN_REP                                      :{WHITE}Can't assign this rep...
+STR_ERROR_NOT_A_SALES_REP                                       :{WHITE}... only sales people can be assigned to towns
+STR_ERROR_TOWN_OUT_OF_REP_RANGE                                 :{WHITE}... this town is too far from your HQ
 STR_TEAM_SKILL                                                  :Skill {NUM}
 STR_TEAM_SALARY                                                 :{CURRENCY_LONG}/month
 STR_TEAM_MORALE                                                 :Morale {NUM}%

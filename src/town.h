@@ -87,6 +87,7 @@ struct Town : TownPool::PoolItem<&_town_pool> {
 	CompanyID exclusivity = CompanyID::Invalid(); ///< which company has exclusivity
 	uint8_t exclusive_counter = 0; ///< months till the exclusivity expires
 	TypedIndexContainer<std::array<int16_t, MAX_COMPANIES>, CompanyID> ratings{};  ///< ratings of each company for this town
+	TypedIndexContainer<std::array<uint32_t, MAX_COMPANIES>, CompanyID> founder_users{}; ///< Founder Mode: customers of each company in this town
 
 	struct SuppliedHistory {
 		uint32_t production = 0; ///< Total produced

@@ -13,6 +13,7 @@
 #include "company_type.h"
 #include "economy_type.h"
 #include "employee_type.h"
+#include "town_type.h"
 #include "core/pool_type.hpp"
 
 using EmployeePool = Pool<Employee, EmployeeID, 64>;
@@ -26,6 +27,7 @@ struct Employee : EmployeePool::PoolItem<&_employee_pool> {
 	uint8_t skill = 50; ///< Skill from 1 to 100.
 	uint8_t morale = 75; ///< Morale from 0 to 100.
 	Money salary = 0; ///< Monthly salary.
+	TownID town = TownID::Invalid(); ///< Town a sales rep works, invalid when unassigned.
 
 	Employee(EmployeeID index, CompanyID company = CompanyID::Invalid(), EmployeeRole role = EmployeeRole::Engineer) :
 		EmployeePool::PoolItem<&_employee_pool>(index), company(company), role(role) {}

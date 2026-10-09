@@ -773,6 +773,12 @@ enum class WindowClass : uint16_t {
 	 */
 	FounderSetup,
 
+	/**
+	 * Founder Mode market window; %Window numbers:
+	 *   - #CompanyID = #MarketWidgets
+	 */
+	Market,
+
 	Invalid = 0xFFFF, ///< Invalid window.
 };
 

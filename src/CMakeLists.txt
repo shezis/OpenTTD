@@ -367,6 +367,8 @@ add_files(
     office_gui.h
     feature.cpp
     founder_gui.cpp
+    market.cpp
+    market_func.h
     founder_gui.h
     feature_base.h
     feature_cmd.h

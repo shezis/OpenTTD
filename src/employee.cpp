@@ -18,6 +18,8 @@
 #include "debug.h"
 #include "office_func.h"
 #include "feature_base.h"
+#include "market_func.h"
+#include "town.h"
 #include "settings_type.h"
 #include "window_func.h"
 
@@ -219,4 +221,30 @@ CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee)
 	}
 
 	return cost;
+}
+
+/**
+ * Assign a sales rep to a town, or take them off it.
+ * @param flags Type of operation.
+ * @param employee The sales rep.
+ * @param town Town to work, or TownID::Invalid() to unassign.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town)
+{
+	Employee *e = Employee::GetIfValid(employee);
+	if (e == nullptr || e->company != _current_company) return CMD_ERROR;
+	if (e->role != EmployeeRole::Sales) return CommandCost(STR_ERROR_NOT_A_SALES_REP);
+	if (town != TownID::Invalid()) {
+		if (!Town::IsValidID(town)) return CMD_ERROR;
+		if (!IsTownInRepRange(_current_company, town)) return CommandCost(STR_ERROR_TOWN_OUT_OF_REP_RANGE);
+	}
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		e->town = town;
+		InvalidateWindowData(WindowClass::Team, e->company);
+		InvalidateWindowData(WindowClass::Market, e->company);
+	}
+
+	return CommandCost();
 }

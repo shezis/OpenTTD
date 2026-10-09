@@ -37,6 +37,7 @@
 #include "employee_base.h"
 #include "feature_base.h"
 #include "office_func.h"
+#include "market_func.h"
 #include "settings_type.h"
 
 #include "safeguards.h"
@@ -190,7 +191,7 @@ struct StatusBarWindow : Window {
 		}
 		uint velocity = 0;
 		for (uint t = 0; t < to_underlying(WorkTrack::End); t++) velocity += GetDailyVelocity(c->index, static_cast<WorkTrack>(t));
-		DrawString(tr, GetString(STR_STATUSBAR_FOUNDER, runway, burn, CountEmployees(c->index), GetOfficeDesks(c->office_level), velocity / 100, (velocity % 100) / 10), colour, AlignmentH::Centre);
+		DrawString(tr, GetString(STR_STATUSBAR_FOUNDER, GetCompanyMRR(c->index), runway, burn, CountEmployees(c->index), GetOfficeDesks(c->office_level), velocity / 100, (velocity % 100) / 10), colour, AlignmentH::Centre);
 	}
 
 	/**

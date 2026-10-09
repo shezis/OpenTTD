@@ -13,6 +13,7 @@
 #include "employee_cmd.h"
 #include "office_func.h"
 #include "office_gui.h"
+#include "town.h"
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
@@ -141,7 +142,11 @@ struct TeamWindow : public Window {
 				TextColour tc = sel ? TextColour::White : TextColour::Black;
 
 				DrawString(row.left, row.left + x_role - 4, row.top, e->GetName(), tc);
-				DrawString(row.left + x_role, row.left + x_skill - 4, row.top, _employee_role_names[to_underlying(e->role)], tc);
+				if (e->role == EmployeeRole::Sales && Town::IsValidID(e->town)) {
+					DrawString(row.left + x_role, row.left + x_skill - 4, row.top, GetString(STR_TEAM_ROLE_REP, e->town), tc);
+				} else {
+					DrawString(row.left + x_role, row.left + x_skill - 4, row.top, _employee_role_names[to_underlying(e->role)], tc);
+				}
 				DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, GetString(STR_TEAM_SKILL, e->skill), tc);
 				DrawString(row.left + x_salary, row.left + x_morale - 4, row.top, GetString(STR_TEAM_SALARY, e->salary), tc);
 				TextColour mood = e->morale >= 70 ? TextColour::Green : (e->morale >= 45 ? TextColour::Yellow : TextColour::Red);

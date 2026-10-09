@@ -63,6 +63,7 @@
 #include "feature_cmd.h"
 #include "roadmap_gui.h"
 #include "founder_gui.h"
+#include "market_func.h"
 #include "town.h"
 
 #include "safeguards.h"
@@ -1007,6 +1008,51 @@ static bool ConFounderSetup(std::span<std::string_view> argv)
 		return true;
 	}
 	ShowFounderSetupWindow();
+	return true;
+}
+
+/** Founder Mode: print the market by town. @copydoc IConsoleCmdProc */
+static bool ConMarket(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Print each town's market for your company. Usage: 'market'.");
+		return true;
+	}
+	if (!Company::IsValidID(_local_company)) return true;
+	uint rank = 0;
+	for (const Town *t : GetTownsBySize()) {
+		auto wants = GetTownWants(t->index);
+		uint size = GetTownMarketSize(t->index);
+		uint users = t->founder_users[_local_company];
+		IConsolePrint(CC_DEFAULT, "{:2} {}: {} of {} customers ({}%), strength {}, wants {}+{}{}", ++rank, t->GetCachedName(), users, size, size == 0 ? 0 : users * 100 / size,
+			GetCompanyStrength(_local_company, t->index), to_underlying(wants[0]), to_underlying(wants[1]), IsTownInRepRange(_local_company, t->index) ? ", in rep range" : "");
+	}
+	IConsolePrint(CC_INFO, "Total {} users, MRR {}.", GetCompanyUsers(_local_company), GetCompanyMRR(_local_company));
+	return true;
+}
+
+/** Founder Mode: assign the nth sales rep to a town. @copydoc IConsoleCmdProc */
+static bool ConAssignRep(std::span<std::string_view> argv)
+{
+	if (argv.size() != 3) {
+		IConsolePrint(CC_HELP, "Assign a sales rep to a town. Usage: 'assign_rep <rep number, 1..> <town rank, 0 to unassign>'.");
+		return true;
+	}
+	auto rep = ParseInteger(argv[1]);
+	auto rank = ParseInteger(argv[2]);
+	if (!rep.has_value() || !rank.has_value()) return true;
+	const Employee *found = nullptr;
+	uint n = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == _local_company && e->role == EmployeeRole::Sales && ++n == *rep) { found = e; break; }
+	}
+	auto towns = GetTownsBySize();
+	if (found == nullptr || *rank > towns.size()) {
+		IConsolePrint(CC_ERROR, "No such rep or town.");
+		return true;
+	}
+	TownID town = *rank == 0 ? TownID::Invalid() : towns[*rank - 1]->index;
+	Command<Commands::AssignRep>::Post(STR_ERROR_CAN_T_ASSIGN_REP, found->index, town);
 	return true;
 }
 
@@ -3261,6 +3307,8 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("upgrade_office",          ConUpgradeOffice);
 	IConsole::CmdRegister("roadmap",                 ConRoadmap);
 	IConsole::CmdRegister("hq",                      ConFounderHQ);
+	IConsole::CmdRegister("market",                  ConMarket);
+	IConsole::CmdRegister("assign_rep",              ConAssignRep);
 	IConsole::CmdRegister("founder_setup",           ConFounderSetup);
 	IConsole::CmdRegister("catalog",                 ConCatalog);
 	IConsole::CmdRegister("plan",                    ConPlan);
