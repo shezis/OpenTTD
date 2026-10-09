@@ -3947,6 +3947,11 @@ STR_LEAGUE_ABOUT_INCUMBENT                                      :{}Starts big an
 STR_LEAGUE_ABOUT_NONE                                           :
 STR_LEAGUE_SUMMARY                                              :{BLACK}{COMPANY} is {NUM}% of the way to an IPO at {CURRENCY_LONG} · {NUM} sales hub{P "" s}{STRING}
 STR_LEAGUE_SUMMARY_NONE                                         :{BLACK}The first startup to reach {CURRENCY_SHORT} goes public
+STR_LEAGUE_POACH                                                :{BLACK}Poach
+STR_LEAGUE_POACH_TOOLTIP                                        :{BLACK}Offer one of the selected rival's people a job at 20% more. Their employer can match within a month. You need a free desk and one month of the new salary as a signing fee. One offer at a time
+STR_LEAGUE_POACH_ITEM                                           :{RAW_STRING} · {STRING} {STRING} · {CURRENCY_LONG} → offer {CURRENCY_LONG}
+STR_LEAGUE_POACH_ITEM_TAKEN                                     :{RAW_STRING} · {STRING} {STRING} · already has an offer
+STR_LEAGUE_POACH_NOBODY                                         :Nobody to poach
 STR_LEAGUE_SHOW                                                 :{BLACK}Show HQ
 STR_LEAGUE_SHOW_TOOLTIP                                         :{BLACK}Scroll the map to the selected startup's HQ
 STR_LEAGUE_BOARD                                                :{BLACK}Board
@@ -3967,6 +3972,10 @@ STR_REGULATION_PAYMENTS                                         :Payments licenc
 STR_NEWS_FOUNDER_REGULATION                                     :{BIG_FONT}{BLACK}Regulator: {STRING} rules now apply to you. Ship "{RAW_STRING}" within {NUM} months or pay monthly fines
 STR_NEWS_FOUNDER_FINES                                          :{BIG_FONT}{BLACK}{STRING} deadline passed: fines start this month
 STR_BOARD_IPO_REPORT                                            :You took the company public. Your founders' stake of {NUM}.{NUM}% is worth {CURRENCY_LONG}. Raised {CURRENCY_LONG} over {NUM} round{P "" s}; {NUM} customers today
+STR_NEWS_FOUNDER_POACHED_FROM_YOU                               :{BIG_FONT}{BLACK}{RAW_STRING} left for {COMPANY}
+STR_NEWS_FOUNDER_POACHED_BY_YOU                                 :{BIG_FONT}{BLACK}{RAW_STRING} joined you from {COMPANY}
+STR_POACH_QUERY_CAPTION                                         :{WHITE}Poaching offer
+STR_POACH_QUERY                                                 :{YELLOW}{COMPANY} offered {RAW_STRING} ({STRING} {STRING}) {CURRENCY_LONG}/month, up from {CURRENCY_LONG}.{}Match the offer to keep them? If you don't, they leave within a month
 STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
 STR_NEWS_FOUNDER_RUNWAY_LOW                                     :{BIG_FONT}{BLACK}Runway under 6 months: about {NUM} month{P "" s} of cash left at the current burn
 STR_NEWS_FOUNDER_OUT_OF_CASH                                    :{BIG_FONT}{BLACK}Out of cash! Raise money or cut costs before the bank closes the company
@@ -4024,6 +4033,7 @@ STR_TEAM_LEVEL_MID                                              :Mid
 STR_TEAM_LEVEL_SENIOR                                           :Senior
 STR_TEAM_LEVEL_ROLE                                             :{STRING} {STRING}
 STR_TEAM_WORK_TOWN                                              :Selling in {TOWN}
+STR_TEAM_POACH_OFFER                                            :Offer from {COMPANY}
 STR_TEAM_WORK_FREE                                              :free
 STR_TEAM_TRAIT_JUNIOR                                           :more bugs
 STR_TEAM_TRAIT_MID                                              :steady
@@ -4123,6 +4133,12 @@ STR_ERROR_WRONG_ROLE_FOR_WORK                                   :{WHITE}This per
 STR_ERROR_WORK_ITEM_FULL                                        :{WHITE}Every slot on this item is taken
 STR_ERROR_WORK_ITEM_LOCKED                                      :{WHITE}... finish its prerequisites first
 STR_ERROR_WORK_ITEM_EXCLUDED                                    :{WHITE}You chose another branch of this fork
+STR_ERROR_CAN_T_POACH                                           :{WHITE}Can't make the offer...
+STR_ERROR_CAN_T_RESPOND_POACH                                   :{WHITE}Can't answer the offer...
+STR_ERROR_ALREADY_HAS_OFFER                                     :{WHITE}... another startup already made this person an offer
+STR_ERROR_ONE_OFFER_AT_A_TIME                                   :{WHITE}... you already have an offer out; wait for an answer
+STR_ERROR_NO_POACH_OFFER                                        :{WHITE}... nobody has made this person an offer
+STR_ERROR_POACH_NO_CASH                                         :{WHITE}... you need a month of the new salary in cash for the signing fee
 STR_ERROR_CAN_T_BUY_BACK                                        :{WHITE}Can't buy back equity...
 STR_ERROR_NO_INVESTOR_EQUITY                                    :{WHITE}... investors hold no equity to buy back
 STR_ERROR_WORK_ITEM_PLANNED                                     :{WHITE}... it is already on the roadmap

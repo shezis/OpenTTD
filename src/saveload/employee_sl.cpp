@@ -25,6 +25,9 @@ static const SaveLoad _employees_desc[] = {
 	SaveLoad::Variable<VarFileType::U16>("town", SLE_OBJECT_ADDRESS(Employee, town), SaveLoadVersion::FounderModeMarket),
 	SaveLoad::Variable<VarFileType::U8>("level", SLE_OBJECT_ADDRESS(Employee, level), SaveLoadVersion::FounderModeStaffLevels),
 	SaveLoad::Variable<VarFileType::U16>("feature", SLE_OBJECT_ADDRESS(Employee, feature), SaveLoadVersion::FounderModeStaffLevels),
+	SaveLoad::Variable<VarFileType::U8>("poach_by", SLE_OBJECT_ADDRESS(Employee, poach_by), SaveLoadVersion::FounderModePoaching),
+	SaveLoad::Variable<VarFileType::I64>("poach_salary", SLE_OBJECT_ADDRESS(Employee, poach_salary), SaveLoadVersion::FounderModePoaching),
+	SaveLoad::Variable<VarFileType::U8>("poach_months", SLE_OBJECT_ADDRESS(Employee, poach_months), SaveLoadVersion::FounderModePoaching),
 };
 
 struct EMPLChunkHandler : ChunkHandler {

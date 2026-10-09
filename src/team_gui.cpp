@@ -170,7 +170,11 @@ struct TeamWindow : public Window {
 				}
 				DrawString(row.left + x_salary, row.left + x_morale - 4, row.top, GetString(STR_TEAM_SALARY, e->salary), tc);
 				TextColour mood = e->morale >= 70 ? TextColour::Green : (e->morale >= 45 ? TextColour::Yellow : TextColour::Red);
-				DrawString(row.left + x_morale, row.right, row.top, GetString(STR_TEAM_MORALE, e->morale), sel ? TextColour::White : mood);
+				if (e->poach_by != CompanyID::Invalid()) {
+					DrawString(row.left + x_morale, row.right, row.top, GetString(STR_TEAM_POACH_OFFER, e->poach_by), sel ? TextColour::White : TextColour::Red);
+				} else {
+					DrawString(row.left + x_morale, row.right, row.top, GetString(STR_TEAM_MORALE, e->morale), sel ? TextColour::White : mood);
+				}
 				ir.top += line;
 			}
 			pos++;

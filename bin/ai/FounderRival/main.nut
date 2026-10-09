@@ -59,6 +59,7 @@ function FounderRival::Start()
 	local tick = 0;
 	while (true) {
 		this.Funding();
+		this.Talent();
 		this.Work();
 		this.Staffing();
 		this.Sales();
@@ -136,6 +137,33 @@ function FounderRival::Funding()
 	local accept = this.personality != BOOTSTRAPPER || this.Runway() < 6;
 	AIFounder.RespondToOffer(accept);
 	AILog.Info((accept ? "Accepted " : "Declined ") + "an offer of " + amount);
+}
+
+/** Keep people other startups try to poach when cash allows; funded blitzscalers and incumbents poach seniors back. */
+function FounderRival::Talent()
+{
+	while (AIFounder.GetPoachOfferCount() > 0) {
+		local keep = this.personality == INCUMBENT || this.Runway() > (this.personality == BOOTSTRAPPER ? 12 : 6);
+		if (!AIFounder.RespondToPoachOffer(keep)) break;
+		AILog.Info(keep ? "Matched a poaching offer" : "Let someone go to a rival");
+	}
+
+	if (this.personality != BLITZSCALER && this.personality != INCUMBENT) return;
+	if (AIFounder.GetFundingStage(AICompany.COMPANY_SELF) == 0 || this.Runway() <= this.target_runway) return;
+	if (AIBase.RandRange(4) != 0) return; // About once a month.
+
+	/* Poach an engineer from the most valuable other startup. */
+	local self = AICompany.ResolveCompanyID(AICompany.COMPANY_SELF);
+	local best = AICompany.COMPANY_INVALID;
+	local best_value = -1;
+	for (local c = AICompany.COMPANY_FIRST; c < AICompany.COMPANY_LAST; c++) {
+		if (c == self || AICompany.ResolveCompanyID(c) == AICompany.COMPANY_INVALID || !AIFounder.IsStartup(c)) continue;
+		if (AIFounder.GetValuation(c) > best_value) {
+			best = c;
+			best_value = AIFounder.GetValuation(c);
+		}
+	}
+	if (best != AICompany.COMPANY_INVALID && AIFounder.PoachFrom(best, AIFounder.ROLE_ENGINEER)) AILog.Info("Made a poaching offer");
 }
 
 /** The next funding round's item comes first, then engineering items the HQ town wants. */

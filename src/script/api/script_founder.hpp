@@ -459,6 +459,30 @@ public:
 	static bool RespondToOffer(bool accept);
 
 	/**
+	 * Offer the most skilled person of a role at another startup a job at a raise.
+	 * Their employer can match within a month. One open offer at a time; you need a free desk.
+	 * @param company The startup to poach from.
+	 * @param role The role.
+	 * @return True when the offer was made.
+	 * @game @pre ScriptCompanyMode::IsValid().
+	 */
+	static bool PoachFrom(ScriptCompany::CompanyID company, StaffRole role);
+
+	/**
+	 * Your people who have a poaching offer waiting.
+	 * @return Number of offers.
+	 */
+	static SQInteger GetPoachOfferCount();
+
+	/**
+	 * Answer the first poaching offer for one of your people.
+	 * @param match True to match the salary and keep them, false to let them go.
+	 * @return True when answered.
+	 * @game @pre ScriptCompanyMode::IsValid().
+	 */
+	static bool RespondToPoachOffer(bool match);
+
+	/**
 	 * Sponsor a transit operator; 0 ends the sponsorship.
 	 * @param transit_operator The operator.
 	 * @param monthly Monthly amount: 0, 2000, 5000 or 10000.

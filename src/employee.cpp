@@ -22,6 +22,10 @@
 #include "town.h"
 #include "settings_type.h"
 #include "window_func.h"
+#include "economy_func.h"
+#include "textbuf_gui.h"
+#include "strings_func.h"
+#include "news_func.h"
 
 #include "table/strings.h"
 
@@ -167,6 +171,60 @@ Money GetFieldSalesCosts(CompanyID company)
 	return REP_FIELD_COST * CountFieldReps(company);
 }
 
+/**
+ * Salary a poaching offer pays: the current salary plus a raise, rounded up to whole hundreds.
+ * @param e The person.
+ * @return Offered salary.
+ */
+Money GetPoachSalary(const Employee *e)
+{
+	return CeilDiv(static_cast<int64_t>(e->salary) * (100 + POACH_RAISE_PERCENT) / 100, 100) * 100;
+}
+
+/**
+ * Does a company already have an offer out to someone? One at a time.
+ * @param company The company.
+ * @return True with an open offer.
+ */
+bool HasOpenPoachOffer(CompanyID company)
+{
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->poach_by == company) return true;
+	}
+	return false;
+}
+
+/**
+ * The person takes the job: they move to the poacher at the offered salary, if it still has a desk.
+ * The poacher pays one month of the new salary as a signing fee.
+ * @param e The person.
+ */
+static void TransferPoachedEmployee(Employee *e)
+{
+	CompanyID from = e->company;
+	CompanyID to = e->poach_by;
+	Money salary = e->poach_salary;
+	e->poach_by = CompanyID::Invalid();
+	e->poach_months = 0;
+	if (!Company::IsValidID(to) || CountEmployees(to) >= GetOfficeDesks(GetOfficeLevel(to))) return;
+
+	SetEmployeeWork(e, FeatureID::Invalid());
+	e->town = TownID::Invalid();
+	e->company = to;
+	e->salary = salary;
+	e->morale = static_cast<uint8_t>(std::min(100, e->morale + 10));
+	SubtractMoneyFromCompany(to, CommandCost(ExpensesType::Construction, salary));
+	Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} poached {} from company {}", to + 1, e->GetName(), from + 1);
+
+	if (from == _local_company) AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_POACHED_FROM_YOU, e->GetName(), to), NewsType::CompanyInfo, NewsStyle::Small, {});
+	if (to == _local_company) AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_POACHED_BY_YOU, e->GetName(), from), NewsType::CompanyInfo, NewsStyle::Small, {});
+	for (CompanyID c : {from, to}) {
+		InvalidateWindowData(WindowClass::Team, c);
+		InvalidateWindowData(WindowClass::Office, c);
+		InvalidateWindowData(WindowClass::Market, c);
+	}
+}
+
 /** Savegames before staff levels: give everyone a level from their skill and put people on the items that had head counts. */
 void AfterLoadEmployeeLevels()
 {
@@ -186,6 +244,8 @@ void AfterLoadEmployeeLevels()
 		}
 	}
 }
+
+static void TransferPoachedEmployee(Employee *e);
 
 /**
  * Count the employees of a company.
@@ -220,6 +280,12 @@ void PayEmployees()
 {
 	if (!_settings_game.game_creation.founder_mode) return;
 
+	/* Poaching offers nobody matched: the person leaves. */
+	for (Employee *e : Employee::Iterate()) {
+		if (e->poach_by == CompanyID::Invalid() || --e->poach_months > 0) continue;
+		TransferPoachedEmployee(e);
+	}
+
 	for (const Company *c : Company::Iterate()) {
 		if (IsFounderOperator(c->index)) continue;
 		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index)));
@@ -253,6 +319,10 @@ void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner)
 			e->company = new_owner;
 			e->feature = FeatureID::Invalid();
 		}
+	}
+	/* Offers made by the company that is going away lapse. */
+	for (Employee *e : Employee::Iterate()) {
+		if (e->poach_by == old_owner) e->poach_by = CompanyID::Invalid();
 	}
 	InvalidateWindowData(WindowClass::Team, old_owner);
 	if (new_owner != INVALID_OWNER) InvalidateWindowData(WindowClass::Team, new_owner);
@@ -474,6 +544,72 @@ CommandCost CmdAssignWork(DoCommandFlags flags, EmployeeID employee, FeatureID f
 		if (feature != FeatureID::Invalid()) e->town = TownID::Invalid();
 		SetEmployeeWork(e, feature);
 		InvalidateWindowData(WindowClass::Market, e->company);
+	}
+	return CommandCost();
+}
+
+/** Employee a poaching prompt is about, for the query callback. */
+static EmployeeID _poach_prompt;
+
+/** The founder answered the poaching prompt. */
+static void PoachPromptCallback(Window *, bool match)
+{
+	if (Employee::IsValidID(_poach_prompt)) Command<Commands::RespondPoachOffer>::Post(STR_ERROR_CAN_T_RESPOND_POACH, _poach_prompt, match);
+}
+
+/**
+ * Offer another startup's employee a job at a raise. The employer can match it within a month.
+ * @param flags Type of operation.
+ * @param employee The person.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdPoachEmployee(DoCommandFlags flags, EmployeeID employee)
+{
+	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
+	Employee *e = Employee::GetIfValid(employee);
+	if (e == nullptr || !Company::IsValidID(_current_company) || e->company == _current_company) return CMD_ERROR;
+	if (IsFounderOperator(_current_company) || IsFounderOperator(e->company)) return CMD_ERROR;
+	if (e->poach_by != CompanyID::Invalid()) return CommandCost(STR_ERROR_ALREADY_HAS_OFFER);
+	if (HasOpenPoachOffer(_current_company)) return CommandCost(STR_ERROR_ONE_OFFER_AT_A_TIME);
+	if (CountEmployees(_current_company) >= GetOfficeDesks(GetOfficeLevel(_current_company))) return CommandCost(STR_ERROR_NO_FREE_DESK);
+	Money salary = GetPoachSalary(e);
+	if (Company::Get(_current_company)->money < salary) return CommandCost(STR_ERROR_POACH_NO_CASH);
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		e->poach_by = _current_company;
+		e->poach_salary = salary;
+		e->poach_months = 2;
+		InvalidateWindowData(WindowClass::Team, e->company);
+		if (e->company == _local_company) {
+			_poach_prompt = e->index;
+			ShowQuery(GetEncodedString(STR_POACH_QUERY_CAPTION), GetEncodedString(STR_POACH_QUERY, _current_company, e->GetName(), STR_TEAM_LEVEL_JUNIOR + to_underlying(e->level), STR_TEAM_ROLE_ENGINEER + to_underlying(e->role), salary, e->salary), nullptr, PoachPromptCallback);
+		}
+	}
+	return CommandCost();
+}
+
+/**
+ * Answer a poaching offer for one of your people: match the salary to keep them, or let them go now.
+ * @param flags Type of operation.
+ * @param employee The person.
+ * @param match True to match the offer.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdRespondPoachOffer(DoCommandFlags flags, EmployeeID employee, bool match)
+{
+	Employee *e = Employee::GetIfValid(employee);
+	if (e == nullptr || e->company != _current_company || e->poach_by == CompanyID::Invalid()) return CommandCost(STR_ERROR_NO_POACH_OFFER);
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		if (match) {
+			e->salary = e->poach_salary;
+			e->morale = static_cast<uint8_t>(std::min(100, e->morale + 5));
+			e->poach_by = CompanyID::Invalid();
+			e->poach_months = 0;
+			InvalidateWindowData(WindowClass::Team, e->company);
+		} else {
+			TransferPoachedEmployee(e);
+		}
 	}
 	return CommandCost();
 }

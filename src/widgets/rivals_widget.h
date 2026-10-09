@@ -18,6 +18,7 @@ enum StartupLeagueWidgets : WidgetID {
 	WID_FML_SUMMARY, ///< Selected startup's position and the IPO target.
 	WID_FML_SHOW, ///< Scroll the map to the selected startup's HQ.
 	WID_FML_BOARD, ///< Open the selected startup's board.
+	WID_FML_POACH, ///< Offer one of the selected rival's people a job (dropdown).
 };
 
 #endif /* WIDGETS_RIVALS_WIDGET_H */

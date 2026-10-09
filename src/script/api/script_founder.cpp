@@ -457,3 +457,42 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	EnforcePrecondition(false, transit_operator != ScriptCompany::COMPANY_INVALID);
 	return ScriptObject::Command<Commands::SponsorOperator>::Do(ScriptCompany::FromScriptCompanyID(transit_operator), monthly);
 }
+
+/* static */ bool ScriptFounder::PoachFrom(ScriptCompany::CompanyID company, StaffRole role)
+{
+	EnforceCompanyModeValid(false);
+	const Company *target = GetFounderCompany(company);
+	EnforcePrecondition(false, target != nullptr && target->index != ScriptObject::GetCompany());
+	const Employee *pick = nullptr;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company != target->index || to_underlying(e->role) != role || e->poach_by != CompanyID::Invalid()) continue;
+		if (pick == nullptr || e->skill > pick->skill) pick = e;
+	}
+	EnforcePrecondition(false, pick != nullptr);
+	return ScriptObject::Command<Commands::PoachEmployee>::Do(pick->index);
+}
+
+/* static */ SQInteger ScriptFounder::GetPoachOfferCount()
+{
+	::CompanyID self = ScriptObject::GetCompany();
+	SQInteger n = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == self && e->poach_by != CompanyID::Invalid()) n++;
+	}
+	return n;
+}
+
+/* static */ bool ScriptFounder::RespondToPoachOffer(bool match)
+{
+	EnforceCompanyModeValid(false);
+	::CompanyID self = ScriptObject::GetCompany();
+	const Employee *offer = nullptr;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == self && e->poach_by != CompanyID::Invalid()) {
+			offer = e;
+			break;
+		}
+	}
+	EnforcePrecondition(false, offer != nullptr);
+	return ScriptObject::Command<Commands::RespondPoachOffer>::Do(offer->index, match);
+}

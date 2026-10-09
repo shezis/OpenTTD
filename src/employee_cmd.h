@@ -25,6 +25,8 @@ CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open);
 CommandCost CmdSponsorOperator(DoCommandFlags flags, CompanyID op, Money monthly);
 CommandCost CmdRespondFundingOffer(DoCommandFlags flags, bool accept);
 CommandCost CmdBuyBackEquity(DoCommandFlags flags, uint16_t permille);
+CommandCost CmdPoachEmployee(DoCommandFlags flags, EmployeeID employee);
+CommandCost CmdRespondPoachOffer(DoCommandFlags flags, EmployeeID employee, bool match);
 
 DEF_CMD_TRAIT(Commands::HireEmployee, CmdHireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::FireEmployee, CmdFireEmployee, {}, CommandType::OtherManagement)
@@ -34,5 +36,7 @@ DEF_CMD_TRAIT(Commands::SetHub, CmdSetHub, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::SponsorOperator, CmdSponsorOperator, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::RespondFundingOffer, CmdRespondFundingOffer, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::BuyBackEquity, CmdBuyBackEquity, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::PoachEmployee, CmdPoachEmployee, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::RespondPoachOffer, CmdRespondPoachOffer, {}, CommandType::OtherManagement)
 
 #endif /* EMPLOYEE_CMD_H */

@@ -392,6 +392,8 @@ enum class Commands : uint8_t {
 	RespondFundingOffer, ///< Founder Mode: accept or decline an investor offer
 	AssignWork, ///< Founder Mode: put a person on a work item
 	BuyBackEquity, ///< Founder Mode: buy back equity from investors
+	PoachEmployee, ///< Founder Mode: offer another startup's employee a job
+	RespondPoachOffer, ///< Founder Mode: match a poaching offer or let the person go
 
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };

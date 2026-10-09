@@ -11,6 +11,11 @@
 #include "market_func.h"
 #include "funding_func.h"
 #include "company_base.h"
+#include "dropdown_func.h"
+#include "dropdown_type.h"
+#include "command_func.h"
+#include "employee_cmd.h"
+#include "employee_base.h"
 #include "company_func.h"
 #include "company_gui.h"
 #include "gfx_func.h"
@@ -179,7 +184,26 @@ struct StartupLeagueWindow : public Window {
 			case WID_FML_BOARD:
 				if (Company::IsValidID(this->selected)) ShowBoardWindow(this->selected);
 				break;
+
+			case WID_FML_POACH: {
+				/* The rival's people with the offer each would get. */
+				DropDownList list;
+				for (const Employee *e : Employee::Iterate()) {
+					if (e->company != this->selected) continue;
+					bool taken = e->poach_by != CompanyID::Invalid();
+					list.push_back(MakeDropDownListStringItem(GetString(taken ? STR_LEAGUE_POACH_ITEM_TAKEN : STR_LEAGUE_POACH_ITEM, e->GetName(),
+							STR_TEAM_LEVEL_JUNIOR + to_underlying(e->level), STR_TEAM_ROLE_ENGINEER + to_underlying(e->role), e->salary, GetPoachSalary(e)), e->index.base(), taken));
+				}
+				if (list.empty()) list.push_back(MakeDropDownListStringItem(STR_LEAGUE_POACH_NOBODY, -1, true));
+				ShowDropDownList(this, std::move(list), -1, WID_FML_POACH);
+				break;
+			}
 		}
+	}
+
+	void OnDropdownSelect(WidgetID widget, int index, int) override
+	{
+		if (widget == WID_FML_POACH && index >= 0) Command<Commands::PoachEmployee>::Post(STR_ERROR_CAN_T_POACH, EmployeeID(index));
 	}
 
 	void OnResize() override
@@ -195,6 +219,7 @@ struct StartupLeagueWindow : public Window {
 		const Company *c = Company::GetIfValid(this->selected);
 		this->SetWidgetDisabledState(WID_FML_SHOW, c == nullptr || c->location_of_HQ == INVALID_TILE);
 		this->SetWidgetDisabledState(WID_FML_BOARD, c == nullptr);
+		this->SetWidgetDisabledState(WID_FML_POACH, c == nullptr || c->index == _local_company || !Company::IsValidID(_local_company) || HasOpenPoachOffer(_local_company));
 		this->SetDirty();
 	}
 
@@ -219,6 +244,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_startup_league_widge
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_FML_SHOW), SetStringTip(STR_LEAGUE_SHOW, STR_LEAGUE_SHOW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_FML_BOARD), SetStringTip(STR_LEAGUE_BOARD, STR_LEAGUE_BOARD_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_FML_POACH), SetStringTip(STR_LEAGUE_POACH, STR_LEAGUE_POACH_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),
 };

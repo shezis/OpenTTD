@@ -31,6 +31,9 @@ struct Employee : EmployeePool::PoolItem<&_employee_pool> {
 	TownID town = TownID::Invalid(); ///< Town a sales rep works, invalid when unassigned.
 	EmployeeLevel level = EmployeeLevel::Mid; ///< Seniority.
 	FeatureID feature = FeatureID::Invalid(); ///< Work item this person works on, invalid when free.
+	CompanyID poach_by = CompanyID::Invalid(); ///< Startup that made this person an offer, invalid when none.
+	Money poach_salary = 0; ///< Salary offered by #poach_by.
+	uint8_t poach_months = 0; ///< Months before the offer is taken if not matched.
 
 	Employee(EmployeeID index, CompanyID company = CompanyID::Invalid(), EmployeeRole role = EmployeeRole::Engineer) :
 		EmployeePool::PoolItem<&_employee_pool>(index), company(company), role(role) {}
@@ -55,5 +58,8 @@ Money GetFieldSalesCosts(CompanyID company);
 void AfterLoadEmployeeLevels();
 
 static constexpr Money REP_FIELD_COST = 600; ///< Monthly travel and tools for each rep working a town.
+static constexpr uint POACH_RAISE_PERCENT = 20; ///< A poaching offer pays this much more than the current salary.
+Money GetPoachSalary(const Employee *e);
+bool HasOpenPoachOffer(CompanyID company);
 
 #endif /* EMPLOYEE_BASE_H */
