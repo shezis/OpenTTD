@@ -11,6 +11,8 @@
 #include "team_gui.h"
 #include "employee_base.h"
 #include "employee_cmd.h"
+#include "office_func.h"
+#include "office_gui.h"
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
@@ -94,7 +96,7 @@ struct TeamWindow : public Window {
 
 			case WID_TEAM_SUMMARY: {
 				CompanyID company = static_cast<CompanyID>(this->window_number);
-				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_TEAM_SUMMARY, CountEmployees(company), GetMonthlyPayroll(company)));
+				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_TEAM_SUMMARY, CountEmployees(company), GetOfficeDesks(GetOfficeLevel(company)), GetMonthlyPayroll(company)));
 				break;
 			}
 		}
@@ -156,6 +158,10 @@ struct TeamWindow : public Window {
 				break;
 			}
 
+			case WID_TEAM_OFFICE:
+				ShowOfficeWindow(static_cast<CompanyID>(this->window_number));
+				break;
+
 			case WID_TEAM_FIRE:
 				if (this->selected != EmployeeID::Invalid()) {
 					Command<Commands::FireEmployee>::Post(STR_ERROR_CAN_T_LET_GO, this->selected);
@@ -204,6 +210,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_team_widgets = {
 		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_FIRE), SetStringTip(STR_TEAM_LET_GO, STR_TEAM_LET_GO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_OFFICE), SetStringTip(STR_TEAM_OFFICE, STR_TEAM_OFFICE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, Colours::Brown),
 	EndContainer(),
 };

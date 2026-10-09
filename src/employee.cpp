@@ -16,6 +16,7 @@
 #include "core/pool_func.hpp"
 #include "core/random_func.hpp"
 #include "debug.h"
+#include "office_func.h"
 #include "settings_type.h"
 #include "window_func.h"
 
@@ -93,10 +94,14 @@ Money GetMonthlyPayroll(CompanyID company)
 	return total;
 }
 
-/** Charge every company its monthly payroll. Called from the monthly company loop. */
+/** Charge every company its monthly payroll and office rent. Called from the monthly company loop. */
 void PayEmployees()
 {
+	if (!_settings_game.game_creation.founder_mode) return;
+
 	for (const Company *c : Company::Iterate()) {
+		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level)));
+
 		Money payroll = GetMonthlyPayroll(c->index);
 		if (payroll == 0) continue;
 
@@ -138,6 +143,7 @@ CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role)
 	if (role >= EmployeeRole::End) return CMD_ERROR;
 	if (!Company::IsValidID(_current_company)) return CMD_ERROR;
 	if (!Employee::CanAllocateItem() || CountEmployees(_current_company) >= MAX_EMPLOYEES_PER_COMPANY) return CommandCost(STR_ERROR_TEAM_FULL);
+	if (CountEmployees(_current_company) >= GetOfficeDesks(GetOfficeLevel(_current_company))) return CommandCost(STR_ERROR_NO_FREE_DESK);
 
 	Money base = GetBaseSalary(role);
 
@@ -148,6 +154,7 @@ CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role)
 		e->morale = 60 + RandomRange(31);
 		e->salary = base * (50 + e->skill) / 100;
 		InvalidateWindowData(WindowClass::Team, _current_company);
+		InvalidateWindowData(WindowClass::Office, _current_company);
 	}
 
 	return CommandCost(ExpensesType::Other, base);
@@ -170,6 +177,7 @@ CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee)
 		CompanyID company = e->company;
 		delete e;
 		InvalidateWindowData(WindowClass::Team, company);
+		InvalidateWindowData(WindowClass::Office, company);
 	}
 
 	return cost;

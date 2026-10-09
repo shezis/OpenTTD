@@ -427,6 +427,7 @@ enum class SaveLoadVersion : uint16_t {
 
 	FounderMode, ///< Saveload version: 369, Founder Mode fork\n Founder Mode game setting.
 	FounderModeEmployees, ///< Saveload version: 370, Founder Mode fork\n Employees and payroll.
+	FounderModeOffice, ///< Saveload version: 371, Founder Mode fork\n Office levels and rent.
 
 	MaxVersion, ///< Highest possible saveload version.
 };

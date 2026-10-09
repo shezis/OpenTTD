@@ -514,6 +514,7 @@ static const SaveLoad _company_desc[] = {
 	SaveLoad::Variable<VarFileType::I32>("current_loan", SLE_OBJECT_ADDRESS(CompanyProperties, current_loan), SaveLoadVersion::MinVersion, SaveLoadVersion::UnifyCurrency),
 	SaveLoad::Variable<VarFileType::I64>("current_loan", SLE_OBJECT_ADDRESS(CompanyProperties, current_loan), SaveLoadVersion::UnifyCurrency),
 	SaveLoad::Variable<VarFileType::I64>("max_loan", SLE_OBJECT_ADDRESS(CompanyProperties, max_loan), SaveLoadVersion::MaxLoanForCompany),
+	SaveLoad::Variable<VarFileType::U8>("office_level", SLE_OBJECT_ADDRESS(CompanyProperties, office_level), SaveLoadVersion::FounderModeOffice),
 
 	SaveLoad::Variable<VarFileType::U8>("colour", SLE_OBJECT_ADDRESS(CompanyProperties, colour)),
 	SaveLoad::Variable<VarFileType::U8>("money_fraction", SLE_OBJECT_ADDRESS(CompanyProperties, money_fraction)),

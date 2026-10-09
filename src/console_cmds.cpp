@@ -56,6 +56,9 @@
 #include "employee_base.h"
 #include "employee_cmd.h"
 #include "team_gui.h"
+#include "office_gui.h"
+#include "office_cmd.h"
+#include "office_func.h"
 
 #include "safeguards.h"
 
@@ -870,6 +873,28 @@ static bool ConTeam(std::span<std::string_view> argv)
 		return true;
 	}
 	ShowTeamWindow(_local_company);
+	return true;
+}
+
+/** Founder Mode: open the office window. @copydoc IConsoleCmdProc */
+static bool ConOffice(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Open your office window in Founder Mode. Usage: 'office'.");
+		return true;
+	}
+	ShowOfficeWindow(_local_company);
+	return true;
+}
+
+/** Founder Mode: move to the next office size. @copydoc IConsoleCmdProc */
+static bool ConUpgradeOffice(std::span<std::string_view> argv)
+{
+	if (argv.empty()) {
+		IConsolePrint(CC_HELP, "Move your startup to the next office size. Usage: 'upgrade_office'.");
+		return true;
+	}
+	Command<Commands::UpgradeOffice>::Post(STR_ERROR_CAN_T_UPGRADE_OFFICE, static_cast<uint8_t>(GetOfficeLevel(_local_company) + 1));
 	return true;
 }
 
@@ -3120,6 +3145,8 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("pause",                   ConPauseGame,        ConHookServerOrNoNetwork);
 	IConsole::CmdRegister("hire",                    ConHire);
 	IConsole::CmdRegister("team",                    ConTeam);
+	IConsole::CmdRegister("office",                  ConOffice);
+	IConsole::CmdRegister("upgrade_office",          ConUpgradeOffice);
 	IConsole::CmdRegister("payroll",                 ConPayroll);
 	IConsole::CmdRegister("unpause",                 ConUnpauseGame,      ConHookServerOrNoNetwork);
 

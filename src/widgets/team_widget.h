@@ -21,6 +21,7 @@ enum TeamWidgets : WidgetID {
 	WID_TEAM_HIRE_SALES, ///< Hire a salesperson.
 	WID_TEAM_HIRE_OPERATIONS, ///< Hire an operations person.
 	WID_TEAM_FIRE, ///< Let the selected employee go.
+	WID_TEAM_OFFICE, ///< Open the office window.
 };
 
 #endif /* WIDGETS_TEAM_WIDGET_H */

@@ -44,7 +44,7 @@
 #include "table/strings.h"
 #include "table/object_land.h"
 
-#include "team_gui.h"
+#include "office_gui.h"
 
 #include "safeguards.h"
 
@@ -741,7 +741,7 @@ static bool ClickTile_Object(TileIndex tile)
 	if (!IsObjectType(tile, OBJECT_HQ)) return false;
 
 	if (_settings_game.game_creation.founder_mode) {
-		ShowTeamWindow(GetTileOwner(tile));
+		ShowOfficeWindow(GetTileOwner(tile));
 	} else {
 		ShowCompany(GetTileOwner(tile));
 	}

@@ -360,6 +360,11 @@ add_files(
     object_type.h
     openttd.cpp
     openttd.h
+    office.cpp
+    office_cmd.h
+    office_func.h
+    office_gui.cpp
+    office_gui.h
     order_backup.cpp
     order_backup.h
     order_base.h

@@ -3848,7 +3848,23 @@ STR_TEAM_ROLE_OPERATIONS                                        :Operations
 STR_TEAM_SKILL                                                  :Skill {NUM}
 STR_TEAM_SALARY                                                 :{CURRENCY_LONG}/month
 STR_TEAM_MORALE                                                 :Morale {NUM}%
-STR_TEAM_SUMMARY                                                :{BLACK}{NUM} {P person people} · Payroll {CURRENCY_LONG} per month
+STR_TEAM_SUMMARY                                                :{BLACK}{NUM} {P person people} at {NUM} desks · Payroll {CURRENCY_LONG} per month
+STR_TEAM_OFFICE                                                 :{BLACK}Office
+STR_TEAM_OFFICE_TOOLTIP                                         :{BLACK}Open your office
+STR_OFFICE_CAPTION                                              :{WHITE}{COMPANY} Office
+STR_OFFICE_LEVEL_GARAGE                                         :Garage
+STR_OFFICE_LEVEL_LOFT                                           :Loft
+STR_OFFICE_LEVEL_FLOOR                                          :Office floor
+STR_OFFICE_SUMMARY                                              :{BLACK}{STRING} · {NUM} of {NUM} desks used · Rent {CURRENCY_LONG} per month
+STR_OFFICE_EMPTY                                                :Empty desks. Hire your team from the Team window
+STR_OFFICE_UPGRADE                                              :{BLACK}Move to {STRING} ({CURRENCY_SHORT})
+STR_OFFICE_UPGRADE_MAX                                          :{BLACK}Largest office
+STR_OFFICE_UPGRADE_TOOLTIP                                      :{BLACK}Move to a bigger office with more desks. Rent goes up
+STR_OFFICE_TEAM                                                 :{BLACK}Team
+STR_OFFICE_TEAM_TOOLTIP                                         :{BLACK}Open the team window
+STR_ERROR_CAN_T_UPGRADE_OFFICE                                  :{WHITE}Can't move to a bigger office...
+STR_ERROR_OFFICE_AT_MAX                                         :{WHITE}... this is already the largest office
+STR_ERROR_NO_FREE_DESK                                          :{WHITE}... no free desk. Move to a bigger office first
 STR_TEAM_HIRE_ENGINEER                                          :{BLACK}Hire engineer
 STR_TEAM_HIRE_DESIGNER                                          :{BLACK}Hire designer
 STR_TEAM_HIRE_SALES                                             :{BLACK}Hire sales
