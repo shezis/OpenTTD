@@ -13,6 +13,9 @@
 /** Widgets of the #TeamWindow class. */
 enum TeamWidgets : WidgetID {
 	WID_TEAM_CAPTION, ///< Caption of the window.
+	WID_TEAM_TAB_TEAM, ///< Company panel tab: team.
+	WID_TEAM_TAB_OFFICE, ///< Company panel tab: office.
+	WID_TEAM_TAB_WORK, ///< Company panel tab: work.
 	WID_TEAM_LIST, ///< List of employees.
 	WID_TEAM_SCROLLBAR, ///< Scrollbar of the list.
 	WID_TEAM_SUMMARY, ///< Headcount and payroll line.

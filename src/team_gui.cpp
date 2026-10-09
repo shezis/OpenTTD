@@ -26,6 +26,8 @@
 
 #include "table/strings.h"
 
+#include "founder_gui.h"
+
 #include "safeguards.h"
 
 /** Name of each role, indexed by #EmployeeRole. */
@@ -49,6 +51,18 @@ struct TeamWindow : public Window {
 		this->FinishInitNested(window_number);
 		this->owner = static_cast<Owner>(this->window_number);
 		this->OnInvalidateData(0);
+		this->LowerWidget(WID_TEAM_TAB_TEAM);
+	}
+
+	Point OnInitialPosition([[maybe_unused]] int16_t sm_width, [[maybe_unused]] int16_t sm_height, [[maybe_unused]] int window_number) override
+	{
+		return GetFounderPanelPosition(GetFounderPanelSize().width);
+	}
+
+	void FindWindowPlacementAndResize(int, int, bool allow_resize) override
+	{
+		Dimension d = GetFounderPanelSize();
+		Window::FindWindowPlacementAndResize(d.width, d.height, allow_resize);
 	}
 
 	/** Collect this company's employees in pool order. */
@@ -141,6 +155,10 @@ struct TeamWindow : public Window {
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
+			case WID_TEAM_TAB_TEAM: break; // Already showing this tab.
+			case WID_TEAM_TAB_OFFICE: ShowFounderTab(FounderTab::Office, static_cast<CompanyID>(this->window_number)); break;
+			case WID_TEAM_TAB_WORK: ShowFounderTab(FounderTab::Work, static_cast<CompanyID>(this->window_number)); break;
+
 			case WID_TEAM_LIST: {
 				int row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_TEAM_LIST, WidgetDimensions::scaled.framerect.top);
 				const auto employees = this->GetEmployees();
@@ -193,25 +211,30 @@ struct TeamWindow : public Window {
 
 static constexpr std::initializer_list<NWidgetPart> _nested_team_widgets = {
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_CLOSEBOX, Colours::Brown),
-		NWidget(WWT_CAPTION, Colours::Brown, WID_TEAM_CAPTION),
-		NWidget(WWT_SHADEBOX, Colours::Brown),
-		NWidget(WWT_DEFSIZEBOX, Colours::Brown),
-		NWidget(WWT_STICKYBOX, Colours::Brown),
+		NWidget(WWT_CLOSEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_CAPTION, FOUNDER_COLOUR, WID_TEAM_CAPTION),
+		NWidget(WWT_SHADEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_DEFSIZEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_STICKYBOX, FOUNDER_COLOUR),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_TEAM_TAB_TEAM), SetStringTip(STR_FOUNDER_TAB_TEAM, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_TEAM_TAB_OFFICE), SetStringTip(STR_FOUNDER_TAB_OFFICE, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_TEAM_TAB_WORK), SetStringTip(STR_FOUNDER_TAB_WORK, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_PANEL, Colours::Brown, WID_TEAM_LIST), SetToolTip(STR_TEAM_LIST_TOOLTIP), SetScrollbar(WID_TEAM_SCROLLBAR), SetResize(1, 1), EndContainer(),
-		NWidget(NWID_VSCROLLBAR, Colours::Brown, WID_TEAM_SCROLLBAR),
+		NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_TEAM_LIST), SetToolTip(STR_TEAM_LIST_TOOLTIP), SetScrollbar(WID_TEAM_SCROLLBAR), SetResize(1, 1), EndContainer(),
+		NWidget(NWID_VSCROLLBAR, FOUNDER_COLOUR, WID_TEAM_SCROLLBAR),
 	EndContainer(),
-	NWidget(WWT_PANEL, Colours::Brown, WID_TEAM_SUMMARY), SetResize(1, 0), EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_TEAM_SUMMARY), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_ENGINEER), SetStringTip(STR_TEAM_HIRE_ENGINEER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_DESIGNER), SetStringTip(STR_TEAM_HIRE_DESIGNER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_FIRE), SetStringTip(STR_TEAM_LET_GO, STR_TEAM_LET_GO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_TEAM_OFFICE), SetStringTip(STR_TEAM_OFFICE, STR_TEAM_OFFICE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_RESIZEBOX, Colours::Brown),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_ENGINEER), SetStringTip(STR_TEAM_HIRE_ENGINEER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_DESIGNER), SetStringTip(STR_TEAM_HIRE_DESIGNER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_FIRE), SetStringTip(STR_TEAM_LET_GO, STR_TEAM_LET_GO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_OFFICE), SetStringTip(STR_TEAM_OFFICE, STR_TEAM_OFFICE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),
 };
 
@@ -229,5 +252,6 @@ static WindowDesc _team_desc(
 void ShowTeamWindow(CompanyID company)
 {
 	if (!Company::IsValidID(company)) return;
+	CloseOtherFounderTabs(WindowClass::Team, company);
 	AllocateWindowDescFront<TeamWindow>(_team_desc, company);
 }

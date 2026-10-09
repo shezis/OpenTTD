@@ -27,6 +27,8 @@
 
 #include "table/strings.h"
 
+#include "founder_gui.h"
+
 #include "safeguards.h"
 
 /** Name of each track, indexed by #WorkTrack. */
@@ -49,6 +51,18 @@ struct RoadmapWindow : public Window {
 		this->FinishInitNested(window_number);
 		this->owner = static_cast<Owner>(this->window_number);
 		this->OnInvalidateData(0);
+		this->LowerWidget(WID_RM_TAB_WORK);
+	}
+
+	Point OnInitialPosition([[maybe_unused]] int16_t sm_width, [[maybe_unused]] int16_t sm_height, [[maybe_unused]] int window_number) override
+	{
+		return GetFounderPanelPosition(GetFounderPanelSize().width);
+	}
+
+	void FindWindowPlacementAndResize(int, int, bool allow_resize) override
+	{
+		Dimension d = GetFounderPanelSize();
+		Window::FindWindowPlacementAndResize(d.width, d.height, allow_resize);
 	}
 
 	CompanyID GetCompany() const { return static_cast<CompanyID>(this->window_number); }
@@ -162,6 +176,10 @@ struct RoadmapWindow : public Window {
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
+			case WID_RM_TAB_TEAM: ShowFounderTab(FounderTab::Team, static_cast<CompanyID>(this->window_number)); break;
+			case WID_RM_TAB_OFFICE: ShowFounderTab(FounderTab::Office, static_cast<CompanyID>(this->window_number)); break;
+			case WID_RM_TAB_WORK: break; // Already showing this tab.
+
 			case WID_RM_LIST: {
 				int row = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_RM_LIST, WidgetDimensions::scaled.framerect.top);
 				const auto features = this->GetFeatures();
@@ -239,23 +257,28 @@ struct RoadmapWindow : public Window {
 
 static constexpr std::initializer_list<NWidgetPart> _nested_roadmap_widgets = {
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_CLOSEBOX, Colours::Brown),
-		NWidget(WWT_CAPTION, Colours::Brown, WID_RM_CAPTION),
-		NWidget(WWT_SHADEBOX, Colours::Brown),
-		NWidget(WWT_DEFSIZEBOX, Colours::Brown),
-		NWidget(WWT_STICKYBOX, Colours::Brown),
+		NWidget(WWT_CLOSEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_CAPTION, FOUNDER_COLOUR, WID_RM_CAPTION),
+		NWidget(WWT_SHADEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_DEFSIZEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_STICKYBOX, FOUNDER_COLOUR),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_RM_TAB_TEAM), SetStringTip(STR_FOUNDER_TAB_TEAM, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_RM_TAB_OFFICE), SetStringTip(STR_FOUNDER_TAB_OFFICE, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_RM_TAB_WORK), SetStringTip(STR_FOUNDER_TAB_WORK, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_PANEL, Colours::Brown, WID_RM_LIST), SetToolTip(STR_ROADMAP_LIST_TOOLTIP), SetScrollbar(WID_RM_SCROLLBAR), SetResize(1, 1), EndContainer(),
-		NWidget(NWID_VSCROLLBAR, Colours::Brown, WID_RM_SCROLLBAR),
+		NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_RM_LIST), SetToolTip(STR_ROADMAP_LIST_TOOLTIP), SetScrollbar(WID_RM_SCROLLBAR), SetResize(1, 1), EndContainer(),
+		NWidget(NWID_VSCROLLBAR, FOUNDER_COLOUR, WID_RM_SCROLLBAR),
 	EndContainer(),
-	NWidget(WWT_PANEL, Colours::Brown, WID_RM_SUMMARY), SetResize(1, 0), EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_RM_SUMMARY), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
-		NWidget(WWT_DROPDOWN, Colours::Brown, WID_RM_NEW), SetStringTip(STR_ROADMAP_NEW, STR_ROADMAP_NEW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_RM_ADD_ENGINEER), SetStringTip(STR_ROADMAP_ADD_ENGINEER, STR_ROADMAP_ADD_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_RM_REMOVE_ENGINEER), SetStringTip(STR_ROADMAP_REMOVE_ENGINEER, STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_RM_SHIP), SetStringTip(STR_ROADMAP_SHIP, STR_ROADMAP_SHIP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_RESIZEBOX, Colours::Brown),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_RM_NEW), SetStringTip(STR_ROADMAP_NEW, STR_ROADMAP_NEW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_ADD_ENGINEER), SetStringTip(STR_ROADMAP_ADD_ENGINEER, STR_ROADMAP_ADD_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_REMOVE_ENGINEER), SetStringTip(STR_ROADMAP_REMOVE_ENGINEER, STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_SHIP), SetStringTip(STR_ROADMAP_SHIP, STR_ROADMAP_SHIP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),
 };
 
@@ -273,5 +296,6 @@ static WindowDesc _roadmap_desc(
 void ShowRoadmapWindow(CompanyID company)
 {
 	if (!Company::IsValidID(company)) return;
+	CloseOtherFounderTabs(WindowClass::Roadmap, company);
 	AllocateWindowDescFront<RoadmapWindow>(_roadmap_desc, company);
 }

@@ -34,6 +34,11 @@
 #include "table/strings.h"
 #include "table/sprites.h"
 
+#include "employee_base.h"
+#include "feature_base.h"
+#include "office_func.h"
+#include "settings_type.h"
+
 #include "safeguards.h"
 
 static bool DrawScrollingStatusText(const NewsItem &ni, int scroll_pos, int left, int right, int top, int bottom)
@@ -146,6 +151,8 @@ struct StatusBarWindow : Window {
 							DrawString(tr, GetString(STR_STATUSBAR_COMPANY_NAME, _local_company), TextColour::FromString, AlignmentH::Centre);
 						}
 					}
+				} else if (_settings_game.game_creation.founder_mode && Company::IsValidID(_local_company)) {
+					DrawFounderStatus(tr);
 				} else {
 					if (Company::IsValidID(_local_company)) {
 						/* This is the default text */
@@ -159,6 +166,31 @@ struct StatusBarWindow : Window {
 				}
 				break;
 		}
+	}
+
+	/**
+	 * Founder Mode vital signs: runway, burn, team and work velocity.
+	 * @param tr Area to draw in.
+	 */
+	static void DrawFounderStatus(const Rect &tr)
+	{
+		const Company *c = Company::Get(_local_company);
+		Money burn = GetMonthlyPayroll(c->index) + GetOfficeRent(c->office_level);
+		std::string runway;
+		TextColour colour = TextColour::White;
+		if (c->money <= 0) {
+			runway = GetString(STR_STATUSBAR_FOUNDER_OUT_OF_CASH);
+			colour = TextColour::Red;
+		} else if (burn <= 0) {
+			runway = GetString(STR_STATUSBAR_FOUNDER_NO_BURN);
+		} else {
+			int64_t tenths = static_cast<int64_t>(c->money) * 10 / static_cast<int64_t>(burn);
+			runway = GetString(STR_STATUSBAR_FOUNDER_MONTHS, tenths / 10, tenths % 10);
+			if (tenths < 30) colour = TextColour::Red; else if (tenths < 60) colour = TextColour::Yellow;
+		}
+		uint velocity = 0;
+		for (uint t = 0; t < to_underlying(WorkTrack::End); t++) velocity += GetDailyVelocity(c->index, static_cast<WorkTrack>(t));
+		DrawString(tr, GetString(STR_STATUSBAR_FOUNDER, runway, burn, CountEmployees(c->index), GetOfficeDesks(c->office_level), velocity / 100, (velocity % 100) / 10), colour, AlignmentH::Centre);
 	}
 
 	/**
@@ -207,6 +239,7 @@ struct StatusBarWindow : Window {
 
 	const IntervalTimer<TimerGameCalendar> daily_interval = {{TimerGameCalendar::Trigger::Day, TimerGameCalendar::Priority::None}, [this](auto) {
 		this->SetWidgetDirty(WID_S_LEFT);
+		if (_settings_game.game_creation.founder_mode) this->SetWidgetDirty(WID_S_MIDDLE);
 	}};
 };
 

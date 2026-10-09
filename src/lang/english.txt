@@ -3838,6 +3838,14 @@ STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_EXCLUSIVE_TRANSPORT_MINUTES  :{PUSH_COLOUR}{Y
 STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_BRIBE                        :{PUSH_COLOUR}{YELLOW}Bribe the local authority to increase your rating and abort a competitor's exclusive transport rights, at the risk of a severe penalty if caught.{}{POP_COLOUR}Cost: {CURRENCY_LONG}
 
 # Goal window
+STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
+STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
+STR_FOUNDER_TAB_WORK                                            :{BLACK}Work
+STR_FOUNDER_TAB_TOOLTIP                                         :{BLACK}Switch the company panel
+STR_STATUSBAR_FOUNDER                                           :Runway {RAW_STRING} · Burn {CURRENCY_SHORT}/mo · Team {NUM}/{NUM} · Work {NUM}.{NUM}/day
+STR_STATUSBAR_FOUNDER_MONTHS                                    :{NUM}.{NUM} mo
+STR_STATUSBAR_FOUNDER_NO_BURN                                   :no costs yet
+STR_STATUSBAR_FOUNDER_OUT_OF_CASH                               :out of cash
 STR_TEAM_CAPTION                                                :{WHITE}{COMPANY} Team
 STR_TEAM_NONE                                                   :{ORANGE}- No employees yet. Hire your first person below -
 STR_TEAM_LIST_TOOLTIP                                           :{BLACK}Your employees. Click a person to select them

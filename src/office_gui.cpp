@@ -27,6 +27,8 @@
 
 #include "table/strings.h"
 
+#include "founder_gui.h"
+
 #include "safeguards.h"
 
 /** Maps office floor coordinates (in tiles) to screen pixels, 2:1 isometric like the game map. */
@@ -75,6 +77,18 @@ struct OfficeWindow : public Window {
 		this->InitNested(window_number);
 		this->owner = static_cast<Owner>(this->window_number);
 		this->OnInvalidateData(0);
+		this->LowerWidget(WID_OFFICE_TAB_OFFICE);
+	}
+
+	Point OnInitialPosition([[maybe_unused]] int16_t sm_width, [[maybe_unused]] int16_t sm_height, [[maybe_unused]] int window_number) override
+	{
+		return GetFounderPanelPosition(GetFounderPanelSize().width);
+	}
+
+	void FindWindowPlacementAndResize(int, int, bool allow_resize) override
+	{
+		Dimension d = GetFounderPanelSize();
+		Window::FindWindowPlacementAndResize(d.width, d.height, allow_resize);
 	}
 
 	CompanyID GetCompany() const { return static_cast<CompanyID>(this->window_number); }
@@ -196,6 +210,10 @@ struct OfficeWindow : public Window {
 	void OnClick([[maybe_unused]] Point pt, WidgetID widget, [[maybe_unused]] int click_count) override
 	{
 		switch (widget) {
+			case WID_OFFICE_TAB_TEAM: ShowFounderTab(FounderTab::Team, static_cast<CompanyID>(this->window_number)); break;
+			case WID_OFFICE_TAB_OFFICE: break; // Already showing this tab.
+			case WID_OFFICE_TAB_WORK: ShowFounderTab(FounderTab::Work, static_cast<CompanyID>(this->window_number)); break;
+
 			case WID_OFFICE_UPGRADE:
 				Command<Commands::UpgradeOffice>::Post(STR_ERROR_CAN_T_UPGRADE_OFFICE, static_cast<uint8_t>(GetOfficeLevel(this->GetCompany()) + 1));
 				break;
@@ -217,18 +235,23 @@ struct OfficeWindow : public Window {
 
 static constexpr std::initializer_list<NWidgetPart> _nested_office_widgets = {
 	NWidget(NWID_HORIZONTAL),
-		NWidget(WWT_CLOSEBOX, Colours::Brown),
-		NWidget(WWT_CAPTION, Colours::Brown, WID_OFFICE_CAPTION),
-		NWidget(WWT_SHADEBOX, Colours::Brown),
-		NWidget(WWT_DEFSIZEBOX, Colours::Brown),
-		NWidget(WWT_STICKYBOX, Colours::Brown),
+		NWidget(WWT_CLOSEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_CAPTION, FOUNDER_COLOUR, WID_OFFICE_CAPTION),
+		NWidget(WWT_SHADEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_DEFSIZEBOX, FOUNDER_COLOUR),
+		NWidget(WWT_STICKYBOX, FOUNDER_COLOUR),
 	EndContainer(),
-	NWidget(WWT_PANEL, Colours::Brown, WID_OFFICE_VIEW), SetResize(1, 1), EndContainer(),
-	NWidget(WWT_PANEL, Colours::Brown, WID_OFFICE_SUMMARY), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_OFFICE_UPGRADE), SetToolTip(STR_OFFICE_UPGRADE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, Colours::Brown, WID_OFFICE_TEAM), SetStringTip(STR_OFFICE_TEAM, STR_OFFICE_TEAM_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_RESIZEBOX, Colours::Brown),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_OFFICE_TAB_TEAM), SetStringTip(STR_FOUNDER_TAB_TEAM, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_OFFICE_TAB_OFFICE), SetStringTip(STR_FOUNDER_TAB_OFFICE, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, FOUNDER_COLOUR, WID_OFFICE_TAB_WORK), SetStringTip(STR_FOUNDER_TAB_WORK, STR_FOUNDER_TAB_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+	EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_OFFICE_VIEW), SetResize(1, 1), EndContainer(),
+	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_OFFICE_SUMMARY), SetResize(1, 0), EndContainer(),
+	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_OFFICE_UPGRADE), SetToolTip(STR_OFFICE_UPGRADE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_OFFICE_TEAM), SetStringTip(STR_OFFICE_TEAM, STR_OFFICE_TEAM_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),
 };
 
@@ -246,5 +269,6 @@ static WindowDesc _office_desc(
 void ShowOfficeWindow(CompanyID company)
 {
 	if (!Company::IsValidID(company)) return;
+	CloseOtherFounderTabs(WindowClass::Office, company);
 	AllocateWindowDescFront<OfficeWindow>(_office_desc, company);
 }

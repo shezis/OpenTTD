@@ -366,6 +366,8 @@ add_files(
     office_gui.cpp
     office_gui.h
     feature.cpp
+    founder_gui.cpp
+    founder_gui.h
     feature_base.h
     feature_cmd.h
     feature_type.h

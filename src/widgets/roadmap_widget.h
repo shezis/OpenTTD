@@ -13,6 +13,9 @@
 /** Widgets of the #RoadmapWindow class. */
 enum RoadmapWidgets : WidgetID {
 	WID_RM_CAPTION, ///< Caption of the window.
+	WID_RM_TAB_TEAM, ///< Company panel tab: team.
+	WID_RM_TAB_OFFICE, ///< Company panel tab: office.
+	WID_RM_TAB_WORK, ///< Company panel tab: work.
 	WID_RM_LIST, ///< List of features.
 	WID_RM_SCROLLBAR, ///< Scrollbar of the list.
 	WID_RM_SUMMARY, ///< Engineers and velocity line.

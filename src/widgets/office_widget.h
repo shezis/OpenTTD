@@ -13,6 +13,9 @@
 /** Widgets of the #OfficeWindow class. */
 enum OfficeWidgets : WidgetID {
 	WID_OFFICE_CAPTION, ///< Caption of the window.
+	WID_OFFICE_TAB_TEAM, ///< Company panel tab: team.
+	WID_OFFICE_TAB_OFFICE, ///< Company panel tab: office.
+	WID_OFFICE_TAB_WORK, ///< Company panel tab: work.
 	WID_OFFICE_VIEW, ///< Isometric drawing of the office.
 	WID_OFFICE_SUMMARY, ///< Office size, desks and rent.
 	WID_OFFICE_UPGRADE, ///< Move to a bigger office.
