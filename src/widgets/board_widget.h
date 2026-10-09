@@ -19,6 +19,7 @@ enum BoardWidgets : WidgetID {
 	WID_BD_ACCEPT, ///< Accept the offer.
 	WID_BD_DECLINE, ///< Decline the offer.
 	WID_BD_FINANCES, ///< Open the finances window.
+	WID_BD_BUYBACK, ///< Buy back equity from investors.
 };
 
 #endif /* WIDGETS_BOARD_WIDGET_H */

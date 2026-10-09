@@ -239,6 +239,12 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	return c != nullptr && ScriptTown::IsValidTown(town) && ::IsTownInRepRange(c->index, town);
 }
 
+/* static */ bool ScriptFounder::IsPermitRequired(TownID town, ScriptCompany::CompanyID company)
+{
+	const Company *c = GetFounderCompany(company);
+	return c != nullptr && ScriptTown::IsValidTown(town) && ::IsPermitRequired(c->index, town);
+}
+
 /* static */ bool ScriptFounder::HasHub(TownID town, ScriptCompany::CompanyID company)
 {
 	const Company *c = GetFounderCompany(company);

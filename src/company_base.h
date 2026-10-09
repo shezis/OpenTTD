@@ -106,6 +106,7 @@ struct CompanyProperties {
 	bool founder_ipo = false; ///< Founder Mode: the company has gone public.
 	uint8_t founder_runway_warning = 0; ///< Founder Mode: last runway warning given (0 none, 1 under 6 months, 2 under 3).
 	bool founder_operator = false; ///< Founder Mode: an AI transit operator rather than a startup.
+	std::array<uint8_t, 2> founder_reg_months{}; ///< Founder Mode: per regulation, 0 when it does not apply yet, else months left before fines plus one.
 	Money max_loan = COMPANY_MAX_LOAN_DEFAULT; ///< Max allowed amount of the loan or COMPANY_MAX_LOAN_DEFAULT.
 
 	Colours colour = Colours::Begin; ///< Company colour.

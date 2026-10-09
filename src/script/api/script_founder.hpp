@@ -257,6 +257,15 @@ public:
 	static bool IsTownInReach(TownID town, ScriptCompany::CompanyID company);
 
 	/**
+	 * Does selling in the town need an operating permit the company does not have yet?
+	 * Big towns need one (see PlanCityWork); the HQ town never does.
+	 * @param town The town.
+	 * @param company The company.
+	 * @return True when a permit is needed.
+	 */
+	static bool IsPermitRequired(TownID town, ScriptCompany::CompanyID company);
+
+	/**
 	 * Does the company have a sales hub in the town?
 	 * @param town The town.
 	 * @param company The company.

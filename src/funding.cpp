@@ -9,6 +9,8 @@
 
 #include "stdafx.h"
 #include "funding_func.h"
+#include "economy_func.h"
+#include "town.h"
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
@@ -47,12 +49,121 @@ StringID GetInvestorName(uint8_t investor) { return _investor_names[investor % s
  * @param round Round index.
  * @return Permille of the company.
  */
+/** An investor's stake from its round, diluted by later rounds, before any buyback. */
+static uint64_t GetRawInvestorEquity(const Company *c, uint8_t round)
+{
+	uint64_t equity = c->founder_round_equity[round];
+	for (uint8_t later = round + 1; later < c->founder_stage; later++) equity = equity * (1000 - c->founder_round_equity[later]) / 1000;
+	return equity;
+}
+
 uint16_t GetInvestorEquity(CompanyID company, uint8_t round)
 {
 	const Company *c = Company::Get(company);
-	uint64_t equity = c->founder_round_equity[round];
-	for (uint8_t later = round + 1; later < c->founder_stage; later++) equity = equity * (1000 - c->founder_round_equity[later]) / 1000;
-	return static_cast<uint16_t>(equity);
+	/* Buybacks shrink every investor's stake in proportion, so investors always hold what founders do not. */
+	uint64_t raw_total = 0;
+	for (uint8_t r = 0; r < c->founder_stage; r++) raw_total += GetRawInvestorEquity(c, r);
+	if (raw_total == 0) return 0;
+	return static_cast<uint16_t>(GetRawInvestorEquity(c, round) * (1000 - c->founder_equity) / raw_total);
+}
+
+/**
+ * Venture debt a startup can carry: half the value of the stake investors hold.
+ * Giving up more equity lets you borrow more; buying it back lowers the limit.
+ * @param c The startup.
+ * @return Debt limit, in whole loan steps.
+ */
+Money GetVentureDebtCapacity(const Company *c)
+{
+	int64_t investor_value = c->founder_valuation / 1000 * (1000 - c->founder_equity);
+	return investor_value / 2 / LOAN_INTERVAL * LOAN_INTERVAL;
+}
+
+/**
+ * Price of buying back one step of equity from investors, at the current valuation.
+ * @param company The startup.
+ * @return The cost.
+ */
+Money GetBuybackCost(CompanyID company)
+{
+	return Company::Get(company)->founder_valuation / 1000 * BUYBACK_STEP_PERMILLE;
+}
+
+/**
+ * Big towns need an operating permit before your reps and hubs win customers there. Your HQ town never does.
+ * @param company The startup.
+ * @param town The town.
+ * @return True when a permit is needed and not yet granted.
+ */
+bool IsPermitRequired(CompanyID company, TownID town)
+{
+	const Town *t = Town::Get(town);
+	if (t->cache.population < PERMIT_POPULATION || GetCompanyHQTown(company) == town) return false;
+	return !HasShippedWorkItem(company, WORK_ITEM_OPERATING_PERMIT, town);
+}
+
+/** Catalog item that satisfies each regulation. */
+static constexpr uint8_t _regulation_items[] = { 38, 39 };
+static_assert(std::size(_regulation_items) == to_underlying(Regulation::End));
+
+bool IsRegulationMet(CompanyID company, Regulation reg)
+{
+	return HasShippedWorkItem(company, _regulation_items[to_underlying(reg)]);
+}
+
+/**
+ * This month's fines for regulations past their deadline.
+ * @param company The startup.
+ * @return Total fines.
+ */
+Money GetRegulationFine(CompanyID company)
+{
+	const Company *c = Company::Get(company);
+	Money fine = 0;
+	for (uint r = 0; r < to_underlying(Regulation::End); r++) {
+		if (c->founder_reg_months[r] == 1 && !IsRegulationMet(company, static_cast<Regulation>(r))) fine += std::max<Money>(2000, GetCompanyMRR(company) / 10);
+	}
+	return fine;
+}
+
+/**
+ * Corporation tax on this month's operating profit.
+ * @param company The startup.
+ * @return Tax, 0 while loss-making.
+ */
+Money GetMonthlyTax(CompanyID company)
+{
+	Money profit = GetCompanyMRR(company) - GetCompanyMonthlyCosts(company);
+	return profit > 0 ? profit * CORPORATION_TAX_PERCENT / 100 : Money(0);
+}
+
+/**
+ * Monthly: start regulation clocks when rules begin to apply, count down, and warn the founder.
+ * @param company The startup.
+ */
+void UpdateRegulation(CompanyID company)
+{
+	Company *c = Company::Get(company);
+	const bool applies[] = {
+		GetCompanyUsers(company) >= 500,
+		HasShippedWorkItem(company, 5), // Own payments and billing; a provider handles licensing for you.
+	};
+	static_assert(std::size(applies) == to_underlying(Regulation::End));
+	for (uint r = 0; r < to_underlying(Regulation::End); r++) {
+		Regulation reg = static_cast<Regulation>(r);
+		uint8_t &months = c->founder_reg_months[r];
+		if (months == 0 && applies[r] && !IsRegulationMet(company, reg)) {
+			months = REGULATION_GRACE_MONTHS + 1;
+			if (company == _local_company) {
+				AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_REGULATION, STR_REGULATION_DATA_PROTECTION + r, GetWorkItemSpec(_regulation_items[r]).name, REGULATION_GRACE_MONTHS), NewsType::CompanyInfo, NewsStyle::Normal, {});
+			}
+		} else if (months > 1 && !IsRegulationMet(company, reg)) {
+			months--;
+			if (months == 1 && company == _local_company) {
+				AddNewsItem(GetEncodedString(STR_NEWS_FOUNDER_FINES, STR_REGULATION_DATA_PROTECTION + r), NewsType::CompanyInfo, NewsStyle::Small, {});
+			}
+		}
+	}
 }
 
 /**
@@ -140,10 +251,30 @@ CommandCost CmdRespondFundingOffer(DoCommandFlags flags, bool accept)
 			c->founder_equity = static_cast<uint16_t>(static_cast<uint32_t>(c->founder_equity) * (1000 - c->founder_offer_equity) / 1000);
 			c->founder_valuation = c->founder_offer_amount * 1000 / std::max<uint16_t>(c->founder_offer_equity, 1);
 			c->founder_stage++;
-			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -c->founder_offer_amount));
+			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::RoadVehRevenue, -c->founder_offer_amount));
 		}
 		c->founder_offer_stage = 0;
 		InvalidateWindowData(WindowClass::Board, c->index);
 	}
 	return CommandCost();
+}
+
+/**
+ * Buy back one step of equity from investors at the current valuation.
+ * @param flags Type of operation.
+ * @param permille Equity to buy back; must be one step.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdBuyBackEquity(DoCommandFlags flags, uint16_t permille)
+{
+	Company *c = Company::GetIfValid(_current_company);
+	if (c == nullptr || IsFounderOperator(c->index) || permille != BUYBACK_STEP_PERMILLE) return CMD_ERROR;
+	if (c->founder_stage == 0 || 1000 - c->founder_equity < permille) return CommandCost(STR_ERROR_NO_INVESTOR_EQUITY);
+
+	CommandCost cost(ExpensesType::RoadVehRevenue, GetBuybackCost(c->index));
+	if (flags.Test(DoCommandFlag::Execute)) {
+		c->founder_equity += permille;
+		InvalidateWindowData(WindowClass::Board, c->index);
+	}
+	return cost;
 }

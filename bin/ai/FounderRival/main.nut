@@ -125,6 +125,12 @@ function FounderRival::Runway()
 /** Answer investor offers. Bootstrappers only take money when they need it. */
 function FounderRival::Funding()
 {
+	/* Short on runway: draw venture debt while the limit allows. */
+	if (this.Runway() < 4) {
+		local cur = AICompany.GetLoanAmount();
+		local max = AICompany.GetMaxLoanAmount();
+		if (cur < max) AICompany.SetLoanAmount(min(max, cur + AICompany.GetLoanInterval() * 5));
+	}
 	local amount = AIFounder.GetOfferAmount(AICompany.COMPANY_SELF);
 	if (amount <= 0) return;
 	local accept = this.personality != BOOTSTRAPPER || this.Runway() < 6;
@@ -277,6 +283,11 @@ function FounderRival::Sales()
 		local best_score = -1;
 		foreach (town, _ in AITownList()) {
 			if (!AIFounder.IsTownInReach(town, AICompany.COMPANY_SELF)) continue;
+			if (AIFounder.IsPermitRequired(town, AICompany.COMPANY_SELF)) {
+				/* Apply for the permit when there is cash; reps wait until it is granted. */
+				if (AICompany.GetBankBalance(AICompany.COMPANY_SELF) > 20000) AIFounder.PlanCityWork(37, town);
+				continue;
+			}
 			local open = AIFounder.GetTownMarketSize(town) - AIFounder.GetTownCustomers(town, AICompany.COMPANY_SELF);
 			local score = open / (AIFounder.GetTownReps(town, AICompany.COMPANY_SELF) + 1);
 			if (score > best_score) {

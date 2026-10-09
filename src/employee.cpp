@@ -221,16 +221,17 @@ void PayEmployees()
 	if (!_settings_game.game_creation.founder_mode) return;
 
 	for (const Company *c : Company::Iterate()) {
+		if (IsFounderOperator(c->index)) continue;
 		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index)));
 		Money field = GetFieldSalesCosts(c->index);
-		if (field > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, field));
+		if (field > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::RoadVehRun, field));
 		Money running = GetWorkRunCosts(c->index);
-		if (running > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, running));
+		if (running > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::AircraftRun, running));
 
 		Money payroll = GetMonthlyPayroll(c->index);
 		if (payroll == 0) continue;
 
-		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, payroll));
+		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::TrainRun, payroll));
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} paid payroll {}, cash now {}", c->index + 1, payroll, c->money);
 		InvalidateWindowData(WindowClass::Team, c->index);
 	}
@@ -322,7 +323,7 @@ CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role, EmployeeLev
 		InvalidateWindowData(WindowClass::Office, _current_company);
 	}
 
-	return CommandCost(ExpensesType::Other, fee);
+	return CommandCost(ExpensesType::Construction, fee);
 }
 
 /**
@@ -336,7 +337,7 @@ CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee)
 	Employee *e = Employee::GetIfValid(employee);
 	if (e == nullptr || e->company != _current_company) return CMD_ERROR;
 
-	CommandCost cost(ExpensesType::Other, e->salary);
+	CommandCost cost(ExpensesType::Construction, e->salary);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
 		CompanyID company = e->company;

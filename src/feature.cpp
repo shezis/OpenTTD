@@ -82,6 +82,10 @@ static const WorkItemSpec _work_items[] = {
 	/* 34 */ { WorkTrack::Engineering, FeatureCategory::End,            10, "Localise for",              {    0, NONE, NONE }, WorkImpact::LocalFit,    40,   300,   50, 0, true },
 	/* 35 */ { WorkTrack::Sales,       FeatureCategory::End,             8, "Local partnerships in",     {    0, NONE, NONE }, WorkImpact::LocalReach,  25,     0,  200, 0, true },
 	/* 36 */ { WorkTrack::Engineering, FeatureCategory::End,            16, "Council integration in",    {   34, NONE, NONE }, WorkImpact::LocalFit,    60,   800,  150, 0, true },
+	/* Regulation. */
+	/* 37 */ { WorkTrack::Business,    FeatureCategory::End,             6, "Operating permit for",      { NONE, NONE, NONE }, WorkImpact::None,         0,  2500,    0, 0, true },
+	/* 38 */ { WorkTrack::Business,    FeatureCategory::End,            16, "Data protection programme", {   15, NONE, NONE }, WorkImpact::Churn,        1,  1000,  300, 0 },
+	/* 39 */ { WorkTrack::Business,    FeatureCategory::End,            20, "Payments licence",          {   14, NONE, NONE }, WorkImpact::None,         0,  5000,  500, 0 },
 };
 
 /** Role that staffs each track, indexed by #WorkTrack. */
@@ -320,7 +324,7 @@ static void ShipFeature(Feature *f, const TrackStaffStats &s)
 	ReleaseFeatureStaff(f->index);
 	f->assigned = 0;
 	Money test = GetWorkItemSpec(f->spec).test_cost;
-	if (test > 0) SubtractMoneyFromCompany(f->company, CommandCost(ExpensesType::Other, test));
+	if (test > 0) SubtractMoneyFromCompany(f->company, CommandCost(ExpensesType::NewVehicles, test));
 	Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} shipped '{}' at {}% (quality {}, bugs {})", f->company + 1, f->GetName(), pct, f->quality, f->bugs);
 	InvalidateWindowData(WindowClass::Roadmap, f->company);
 }

@@ -83,6 +83,8 @@ static const std::initializer_list<ExpensesType> _expenses_list_capital_costs = 
 };
 
 /** Expense list container. */
+static StringID GetExpenseLabel(ExpensesType et);
+
 struct ExpensesList {
 	const StringID title; ///< StringID of list title.
 	const std::initializer_list<ExpensesType> &items; ///< List of expenses types.
@@ -105,7 +107,7 @@ struct ExpensesList {
 	{
 		uint width = 0;
 		for (const ExpensesType &et : this->items) {
-			width = std::max(width, GetStringBoundingBox(STR_FINANCES_SECTION_CONSTRUCTION + to_underlying(et)).width);
+			width = std::max(width, GetStringBoundingBox(GetExpenseLabel(et)).width);
 		}
 		return width;
 	}
@@ -118,6 +120,44 @@ static const std::initializer_list<ExpensesList> _expenses_list_types = {
 	{ STR_FINANCES_CAPITAL_EXPENSES_TITLE,   _expenses_list_capital_costs },
 };
 
+/* Founder Mode startups: the same saved expense slots under startup names. */
+static const std::initializer_list<ExpensesType> _founder_list_revenue = {
+	ExpensesType::TrainRevenue, // Subscriptions.
+	ExpensesType::RoadVehRevenue, // Equity raised, net of buybacks.
+};
+static const std::initializer_list<ExpensesType> _founder_list_operating_costs = {
+	ExpensesType::TrainRun, // Salaries.
+	ExpensesType::RoadVehRun, // Field sales.
+	ExpensesType::AircraftRun, // Hosting and running costs.
+	ExpensesType::ShipRun, // Sponsorship.
+	ExpensesType::Property, // Office and hubs.
+	ExpensesType::LoanInterest, // Debt interest.
+};
+static const std::initializer_list<ExpensesType> _founder_list_one_off_costs = {
+	ExpensesType::Construction, // Hiring and setup.
+	ExpensesType::NewVehicles, // Testing and QA.
+	ExpensesType::Other, // Tax and compliance.
+};
+static const std::initializer_list<ExpensesList> _founder_list_types = {
+	{ STR_FINANCES_REVENUE_TITLE,              _founder_list_revenue },
+	{ STR_FINANCES_OPERATING_EXPENSES_TITLE,   _founder_list_operating_costs },
+	{ STR_FINANCES_FOUNDER_ONE_OFF_TITLE,      _founder_list_one_off_costs },
+};
+
+/** Whether the finances window being sized or drawn shows a Founder Mode startup. */
+static bool _finances_founder_view = false;
+
+static const std::initializer_list<ExpensesList> &GetExpensesListTypes()
+{
+	return _finances_founder_view ? _founder_list_types : _expenses_list_types;
+}
+
+/** Row label of an expense type, in startup terms for Founder Mode startups. */
+static StringID GetExpenseLabel(ExpensesType et)
+{
+	return (_finances_founder_view ? STR_FINANCES_FOUNDER_CONSTRUCTION : STR_FINANCES_SECTION_CONSTRUCTION) + to_underlying(et);
+}
+
 /**
  * Get the total height of the "categories" column.
  * @return The total height in pixels.
@@ -127,7 +167,7 @@ static uint GetTotalCategoriesHeight()
 	/* There's an empty line and blockspace on the year row */
 	uint total_height = GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.vsep_wide;
 
-	for (const ExpensesList &list : _expenses_list_types) {
+	for (const ExpensesList &list : GetExpensesListTypes()) {
 		/* Title + expense list + total line + total + blockspace after category */
 		total_height += GetCharacterHeight(FontSize::Normal) + list.GetHeight() + WidgetDimensions::scaled.vsep_normal + GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.vsep_wide;
 	}
@@ -147,7 +187,7 @@ static uint GetMaxCategoriesWidth()
 	uint max_width = GetStringBoundingBox(TimerGameEconomy::UsingWallclockUnits() ? STR_FINANCES_PERIOD_CAPTION : STR_FINANCES_YEAR_CAPTION).width;
 
 	/* Loop through categories to check max widths. */
-	for (const ExpensesList &list : _expenses_list_types) {
+	for (const ExpensesList &list : GetExpensesListTypes()) {
 		/* Title of category */
 		max_width = std::max(max_width, GetStringBoundingBox(list.title).width);
 		/* Entries in category */
@@ -170,7 +210,7 @@ static void DrawCategory(const Rect &r, int start_y, const ExpensesList &list)
 	tr.top = start_y;
 
 	for (const ExpensesType &et : list.items) {
-		DrawString(tr, STR_FINANCES_SECTION_CONSTRUCTION + to_underlying(et));
+		DrawString(tr, GetExpenseLabel(et));
 		tr.top += GetCharacterHeight(FontSize::Normal);
 	}
 }
@@ -187,7 +227,7 @@ static void DrawCategories(const Rect &r)
 	DrawString(r.left, r.right, y, (TimerGameEconomy::UsingWallclockUnits() ? STR_FINANCES_PERIOD_CAPTION : STR_FINANCES_YEAR_CAPTION), TextColour::FromString, AlignmentH::Start, true);
 	y += GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.vsep_wide;
 
-	for (const ExpensesList &list : _expenses_list_types) {
+	for (const ExpensesList &list : GetExpensesListTypes()) {
 		/* Draw category title and advance y */
 		DrawString(r.left, r.right, y, list.title, TextColour::FromString, AlignmentH::Start);
 		y += GetCharacterHeight(FontSize::Normal);
@@ -279,7 +319,7 @@ static void DrawYearColumn(const Rect &r, TimerGameEconomy::Year year, const Exp
 	y += GetCharacterHeight(FontSize::Normal) + WidgetDimensions::scaled.vsep_wide;
 
 	/* Categories */
-	for (const ExpensesList &list : _expenses_list_types) {
+	for (const ExpensesList &list : GetExpensesListTypes()) {
 		y += GetCharacterHeight(FontSize::Normal);
 		sum += DrawYearCategory(r, y, list, tbl);
 		/* Expense list + expense category title + expense category total + blockspace after category */
@@ -384,7 +424,7 @@ struct CompanyFinancesWindow : Window {
 
 			case WID_CF_MAXLOAN_VALUE: {
 				const Company *c = Company::Get(this->window_number);
-				return GetString(STR_FINANCES_MAX_LOAN, c->GetMaxLoan());
+				return GetString(this->IsFounderView() ? STR_FINANCES_FOUNDER_DEBT_LIMIT : STR_FINANCES_MAX_LOAN, c->GetMaxLoan());
 			}
 
 			case WID_CF_INCREASE_LOAN:
@@ -398,8 +438,15 @@ struct CompanyFinancesWindow : Window {
 		}
 	}
 
+	/** Founder Mode startups show startup cost names. */
+	bool IsFounderView() const
+	{
+		return _settings_game.game_creation.founder_mode && !Company::Get(this->window_number)->founder_operator;
+	}
+
 	void UpdateWidgetSize(WidgetID widget, Dimension &size, [[maybe_unused]] const Dimension &padding, [[maybe_unused]] Dimension &fill, [[maybe_unused]] Dimension &resize) override
 	{
+		_finances_founder_view = this->IsFounderView();
 		switch (widget) {
 			case WID_CF_EXPS_CATEGORY:
 				size.width  = GetMaxCategoriesWidth();
@@ -429,6 +476,7 @@ struct CompanyFinancesWindow : Window {
 
 	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
+		_finances_founder_view = this->IsFounderView();
 		switch (widget) {
 			case WID_CF_EXPS_CATEGORY:
 				DrawCategories(r);

@@ -3918,6 +3918,7 @@ STR_ERROR_HUB_ALREADY_OPEN                                      :{WHITE}... you 
 STR_ERROR_HUB_IN_HQ_TOWN                                        :{WHITE}... your HQ already covers this town
 STR_ERROR_TOO_MANY_HUBS                                         :{WHITE}... you already run the maximum number of hubs
 STR_MARKET_WANTS                                                :wants {STRING} and {STRING} · {NUM} rep{P "" s} here
+STR_MARKET_WANTS_PERMIT                                         :{RED}needs an operating permit (City work){SILVER} · wants {STRING} and {STRING} · {NUM} rep{P "" s} here
 STR_MARKET_SUMMARY                                              :{BLACK}{NUM} customer{P "" s} · MRR {CURRENCY_LONG} · {CURRENCY_SHORT} per customer per month
 STR_MARKET_ADD_REP                                              :{BLACK}Add rep here
 STR_MARKET_ADD_REP_TOOLTIP                                      :{BLACK}Send a free sales rep to the selected town. Reps reach towns near your HQ
@@ -3931,6 +3932,18 @@ STR_BOARD_NO_ROUNDS                                             :no rounds yet
 STR_BOARD_PUBLIC                                                :public company
 STR_BOARD_COSTS_BREAKDOWN                                       :Salaries {CURRENCY_LONG} · Office {CURRENCY_LONG} · Hubs {CURRENCY_LONG} ({NUM}) · Field sales {CURRENCY_LONG} ({NUM} rep{P "" s}) · Running costs {CURRENCY_LONG} · Sponsorship {CURRENCY_LONG}
 STR_BOARD_INSOLVENT                                             :Insolvent for {NUM} month{P "" s} · raise money now
+STR_BOARD_TAX_DEBT                                              :Tax {CURRENCY_LONG}/month ({NUM}% of profit) · Debt {CURRENCY_LONG} of {CURRENCY_LONG} limit
+STR_BOARD_REGULATION                                            :Regulation: {RAW_STRING}
+STR_BOARD_REGULATION_NONE                                       :Regulation: nothing applies yet
+STR_BOARD_REGULATION_MET                                        :{STRING} compliant
+STR_BOARD_REGULATION_DUE                                        :{STRING} due in {NUM} month{P "" s}
+STR_BOARD_REGULATION_FINED                                      :{STRING} overdue, fined monthly
+STR_BOARD_BUYBACK                                               :{BLACK}Buy back 1% ({CURRENCY_SHORT})
+STR_BOARD_BUYBACK_TOOLTIP                                       :{BLACK}Buy 1% of the company back from your investors at the current valuation. Investors' stakes shrink in proportion, and so does your venture debt limit
+STR_REGULATION_DATA_PROTECTION                                  :Data protection
+STR_REGULATION_PAYMENTS                                         :Payments licence
+STR_NEWS_FOUNDER_REGULATION                                     :{BIG_FONT}{BLACK}Regulator: {STRING} rules now apply to you. Ship "{RAW_STRING}" within {NUM} months or pay monthly fines
+STR_NEWS_FOUNDER_FINES                                          :{BIG_FONT}{BLACK}{STRING} deadline passed: fines start this month
 STR_BOARD_IPO_REPORT                                            :You took the company public. Your founders' stake of {NUM}.{NUM}% is worth {CURRENCY_LONG}. Raised {CURRENCY_LONG} over {NUM} round{P "" s}; {NUM} customers today
 STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
 STR_NEWS_FOUNDER_RUNWAY_LOW                                     :{BIG_FONT}{BLACK}Runway under 6 months: about {NUM} month{P "" s} of cash left at the current burn
@@ -4079,6 +4092,8 @@ STR_ERROR_WRONG_ROLE_FOR_WORK                                   :{WHITE}This per
 STR_ERROR_WORK_ITEM_FULL                                        :{WHITE}Every slot on this item is taken
 STR_ERROR_WORK_ITEM_LOCKED                                      :{WHITE}... finish its prerequisites first
 STR_ERROR_WORK_ITEM_EXCLUDED                                    :{WHITE}You chose another branch of this fork
+STR_ERROR_CAN_T_BUY_BACK                                        :{WHITE}Can't buy back equity...
+STR_ERROR_NO_INVESTOR_EQUITY                                    :{WHITE}... investors hold no equity to buy back
 STR_ERROR_WORK_ITEM_PLANNED                                     :{WHITE}... it is already on the roadmap
 STR_ERROR_FEATURE_TOO_EARLY                                     :{WHITE}... less than half of it is built
 STR_ERROR_OFFICE_AT_MAX                                         :{WHITE}... this is already the largest office
@@ -4277,6 +4292,20 @@ STR_FINANCES_SECTION_AIRCRAFT_REVENUE                           :{GOLD}Aircraft
 STR_FINANCES_SECTION_SHIP_REVENUE                               :{GOLD}Ships
 STR_FINANCES_SECTION_LOAN_INTEREST                              :{GOLD}Loan Interest
 STR_FINANCES_SECTION_OTHER                                      :{GOLD}Other
+STR_FINANCES_FOUNDER_ONE_OFF_TITLE                              :{WHITE}One-off Costs and Tax
+STR_FINANCES_FOUNDER_CONSTRUCTION                               :{GOLD}Hiring and setup
+STR_FINANCES_FOUNDER_NEW_VEHICLES                               :{GOLD}Testing and QA
+STR_FINANCES_FOUNDER_TRAIN_RUNNING_COSTS                        :{GOLD}Salaries
+STR_FINANCES_FOUNDER_ROAD_VEHICLE_RUNNING_COSTS                 :{GOLD}Field sales
+STR_FINANCES_FOUNDER_AIRCRAFT_RUNNING_COSTS                     :{GOLD}Hosting and running
+STR_FINANCES_FOUNDER_SHIP_RUNNING_COSTS                         :{GOLD}Sponsorship
+STR_FINANCES_FOUNDER_INFRASTRUCTURE                             :{GOLD}Office and hubs
+STR_FINANCES_FOUNDER_TRAIN_REVENUE                              :{GOLD}Subscriptions
+STR_FINANCES_FOUNDER_ROAD_VEHICLE_REVENUE                       :{GOLD}Equity raised (net)
+STR_FINANCES_FOUNDER_AIRCRAFT_REVENUE                           :{GOLD}Unused
+STR_FINANCES_FOUNDER_SHIP_REVENUE                               :{GOLD}Unused
+STR_FINANCES_FOUNDER_LOAN_INTEREST                              :{GOLD}Debt interest
+STR_FINANCES_FOUNDER_OTHER                                      :{GOLD}Tax and compliance
 
 STR_FINANCES_TOTAL_CAPTION                                      :{WHITE}Total
 STR_FINANCES_NEGATIVE_INCOME                                    :-{CURRENCY_LONG}
@@ -4288,6 +4317,7 @@ STR_FINANCES_OWN_FUNDS_TITLE                                    :{WHITE}Own Fund
 STR_FINANCES_LOAN_TITLE                                         :{WHITE}Loan
 STR_FINANCES_INTEREST_RATE                                      :{WHITE}Loan Interest: {BLACK}{NUM}%
 STR_FINANCES_MAX_LOAN                                           :{WHITE}Maximum Loan: {BLACK}{CURRENCY_LONG}
+STR_FINANCES_FOUNDER_DEBT_LIMIT                                 :{WHITE}Venture debt limit: {BLACK}{CURRENCY_LONG}
 STR_FINANCES_TOTAL_CURRENCY                                     :{BLACK}{CURRENCY_LONG}
 STR_FINANCES_BANK_BALANCE                                       :{WHITE}{CURRENCY_LONG}
 STR_FINANCES_BORROW_BUTTON                                      :{BLACK}Borrow {CURRENCY_LONG}

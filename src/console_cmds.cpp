@@ -33,6 +33,7 @@
 #include "window_func.h"
 #include "timer/timer.h"
 #include "company_func.h"
+#include "company_gui.h"
 #include "gamelog.h"
 #include "ai/ai.hpp"
 #include "ai/ai_config.hpp"
@@ -3348,6 +3349,7 @@ void IConsoleStdLibRegister()
 	IConsole::CmdRegister("hub",                     ConHub);
 	IConsole::CmdRegister("sponsor",                 ConSponsor);
 	IConsole::CmdRegister("board",                   [](std::span<std::string_view> argv) { if (!argv.empty()) ShowBoardWindow(_local_company); return true; });
+	IConsole::CmdRegister("finances",                [](std::span<std::string_view> argv) { if (!argv.empty() && Company::IsValidID(_local_company)) ShowCompanyFinances(_local_company); return true; });
 	IConsole::CmdRegister("fm_debug_valuation",      [](std::span<std::string_view> argv) {
 		if (argv.size() != 2 || _networking) { IConsolePrint(CC_HELP, "Developer tool, single player only: set your valuation. Usage: 'fm_debug_valuation <amount>'."); return true; }
 		auto v = ParseInteger<int64_t>(argv[1]);

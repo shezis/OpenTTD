@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "market_func.h"
+#include "funding_func.h"
 #include "roadmap_gui.h"
 #include "feature_cmd.h"
 #include "feature_base.h"
@@ -139,7 +140,7 @@ struct MarketWindow : public Window {
 						/* Line 2: what the town wants and your reps there. */
 						auto wants = GetTownWants(t->index);
 						DrawString(row.left + ScaleGUITrad(8), row.right, y1 + line + ScaleGUITrad(1),
-								GetString(STR_MARKET_WANTS, STR_FEATURE_CATEGORY_CORE + to_underlying(wants[0]), STR_FEATURE_CATEGORY_CORE + to_underlying(wants[1]), CountRepsInTown(company, t->index)),
+								GetString(IsPermitRequired(company, t->index) ? STR_MARKET_WANTS_PERMIT : STR_MARKET_WANTS, STR_FEATURE_CATEGORY_CORE + to_underlying(wants[0]), STR_FEATURE_CATEGORY_CORE + to_underlying(wants[1]), CountRepsInTown(company, t->index)),
 								sel ? TextColour::White : TextColour::Grey, AlignmentH::Start, false, FontSize::Small);
 						ir.top += row_h;
 					}

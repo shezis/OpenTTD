@@ -56,6 +56,7 @@ struct BoardWindow : public Window {
 	std::string GetWidgetString(WidgetID widget, StringID stringid) const override
 	{
 		if (widget == WID_BD_CAPTION) return GetString(STR_BOARD_CAPTION, this->window_number);
+		if (widget == WID_BD_BUYBACK) return GetString(STR_BOARD_BUYBACK, GetBuybackCost(static_cast<CompanyID>(this->window_number)));
 		return this->Window::GetWidgetString(widget, stringid);
 	}
 
@@ -63,7 +64,7 @@ struct BoardWindow : public Window {
 	{
 		const int line = GetCharacterHeight(FontSize::Normal);
 		switch (widget) {
-			case WID_BD_REPORT: size.height = 6 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
+			case WID_BD_REPORT: size.height = 9 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
 			case WID_BD_CAPTABLE: size.height = 6 * line + WidgetDimensions::scaled.framerect.Vertical(); resize.height = 1; fill.height = 1; break;
 			case WID_BD_OFFER: size.height = 4 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
 		}
@@ -90,6 +91,25 @@ struct BoardWindow : public Window {
 				uint reps = CountFieldReps(c->index);
 				ir.top = DrawStringMultiLine(ir.left, ir.right, ir.top, ir.top + 2 * line, GetString(STR_BOARD_COSTS_BREAKDOWN,
 						GetMonthlyPayroll(c->index), GetOfficeRent(c->office_level), HUB_RENT * hubs, hubs, GetFieldSalesCosts(c->index), reps, GetWorkRunCosts(c->index), c->founder_sponsor_monthly), TextColour::Grey);
+				/* Tax, debt and regulation. */
+				DrawString(ir, GetString(STR_BOARD_TAX_DEBT, GetMonthlyTax(c->index), CORPORATION_TAX_PERCENT, c->current_loan, c->GetMaxLoan()), TextColour::Black);
+				ir.top += line;
+				std::string regs;
+				for (uint r = 0; r < to_underlying(Regulation::End); r++) {
+					uint8_t months = c->founder_reg_months[r];
+					if (months == 0) continue;
+					if (!regs.empty()) regs += " · ";
+					StringID name = STR_REGULATION_DATA_PROTECTION + r;
+					if (IsRegulationMet(c->index, static_cast<Regulation>(r))) {
+						regs += GetString(STR_BOARD_REGULATION_MET, name);
+					} else if (months > 1) {
+						regs += GetString(STR_BOARD_REGULATION_DUE, name, months - 1);
+					} else {
+						regs += GetString(STR_BOARD_REGULATION_FINED, name);
+					}
+				}
+				DrawString(ir, regs.empty() ? GetString(STR_BOARD_REGULATION_NONE) : GetString(STR_BOARD_REGULATION, regs), GetRegulationFine(c->index) > 0 ? TextColour::Red : TextColour::Black);
+				ir.top += line;
 				if (c->money < 0) {
 					DrawString(ir, GetString(STR_BOARD_INSOLVENT, std::max<uint>(c->months_of_bankruptcy, 1)), TextColour::Red);
 				} else if (net <= 0) {
@@ -146,6 +166,7 @@ struct BoardWindow : public Window {
 			case WID_BD_ACCEPT: Command<Commands::RespondFundingOffer>::Post(STR_ERROR_CAN_T_RESPOND_OFFER, true); break;
 			case WID_BD_DECLINE: Command<Commands::RespondFundingOffer>::Post(STR_ERROR_CAN_T_RESPOND_OFFER, false); break;
 			case WID_BD_FINANCES: ShowCompanyFinances(static_cast<CompanyID>(this->window_number)); break;
+			case WID_BD_BUYBACK: Command<Commands::BuyBackEquity>::Post(STR_ERROR_CAN_T_BUY_BACK, static_cast<uint16_t>(BUYBACK_STEP_PERMILLE)); break;
 		}
 	}
 
@@ -155,6 +176,7 @@ struct BoardWindow : public Window {
 		bool own = this->window_number == _local_company;
 		bool offer = this->GetCompany()->founder_offer_stage != 0;
 		this->SetWidgetsDisabledState(!own || !offer, WID_BD_ACCEPT, WID_BD_DECLINE);
+		this->SetWidgetDisabledState(WID_BD_BUYBACK, !own || this->GetCompany()->founder_stage == 0 || this->GetCompany()->founder_equity >= 1000);
 		this->SetDirty();
 	}
 };
@@ -172,6 +194,7 @@ static constexpr std::initializer_list<NWidgetPart> _nested_board_widgets = {
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
 		NWidget(WWT_PUSHTXTBTN, Colours::DarkBlue, WID_BD_ACCEPT), SetStringTip(STR_BOARD_ACCEPT, STR_BOARD_ACCEPT_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_BD_DECLINE), SetStringTip(STR_BOARD_DECLINE, STR_BOARD_DECLINE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_BD_BUYBACK), SetToolTip(STR_BOARD_BUYBACK_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_BD_FINANCES), SetStringTip(STR_BOARD_FINANCES, STR_BOARD_FINANCES_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),

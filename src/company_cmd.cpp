@@ -51,6 +51,7 @@
 
 #include "employee_base.h"
 #include "market_func.h"
+#include "funding_func.h"
 
 #include "safeguards.h"
 
@@ -112,6 +113,8 @@ void Company::PostDestructor(size_t index)
  */
 Money Company::GetMaxLoan() const
 {
+	/* Founder Mode startups borrow venture debt against the equity investors hold. */
+	if (_settings_game.game_creation.founder_mode && !this->founder_operator) return GetVentureDebtCapacity(this);
 	if (this->max_loan == COMPANY_MAX_LOAN_DEFAULT) return _economy.max_loan;
 	return this->max_loan;
 }
@@ -670,7 +673,11 @@ Company *DoStartupNewCompany(bool is_ai, CompanyID company = CompanyID::Invalid(
 	ClearEnginesHiddenFlagOfCompany(c->index);
 	if (_settings_game.game_creation.founder_mode) {
 		uint8_t background = is_ai ? AssignFounderAIRole(c) : _settings_game.game_creation.founder_background;
-		if (!c->founder_operator) ApplyFounderBackground(c->index, background);
+		if (!c->founder_operator) {
+			ApplyFounderBackground(c->index, background);
+			/* The starting cash is the founders' own money, not a loan. */
+			c->current_loan = 0;
+		}
 	}
 
 	GeneratePresidentName(c);

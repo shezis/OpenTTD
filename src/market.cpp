@@ -339,7 +339,7 @@ uint GetTownMarketSize(TownID town)
 uint GetCompanyStrength(CompanyID company, TownID town)
 {
 	uint fit = GetCompanyFit(company, town);
-	if (fit == 0) return 0;
+	if (fit == 0 || IsPermitRequired(company, town)) return 0;
 	const Town *t = Town::Get(town);
 
 	uint reach = 0;
@@ -434,10 +434,16 @@ static const IntervalTimer<TimerGameEconomy> _economy_market_monthly({TimerGameE
 			continue;
 		}
 		Money mrr = GetCompanyMRR(c->index);
-		if (mrr > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, -mrr));
+		if (mrr > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::TrainRevenue, -mrr));
+		/* Tax on profit, then fines for regulations past their deadline. */
+		Money tax = GetMonthlyTax(c->index);
+		if (tax > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, tax));
+		UpdateRegulation(c->index);
+		Money fine = GetRegulationFine(c->index);
+		if (fine > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, fine));
 		UpdateFunding(c->index, static_cast<int64_t>(mrr));
 		if (IsFounderOperator(c->founder_sponsoring) && c->founder_sponsor_monthly > 0) {
-			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, c->founder_sponsor_monthly));
+			SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::ShipRun, c->founder_sponsor_monthly));
 			SubtractMoneyFromCompany(c->founder_sponsoring, CommandCost(ExpensesType::Other, -c->founder_sponsor_monthly));
 		}
 		Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} has {} users, MRR {}", c->index + 1, GetCompanyUsers(c->index), mrr);
