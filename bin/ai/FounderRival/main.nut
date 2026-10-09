@@ -177,6 +177,7 @@ function FounderRival::Work()
 		local free = AIFounder.GetFreeStaff(AICompany.COMPANY_SELF, track);
 		/* Sales people mostly work towns; lend at most one to sales-track work. */
 		if (track == AIFounder.TRACK_SALES) free = min(free, 1 - staff);
+		free = min(free, AIFounder.GetWorkItemSlots(item) - staff);
 		if (free > 0) AIFounder.StaffWorkItem(item, staff + free);
 	}
 }
@@ -226,7 +227,7 @@ function FounderRival::Staffing()
 		local first = [[AIFounder.TRACK_BUSINESS, 2], [AIFounder.TRACK_SALES, 1], [AIFounder.TRACK_ENGINEERING, 0]];
 		foreach (pair in first) {
 			if (counts[pair[1]] == 0 && this.HasOpenWork(pair[0])) {
-				AIFounder.Hire(roles[pair[1]]);
+				AIFounder.Hire(roles[pair[1]], this.HireLevel());
 				return;
 			}
 		}
@@ -254,7 +255,18 @@ function FounderRival::Staffing()
 			pick_ratio = ratio;
 		}
 	}
-	AIFounder.Hire(roles[pick]);
+	AIFounder.Hire(roles[pick], this.HireLevel());
+}
+
+/** Seniority to hire at: bootstrappers go cheap, funded blitzscalers and incumbents pay for seniors. */
+function FounderRival::HireLevel()
+{
+	switch (this.personality) {
+		case BOOTSTRAPPER: return AIFounder.LEVEL_JUNIOR;
+		case BLITZSCALER: return AIFounder.GetFundingStage(AICompany.COMPANY_SELF) > 0 ? AIFounder.LEVEL_SENIOR : AIFounder.LEVEL_MID;
+		case INCUMBENT: return AIFounder.LEVEL_SENIOR;
+	}
+	return AIFounder.LEVEL_MID;
 }
 
 /** Send free reps to the reachable town with the most customers left to win per rep. */

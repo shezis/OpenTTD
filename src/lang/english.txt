@@ -3924,6 +3924,7 @@ STR_MARKET_NO_FREE_REP                                          :{WHITE}... ever
 STR_BOARD_CAPTION                                               :{WHITE}{COMPANY} Board
 STR_BOARD_NO_ROUNDS                                             :no rounds yet
 STR_BOARD_PUBLIC                                                :public company
+STR_BOARD_COSTS_BREAKDOWN                                       :Salaries {CURRENCY_LONG} · Office {CURRENCY_LONG} · Hubs {CURRENCY_LONG} ({NUM}) · Field sales {CURRENCY_LONG} ({NUM} rep{P "" s}) · Sponsorship {CURRENCY_LONG}
 STR_BOARD_INSOLVENT                                             :Insolvent for {NUM} month{P "" s} · raise money now
 STR_BOARD_IPO_REPORT                                            :You took the company public. Your founders' stake of {NUM}.{NUM}% is worth {CURRENCY_LONG}. Raised {CURRENCY_LONG} over {NUM} round{P "" s}; {NUM} customers today
 STR_NEWS_FOUNDER_IPO                                            :{BIG_FONT}{BLACK}{COMPANY} goes public at a {CURRENCY_LONG} valuation!
@@ -3978,13 +3979,23 @@ STR_TEAM_ROLE_DESIGNER                                          :Designer
 STR_TEAM_ROLE_SALES                                             :Sales
 STR_TEAM_ROLE_OPERATIONS                                        :Operations
 STR_TEAM_ROLE_REP                                               :Sales · {TOWN}
+STR_TEAM_LEVEL_JUNIOR                                           :Junior
+STR_TEAM_LEVEL_MID                                              :Mid
+STR_TEAM_LEVEL_SENIOR                                           :Senior
+STR_TEAM_LEVEL_ROLE                                             :{STRING} {STRING}
+STR_TEAM_WORK_TOWN                                              :Selling in {TOWN}
+STR_TEAM_WORK_FREE                                              :free
+STR_TEAM_TRAIT_JUNIOR                                           :more bugs
+STR_TEAM_TRAIT_MID                                              :steady
+STR_TEAM_TRAIT_SENIOR                                           :fewer bugs, higher quality
+STR_TEAM_HIRE_LEVEL_ITEM                                        :{STRING}: {CURRENCY_LONG}/month · speed {NUM}% · {STRING}
 STR_ERROR_CAN_T_ASSIGN_REP                                      :{WHITE}Can't assign this rep...
 STR_ERROR_NOT_A_SALES_REP                                       :{WHITE}... only sales people can be assigned to towns
 STR_ERROR_TOWN_OUT_OF_REP_RANGE                                 :{WHITE}... this town is too far from your HQ
 STR_TEAM_SKILL                                                  :Skill {NUM}
 STR_TEAM_SALARY                                                 :{CURRENCY_LONG}/month
 STR_TEAM_MORALE                                                 :Morale {NUM}%
-STR_TEAM_SUMMARY                                                :{BLACK}{NUM} {P person people} at {NUM} desks · Payroll {CURRENCY_LONG} per month
+STR_TEAM_SUMMARY                                                :{BLACK}{NUM} {P person people} at {NUM} desks · Payroll {CURRENCY_LONG}/month · Field sales {CURRENCY_LONG}/month
 STR_TEAM_OFFICE                                                 :{BLACK}Office
 STR_TEAM_OFFICE_TOOLTIP                                         :{BLACK}Open your office
 STR_OFFICE_CAPTION                                              :{WHITE}{COMPANY} Office
@@ -4004,7 +4015,15 @@ STR_ROADMAP_NONE                                                :{ORANGE}- Nothi
 STR_ROADMAP_LIST_TOOLTIP                                        :{BLACK}Work in progress, then the backlog, then done. Click an item to select it
 STR_ROADMAP_SUMMARY                                             :{BLACK}Assigned: engineering {NUM}/{NUM} · business {NUM}/{NUM} · sales {NUM}/{NUM}
 STR_ROADMAP_STATUS_BACKLOG                                      :Backlog · {NUM} points
-STR_ROADMAP_STATUS_PROGRESS                                     :{NUM}% · {NUM} {P person people}
+STR_ROADMAP_STATUS_PROGRESS                                     :{NUM}% · {NUM}/{NUM} slots
+STR_ROADMAP_CREW                                                :{BLACK}Crew: {RAW_STRING} · {NUM}.{NUM} points/day · {NUM}/{NUM} slots
+STR_ROADMAP_CREW_NONE                                           :{BLACK}{RAW_STRING}: nobody yet · {NUM} slots. Use Assign to pick people
+STR_ROADMAP_CREW_PERSON                                         :{RAW_STRING} ({STRING})
+STR_ROADMAP_PERSON_ITEM                                         :{RAW_STRING} · {STRING} · {NUM}.{NUM} pts/day
+STR_ROADMAP_PERSON_ITEM_TOWN                                    :{RAW_STRING} · {STRING} · {NUM}.{NUM} pts/day · leaves {RAW_STRING}
+STR_ROADMAP_PERSON_ITEM_BUSY                                    :{RAW_STRING} · {STRING} · {NUM}.{NUM} pts/day · moves from {RAW_STRING}
+STR_ROADMAP_NOBODY_FREE                                         :Nobody in this role yet. Hire someone first
+STR_ROADMAP_NOBODY_ON_IT                                        :Nobody is working on this item
 STR_ROADMAP_STATUS_SHIPPED                                      :Shipped · quality {NUM} · {NUM} bug{P "" s}
 STR_ROADMAP_VIEW_LIST                                           :{BLACK}List
 STR_ROADMAP_VIEW_TREE                                           :{BLACK}Tree
@@ -4014,10 +4033,10 @@ STR_ROADMAP_NEW_TOOLTIP                                         :{BLACK}Add an i
 STR_ROADMAP_NEW_ITEM                                            :{STRING} · {RAW_STRING} · {NUM} points
 STR_ROADMAP_NEW_ITEM_LOCKED                                     :{STRING} · {RAW_STRING} · needs {RAW_STRING}
 STR_ROADMAP_NEW_ALL_PLANNED                                     :Everything in the catalog is planned
-STR_ROADMAP_ADD_ENGINEER                                        :{BLACK}+ Person
-STR_ROADMAP_ADD_ENGINEER_TOOLTIP                                :{BLACK}Put one more person on the selected item. Engineering uses engineers, business uses operations, sales uses sales
-STR_ROADMAP_REMOVE_ENGINEER                                     :{BLACK}- Person
-STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP                             :{BLACK}Take one person off the selected item
+STR_ROADMAP_ADD_ENGINEER                                        :{BLACK}Assign
+STR_ROADMAP_ADD_ENGINEER_TOOLTIP                                :{BLACK}Pick a person to work on the selected item. Engineering uses engineers, business uses operations, sales uses sales
+STR_ROADMAP_REMOVE_ENGINEER                                     :{BLACK}Remove
+STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP                             :{BLACK}Pick a person to take off the selected item
 STR_ROADMAP_SHIP                                                :{BLACK}Ship now
 STR_ROADMAP_SHIP_TOOLTIP                                        :{BLACK}Ship the selected feature before it is finished. Unfinished work lowers quality and adds bugs. Needs at least 50% done
 STR_FEATURE_CATEGORY_CORE                                       :Core
@@ -4036,6 +4055,8 @@ STR_ERROR_CAN_T_SHIP_FEATURE                                    :{WHITE}Can't sh
 STR_ERROR_ROADMAP_FULL                                          :{WHITE}... the roadmap is full. Ship or finish something first
 STR_ERROR_FEATURE_SHIPPED                                       :{WHITE}... this feature has already shipped
 STR_ERROR_NO_FREE_STAFF                                         :{WHITE}... nobody free in this role. Hire someone or move a person off other work
+STR_ERROR_WRONG_ROLE_FOR_WORK                                   :{WHITE}This person works a different track
+STR_ERROR_WORK_ITEM_FULL                                        :{WHITE}Every slot on this item is taken
 STR_ERROR_WORK_ITEM_LOCKED                                      :{WHITE}... finish its prerequisites first
 STR_ERROR_WORK_ITEM_PLANNED                                     :{WHITE}... it is already on the roadmap
 STR_ERROR_FEATURE_TOO_EARLY                                     :{WHITE}... less than half of it is built
@@ -4045,7 +4066,7 @@ STR_TEAM_HIRE_ENGINEER                                          :{BLACK}Hire eng
 STR_TEAM_HIRE_DESIGNER                                          :{BLACK}Hire designer
 STR_TEAM_HIRE_SALES                                             :{BLACK}Hire sales
 STR_TEAM_HIRE_OPERATIONS                                        :{BLACK}Hire operations
-STR_TEAM_HIRE_TOOLTIP                                           :{BLACK}Hire a new person for this role. The recruiting fee is one month of the role's base salary
+STR_TEAM_HIRE_TOOLTIP                                           :{BLACK}Hire a junior, mid or senior person for this role. Seniors cost more but work faster with fewer bugs. The recruiting fee is one month of salary
 STR_TEAM_LET_GO                                                 :{BLACK}Let go
 STR_TEAM_LET_GO_TOOLTIP                                         :{BLACK}Let the selected person go. Severance is one month of their salary
 STR_ERROR_CAN_T_HIRE                                            :{WHITE}Can't hire...

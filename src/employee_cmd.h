@@ -12,11 +12,13 @@
 
 #include "command_type.h"
 #include "employee_type.h"
+#include "feature_type.h"
 #include "town_type.h"
 #include "company_type.h"
 #include "economy_type.h"
 
-CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role);
+CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role, EmployeeLevel level);
+CommandCost CmdAssignWork(DoCommandFlags flags, EmployeeID employee, FeatureID feature);
 CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee);
 CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town);
 CommandCost CmdSetHub(DoCommandFlags flags, TownID town, bool open);
@@ -25,6 +27,7 @@ CommandCost CmdRespondFundingOffer(DoCommandFlags flags, bool accept);
 
 DEF_CMD_TRAIT(Commands::HireEmployee, CmdHireEmployee, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::FireEmployee, CmdFireEmployee, {}, CommandType::OtherManagement)
+DEF_CMD_TRAIT(Commands::AssignWork, CmdAssignWork, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::AssignRep, CmdAssignRep, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::SetHub, CmdSetHub, {}, CommandType::OtherManagement)
 DEF_CMD_TRAIT(Commands::SponsorOperator, CmdSponsorOperator, {}, CommandType::OtherManagement)

@@ -11,6 +11,9 @@
 #include "roadmap_gui.h"
 #include "feature_base.h"
 #include "feature_cmd.h"
+#include "employee_base.h"
+#include "employee_cmd.h"
+#include "town.h"
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
@@ -31,6 +34,13 @@
 #include "founder_gui.h"
 
 #include "safeguards.h"
+
+/** Short level names for crew lists, indexed by #EmployeeLevel. */
+static const StringID _level_short_names[] = {
+	STR_TEAM_LEVEL_JUNIOR,
+	STR_TEAM_LEVEL_MID,
+	STR_TEAM_LEVEL_SENIOR,
+};
 
 /** Name of each track, indexed by #WorkTrack. */
 static const StringID _work_track_names[] = {
@@ -256,6 +266,20 @@ struct RoadmapWindow : public Window {
 
 			case WID_RM_SUMMARY: {
 				CompanyID company = this->GetCompany();
+				/* The selected item's crew, by name. */
+				if (const Feature *f = this->GetSelected(); f != nullptr && f->state != FeatureState::Shipped) {
+					std::string crew;
+					for (const Employee *e : Employee::Iterate()) {
+						if (e->feature != f->index) continue;
+						if (!crew.empty()) crew += ", ";
+						crew += GetString(STR_ROADMAP_CREW_PERSON, e->GetName(), _level_short_names[to_underlying(e->level)]);
+					}
+					uint per_day = GetFeatureDailyProgress(f);
+					DrawString(r.Shrink(WidgetDimensions::scaled.framerect), crew.empty()
+							? GetString(STR_ROADMAP_CREW_NONE, f->GetName(), GetWorkItemSlots(f->spec))
+							: GetString(STR_ROADMAP_CREW, crew, per_day / 100, per_day % 100 / 10, f->assigned, GetWorkItemSlots(f->spec)));
+					break;
+				}
 				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_ROADMAP_SUMMARY,
 						CountAssignedStaff(company, WorkTrack::Engineering), CountTrackStaff(company, WorkTrack::Engineering),
 						CountAssignedStaff(company, WorkTrack::Business), CountTrackStaff(company, WorkTrack::Business),
@@ -304,7 +328,7 @@ struct RoadmapWindow : public Window {
 				std::string status;
 				switch (f->state) {
 					case FeatureState::Backlog: status = GetString(STR_ROADMAP_STATUS_BACKLOG, f->effort); break;
-					case FeatureState::InProgress: status = GetString(STR_ROADMAP_STATUS_PROGRESS, f->GetProgressPercent(), f->assigned); break;
+					case FeatureState::InProgress: status = GetString(STR_ROADMAP_STATUS_PROGRESS, f->GetProgressPercent(), f->assigned, GetWorkItemSlots(f->spec)); break;
 					case FeatureState::Shipped: status = GetString(STR_ROADMAP_STATUS_SHIPPED, f->quality, f->bugs); break;
 				}
 				TextColour sc = tc;
@@ -379,11 +403,29 @@ struct RoadmapWindow : public Window {
 
 			case WID_RM_ADD_ENGINEER:
 			case WID_RM_REMOVE_ENGINEER: {
+				/* Pick a person by name: free people of the item's track to add, its crew to remove. */
 				const Feature *f = this->GetSelected();
 				if (f == nullptr) break;
-				int n = f->assigned + (widget == WID_RM_ADD_ENGINEER ? 1 : -1);
-				if (n < 0 || n > 255) break;
-				Command<Commands::AssignFeature>::Post(STR_ERROR_CAN_T_ASSIGN_FEATURE, f->index, static_cast<uint8_t>(n));
+				bool add = widget == WID_RM_ADD_ENGINEER;
+				EmployeeRole role = GetTrackRole(f->GetTrack());
+				DropDownList list;
+				for (const Employee *e : Employee::Iterate()) {
+					if (e->company != f->company || e->role != role) continue;
+					if (add ? e->feature == f->index : e->feature != f->index) continue;
+					uint per_day = GetPersonDailyProgress(e);
+					StringID str = STR_ROADMAP_PERSON_ITEM;
+					std::string where;
+					if (add && Town::IsValidID(e->town)) {
+						str = STR_ROADMAP_PERSON_ITEM_TOWN;
+						where = GetString(STR_TOWN_NAME, e->town);
+					} else if (add && Feature::IsValidID(e->feature)) {
+						str = STR_ROADMAP_PERSON_ITEM_BUSY;
+						where = Feature::Get(e->feature)->GetName();
+					}
+					list.push_back(MakeDropDownListStringItem(GetString(str, e->GetName(), _level_short_names[to_underlying(e->level)], per_day / 100, per_day % 100 / 10, where), e->index.base()));
+				}
+				if (list.empty()) list.push_back(MakeDropDownListStringItem(add ? STR_ROADMAP_NOBODY_FREE : STR_ROADMAP_NOBODY_ON_IT, -1, true));
+				ShowDropDownList(this, std::move(list), -1, widget);
 				break;
 			}
 
@@ -397,8 +439,20 @@ struct RoadmapWindow : public Window {
 
 	void OnDropdownSelect(WidgetID widget, int index, int) override
 	{
-		if (widget != WID_RM_NEW || index < 0) return;
-		Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index));
+		if (index < 0) return;
+		switch (widget) {
+			case WID_RM_NEW:
+				Command<Commands::CreateFeature>::Post(STR_ERROR_CAN_T_CREATE_FEATURE, static_cast<uint8_t>(index));
+				break;
+
+			case WID_RM_ADD_ENGINEER:
+				if (const Feature *f = this->GetSelected(); f != nullptr) Command<Commands::AssignWork>::Post(STR_ERROR_CAN_T_ASSIGN_FEATURE, EmployeeID(index), f->index);
+				break;
+
+			case WID_RM_REMOVE_ENGINEER:
+				Command<Commands::AssignWork>::Post(STR_ERROR_CAN_T_ASSIGN_FEATURE, EmployeeID(index), FeatureID::Invalid());
+				break;
+		}
 	}
 
 	void OnResize() override
@@ -447,8 +501,8 @@ static constexpr std::initializer_list<NWidgetPart> _nested_roadmap_widgets = {
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_VIEW), SetToolTip(STR_ROADMAP_VIEW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_RM_NEW), SetStringTip(STR_ROADMAP_NEW, STR_ROADMAP_NEW_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_ADD_ENGINEER), SetStringTip(STR_ROADMAP_ADD_ENGINEER, STR_ROADMAP_ADD_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_REMOVE_ENGINEER), SetStringTip(STR_ROADMAP_REMOVE_ENGINEER, STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_RM_ADD_ENGINEER), SetStringTip(STR_ROADMAP_ADD_ENGINEER, STR_ROADMAP_ADD_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_RM_REMOVE_ENGINEER), SetStringTip(STR_ROADMAP_REMOVE_ENGINEER, STR_ROADMAP_REMOVE_ENGINEER_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_RM_SHIP), SetStringTip(STR_ROADMAP_SHIP, STR_ROADMAP_SHIP_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),
 	EndContainer(),

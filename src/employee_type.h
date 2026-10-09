@@ -23,6 +23,14 @@ enum class EmployeeRole : uint8_t {
 	End, ///< End marker.
 };
 
+/** Seniority: sets salary, speed and quality. */
+enum class EmployeeLevel : uint8_t {
+	Junior, ///< Cheap, slower, more bugs.
+	Mid, ///< The baseline.
+	Senior, ///< Expensive, faster, fewer bugs and better quality.
+	End, ///< End marker.
+};
+
 struct Employee;
 
 static constexpr uint MAX_EMPLOYEES_PER_COMPANY = 100; ///< Hard cap until offices add desk limits.

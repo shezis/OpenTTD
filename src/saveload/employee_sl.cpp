@@ -23,6 +23,8 @@ static const SaveLoad _employees_desc[] = {
 	SaveLoad::Variable<VarFileType::U8>("morale", SLE_OBJECT_ADDRESS(Employee, morale)),
 	SaveLoad::Variable<VarFileType::I64>("salary", SLE_OBJECT_ADDRESS(Employee, salary)),
 	SaveLoad::Variable<VarFileType::U16>("town", SLE_OBJECT_ADDRESS(Employee, town), SaveLoadVersion::FounderModeMarket),
+	SaveLoad::Variable<VarFileType::U8>("level", SLE_OBJECT_ADDRESS(Employee, level), SaveLoadVersion::FounderModeStaffLevels),
+	SaveLoad::Variable<VarFileType::U16>("feature", SLE_OBJECT_ADDRESS(Employee, feature), SaveLoadVersion::FounderModeStaffLevels),
 };
 
 struct EMPLChunkHandler : ChunkHandler {

@@ -63,7 +63,7 @@ struct BoardWindow : public Window {
 	{
 		const int line = GetCharacterHeight(FontSize::Normal);
 		switch (widget) {
-			case WID_BD_REPORT: size.height = 4 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
+			case WID_BD_REPORT: size.height = 6 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
 			case WID_BD_CAPTABLE: size.height = 6 * line + WidgetDimensions::scaled.framerect.Vertical(); resize.height = 1; fill.height = 1; break;
 			case WID_BD_OFFER: size.height = 4 * line + WidgetDimensions::scaled.framerect.Vertical(); break;
 		}
@@ -85,6 +85,11 @@ struct BoardWindow : public Window {
 				Money net = burn - GetCompanyMRR(c->index);
 				DrawString(ir, GetString(STR_BOARD_BURN, burn, net > 0 ? net : Money(0)), TextColour::Black);
 				ir.top += line;
+				/* Where the money goes: every running cost, hubs and field sales included. */
+				uint hubs = CountHubs(c->index);
+				uint reps = CountFieldReps(c->index);
+				ir.top = DrawStringMultiLine(ir.left, ir.right, ir.top, ir.top + 2 * line, GetString(STR_BOARD_COSTS_BREAKDOWN,
+						GetMonthlyPayroll(c->index), GetOfficeRent(c->office_level), HUB_RENT * hubs, hubs, GetFieldSalesCosts(c->index), reps, c->founder_sponsor_monthly), TextColour::Grey);
 				if (c->money < 0) {
 					DrawString(ir, GetString(STR_BOARD_INSOLVENT, std::max<uint>(c->months_of_bankruptcy, 1)), TextColour::Red);
 				} else if (net <= 0) {

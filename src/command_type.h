@@ -390,6 +390,7 @@ enum class Commands : uint8_t {
 	SetHub, ///< Founder Mode: open or close a sales hub
 	SponsorOperator, ///< Founder Mode: sponsor a transit operator
 	RespondFundingOffer, ///< Founder Mode: accept or decline an investor offer
+	AssignWork, ///< Founder Mode: put a person on a work item
 
 	End, ///< @important Must ALWAYS be on the end of this list!! (period)
 };

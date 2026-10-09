@@ -17,6 +17,9 @@
 #include "command_func.h"
 #include "company_base.h"
 #include "company_func.h"
+#include "dropdown_type.h"
+#include "dropdown_func.h"
+#include "feature_base.h"
 #include "gfx_func.h"
 #include "strings_func.h"
 #include "window_func.h"
@@ -39,6 +42,21 @@ static const StringID _employee_role_names[] = {
 	STR_TEAM_ROLE_OPERATIONS,
 };
 static_assert(std::size(_employee_role_names) == to_underlying(EmployeeRole::End));
+
+/** Name of each level, indexed by #EmployeeLevel. */
+static const StringID _employee_level_names[] = {
+	STR_TEAM_LEVEL_JUNIOR,
+	STR_TEAM_LEVEL_MID,
+	STR_TEAM_LEVEL_SENIOR,
+};
+static_assert(std::size(_employee_level_names) == to_underlying(EmployeeLevel::End));
+
+/** What each level trades off, indexed by #EmployeeLevel. */
+static const StringID _employee_level_traits[] = {
+	STR_TEAM_TRAIT_JUNIOR,
+	STR_TEAM_TRAIT_MID,
+	STR_TEAM_TRAIT_SENIOR,
+};
 
 /** Window listing a company's employees. */
 struct TeamWindow : public Window {
@@ -111,7 +129,7 @@ struct TeamWindow : public Window {
 
 			case WID_TEAM_SUMMARY: {
 				CompanyID company = static_cast<CompanyID>(this->window_number);
-				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_TEAM_SUMMARY, CountEmployees(company), GetOfficeDesks(GetOfficeLevel(company)), GetMonthlyPayroll(company)));
+				DrawString(r.Shrink(WidgetDimensions::scaled.framerect), GetString(STR_TEAM_SUMMARY, CountEmployees(company), GetOfficeDesks(GetOfficeLevel(company)), GetMonthlyPayroll(company), GetFieldSalesCosts(company)));
 				break;
 			}
 		}
@@ -128,9 +146,9 @@ struct TeamWindow : public Window {
 			return;
 		}
 
-		/* Columns as fractions of the width: name, role, skill, salary, morale. */
+		/* Columns as fractions of the width: name, level and role, work, salary, morale. */
 		const int w = ir.Width();
-		const int x_role = w * 34 / 100, x_skill = w * 54 / 100, x_salary = w * 68 / 100, x_morale = w * 86 / 100;
+		const int x_role = w * 26 / 100, x_skill = w * 46 / 100, x_salary = w * 70 / 100, x_morale = w * 86 / 100;
 
 		int pos = -this->vscroll->GetPosition();
 		const int cap = this->vscroll->GetCapacity();
@@ -142,12 +160,14 @@ struct TeamWindow : public Window {
 				TextColour tc = sel ? TextColour::White : TextColour::Black;
 
 				DrawString(row.left, row.left + x_role - 4, row.top, e->GetName(), tc);
-				if (e->role == EmployeeRole::Sales && Town::IsValidID(e->town)) {
-					DrawString(row.left + x_role, row.left + x_skill - 4, row.top, GetString(STR_TEAM_ROLE_REP, e->town), tc);
+				DrawString(row.left + x_role, row.left + x_skill - 4, row.top, GetString(STR_TEAM_LEVEL_ROLE, _employee_level_names[to_underlying(e->level)], _employee_role_names[to_underlying(e->role)]), tc);
+				if (Town::IsValidID(e->town)) {
+					DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, GetString(STR_TEAM_WORK_TOWN, e->town), tc);
+				} else if (const Feature *f = Feature::GetIfValid(e->feature); f != nullptr) {
+					DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, f->GetName(), tc);
 				} else {
-					DrawString(row.left + x_role, row.left + x_skill - 4, row.top, _employee_role_names[to_underlying(e->role)], tc);
+					DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, STR_TEAM_WORK_FREE, sel ? TextColour::White : TextColour::Orange);
 				}
-				DrawString(row.left + x_skill, row.left + x_salary - 4, row.top, GetString(STR_TEAM_SKILL, e->skill), tc);
 				DrawString(row.left + x_salary, row.left + x_morale - 4, row.top, GetString(STR_TEAM_SALARY, e->salary), tc);
 				TextColour mood = e->morale >= 70 ? TextColour::Green : (e->morale >= 45 ? TextColour::Yellow : TextColour::Red);
 				DrawString(row.left + x_morale, row.right, row.top, GetString(STR_TEAM_MORALE, e->morale), sel ? TextColour::White : mood);
@@ -176,8 +196,15 @@ struct TeamWindow : public Window {
 			case WID_TEAM_HIRE_DESIGNER:
 			case WID_TEAM_HIRE_SALES:
 			case WID_TEAM_HIRE_OPERATIONS: {
+				/* Each level with its monthly cost and what it trades off. */
 				EmployeeRole role = static_cast<EmployeeRole>(widget - WID_TEAM_HIRE_ENGINEER);
-				Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role);
+				DropDownList list;
+				for (uint l = 0; l < to_underlying(EmployeeLevel::End); l++) {
+					EmployeeLevel level = static_cast<EmployeeLevel>(l);
+					list.push_back(MakeDropDownListStringItem(GetString(STR_TEAM_HIRE_LEVEL_ITEM, _employee_level_names[to_underlying(level)],
+							GetLevelSalary(role, level), GetLevelSpeedPercent(level), _employee_level_traits[to_underlying(level)]), to_underlying(level)));
+				}
+				ShowDropDownList(this, std::move(list), -1, widget, 0, DropDownOption::Filterable);
 				break;
 			}
 
@@ -191,6 +218,13 @@ struct TeamWindow : public Window {
 				}
 				break;
 		}
+	}
+
+	void OnDropdownSelect(WidgetID widget, int index, int) override
+	{
+		if (widget < WID_TEAM_HIRE_ENGINEER || widget > WID_TEAM_HIRE_OPERATIONS || index < 0) return;
+		EmployeeRole role = static_cast<EmployeeRole>(widget - WID_TEAM_HIRE_ENGINEER);
+		Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role, static_cast<EmployeeLevel>(index));
 	}
 
 	void OnResize() override
@@ -233,10 +267,10 @@ static constexpr std::initializer_list<NWidgetPart> _nested_team_widgets = {
 	EndContainer(),
 	NWidget(WWT_PANEL, FOUNDER_COLOUR, WID_TEAM_SUMMARY), SetResize(1, 0), EndContainer(),
 	NWidget(NWID_HORIZONTAL, NWidContainerFlag::EqualSize),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_ENGINEER), SetStringTip(STR_TEAM_HIRE_ENGINEER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_DESIGNER), SetStringTip(STR_TEAM_HIRE_DESIGNER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
-		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_TEAM_HIRE_ENGINEER), SetStringTip(STR_TEAM_HIRE_ENGINEER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_TEAM_HIRE_DESIGNER), SetStringTip(STR_TEAM_HIRE_DESIGNER, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_TEAM_HIRE_SALES), SetStringTip(STR_TEAM_HIRE_SALES, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
+		NWidget(WWT_DROPDOWN, FOUNDER_COLOUR, WID_TEAM_HIRE_OPERATIONS), SetStringTip(STR_TEAM_HIRE_OPERATIONS, STR_TEAM_HIRE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_FIRE), SetStringTip(STR_TEAM_LET_GO, STR_TEAM_LET_GO_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, FOUNDER_COLOUR, WID_TEAM_OFFICE), SetStringTip(STR_TEAM_OFFICE, STR_TEAM_OFFICE_TOOLTIP), SetFill(1, 0), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, FOUNDER_COLOUR),

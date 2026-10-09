@@ -54,18 +54,136 @@ std::string Employee::GetName() const
 }
 
 /**
- * Typical monthly salary for a role, before skill is applied.
+ * Monthly salary of a mid-level person in a role.
  * @param role The role.
  * @return Base monthly salary.
  */
 static Money GetBaseSalary(EmployeeRole role)
 {
 	switch (role) {
-		case EmployeeRole::Engineer: return 6000;
-		case EmployeeRole::Designer: return 5000;
-		case EmployeeRole::Sales: return 4500;
-		case EmployeeRole::Operations: return 4000;
+		case EmployeeRole::Engineer: return 5000;
+		case EmployeeRole::Designer: return 4200;
+		case EmployeeRole::Sales: return 3800;
+		case EmployeeRole::Operations: return 3400;
 		default: NOT_REACHED();
+	}
+}
+
+/** Per level: salary in percent of the base, lowest skill, skill range. */
+struct LevelSpec {
+	uint salary_percent;
+	uint8_t skill_min;
+	uint8_t skill_range;
+};
+static constexpr LevelSpec _level_specs[] = {
+	{  55, 25, 20 }, // Junior: skill 25-44.
+	{ 100, 45, 25 }, // Mid: skill 45-69.
+	{ 170, 70, 25 }, // Senior: skill 70-94.
+};
+static_assert(std::size(_level_specs) == to_underlying(EmployeeLevel::End));
+
+/**
+ * Monthly salary for a role at a level. The recruiting fee is one month of it.
+ * @param role The role.
+ * @param level The level.
+ * @return Monthly salary.
+ */
+Money GetLevelSalary(EmployeeRole role, EmployeeLevel level)
+{
+	return GetBaseSalary(role) * _level_specs[to_underlying(level)].salary_percent / 100;
+}
+
+/**
+ * Typical speed of a level, relative to a mid-level person.
+ * @param level The level.
+ * @return Speed in percent.
+ */
+uint GetLevelSpeedPercent(EmployeeLevel level)
+{
+	const LevelSpec &mid = _level_specs[to_underlying(EmployeeLevel::Mid)];
+	const LevelSpec &l = _level_specs[to_underlying(level)];
+	return (l.skill_min * 2 + l.skill_range) * 100 / (mid.skill_min * 2 + mid.skill_range);
+}
+
+/**
+ * Is this person free: not on a work item and, for sales, not working a town?
+ * @param e The employee.
+ * @return True when free.
+ */
+bool IsEmployeeFree(const Employee *e)
+{
+	return e->feature == FeatureID::Invalid() && !Town::IsValidID(e->town);
+}
+
+/**
+ * Put a person on a work item or take them off, keeping the item's head count.
+ * @param e The employee.
+ * @param feature The item, or FeatureID::Invalid() to free them.
+ */
+void SetEmployeeWork(Employee *e, FeatureID feature)
+{
+	if (Feature *old = Feature::GetIfValid(e->feature); old != nullptr && old->assigned > 0) old->assigned--;
+	e->feature = feature;
+	if (Feature *f = Feature::GetIfValid(feature); f != nullptr) {
+		f->assigned++;
+		if (f->state == FeatureState::Backlog) f->state = FeatureState::InProgress;
+	}
+	InvalidateWindowData(WindowClass::Team, e->company);
+	InvalidateWindowData(WindowClass::Roadmap, e->company);
+}
+
+/**
+ * Free everyone working on an item, e.g. when it ships.
+ * @param feature The item.
+ */
+void ReleaseFeatureStaff(FeatureID feature)
+{
+	for (Employee *e : Employee::Iterate()) {
+		if (e->feature == feature) SetEmployeeWork(e, FeatureID::Invalid());
+	}
+}
+
+/**
+ * Sales reps working a town.
+ * @param company The company.
+ * @return Reps in the field.
+ */
+uint CountFieldReps(CompanyID company)
+{
+	uint n = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == company && e->role == EmployeeRole::Sales && Town::IsValidID(e->town)) n++;
+	}
+	return n;
+}
+
+/**
+ * Monthly travel and tools for the reps working towns.
+ * @param company The company.
+ * @return Field sales costs.
+ */
+Money GetFieldSalesCosts(CompanyID company)
+{
+	return REP_FIELD_COST * CountFieldReps(company);
+}
+
+/** Savegames before staff levels: give everyone a level from their skill and put people on the items that had head counts. */
+void AfterLoadEmployeeLevels()
+{
+	for (Employee *e : Employee::Iterate()) {
+		e->level = e->skill < 45 ? EmployeeLevel::Junior : (e->skill < 70 ? EmployeeLevel::Mid : EmployeeLevel::Senior);
+		e->feature = FeatureID::Invalid();
+	}
+	for (Feature *f : Feature::Iterate()) {
+		uint wanted = f->state == FeatureState::Shipped ? 0 : f->assigned;
+		f->assigned = 0;
+		for (Employee *e : Employee::Iterate()) {
+			if (f->assigned >= wanted) break;
+			if (e->company == f->company && e->role == GetTrackRole(f->GetTrack()) && IsEmployeeFree(e)) {
+				e->feature = f->index;
+				f->assigned++;
+			}
+		}
 	}
 }
 
@@ -104,6 +222,8 @@ void PayEmployees()
 
 	for (const Company *c : Company::Iterate()) {
 		SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Property, GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(c->index)));
+		Money field = GetFieldSalesCosts(c->index);
+		if (field > 0) SubtractMoneyFromCompany(c->index, CommandCost(ExpensesType::Other, field));
 
 		Money payroll = GetMonthlyPayroll(c->index);
 		if (payroll == 0) continue;
@@ -128,6 +248,7 @@ void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner)
 			delete e;
 		} else {
 			e->company = new_owner;
+			e->feature = FeatureID::Invalid();
 		}
 	}
 	InvalidateWindowData(WindowClass::Team, old_owner);
@@ -140,14 +261,16 @@ void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner)
  * @param role Role of the new employee.
  * @return The new employee, or nullptr when the pool is full.
  */
-static Employee *CreateEmployee(CompanyID company, EmployeeRole role)
+static Employee *CreateEmployee(CompanyID company, EmployeeRole role, EmployeeLevel level = EmployeeLevel::Mid)
 {
 	if (!Employee::CanAllocateItem()) return nullptr;
+	const LevelSpec &spec = _level_specs[to_underlying(level)];
 	Employee *e = Employee::Create(company, role);
+	e->level = level;
 	e->name_index = RandomRange(NUM_EMPLOYEE_NAMES);
-	e->skill = 30 + RandomRange(61);
+	e->skill = spec.skill_min + RandomRange(spec.skill_range);
 	e->morale = 60 + RandomRange(31);
-	e->salary = GetBaseSalary(role) * (50 + e->skill) / 100;
+	e->salary = GetLevelSalary(role, level);
 	return e;
 }
 
@@ -162,7 +285,7 @@ void ApplyFounderBackground(CompanyID company, uint8_t background)
 		default:
 		case 0: // Engineer.
 			CreateEmployee(company, EmployeeRole::Engineer);
-			CreateEmployee(company, EmployeeRole::Engineer);
+			CreateEmployee(company, EmployeeRole::Engineer, EmployeeLevel::Junior);
 			break;
 		case 1: // Seller.
 			CreateEmployee(company, EmployeeRole::Sales);
@@ -181,23 +304,23 @@ void ApplyFounderBackground(CompanyID company, uint8_t background)
  * @param role Role of the new employee.
  * @return The cost of this operation or an error.
  */
-CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role)
+CommandCost CmdHireEmployee(DoCommandFlags flags, EmployeeRole role, EmployeeLevel level)
 {
 	if (!_settings_game.game_creation.founder_mode) return CommandCost(STR_ERROR_FOUNDER_MODE_ONLY);
-	if (role >= EmployeeRole::End) return CMD_ERROR;
+	if (role >= EmployeeRole::End || level >= EmployeeLevel::End) return CMD_ERROR;
 	if (!Company::IsValidID(_current_company)) return CMD_ERROR;
 	if (!Employee::CanAllocateItem() || CountEmployees(_current_company) >= MAX_EMPLOYEES_PER_COMPANY) return CommandCost(STR_ERROR_TEAM_FULL);
 	if (CountEmployees(_current_company) >= GetOfficeDesks(GetOfficeLevel(_current_company))) return CommandCost(STR_ERROR_NO_FREE_DESK);
 
-	Money base = GetBaseSalary(role);
+	Money fee = GetLevelSalary(role, level);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
-		CreateEmployee(_current_company, role);
+		CreateEmployee(_current_company, role, level);
 		InvalidateWindowData(WindowClass::Team, _current_company);
 		InvalidateWindowData(WindowClass::Office, _current_company);
 	}
 
-	return CommandCost(ExpensesType::Other, base);
+	return CommandCost(ExpensesType::Other, fee);
 }
 
 /**
@@ -215,6 +338,7 @@ CommandCost CmdFireEmployee(DoCommandFlags flags, EmployeeID employee)
 
 	if (flags.Test(DoCommandFlag::Execute)) {
 		CompanyID company = e->company;
+		SetEmployeeWork(e, FeatureID::Invalid());
 		delete e;
 		InvalidateWindowData(WindowClass::Team, company);
 		InvalidateWindowData(WindowClass::Office, company);
@@ -241,6 +365,8 @@ CommandCost CmdAssignRep(DoCommandFlags flags, EmployeeID employee, TownID town)
 	}
 
 	if (flags.Test(DoCommandFlag::Execute)) {
+		/* Working a town and working an item are either-or. */
+		if (town != TownID::Invalid()) SetEmployeeWork(e, FeatureID::Invalid());
 		e->town = town;
 		InvalidateWindowData(WindowClass::Team, e->company);
 		InvalidateWindowData(WindowClass::Market, e->company);
@@ -316,6 +442,35 @@ CommandCost CmdSponsorOperator(DoCommandFlags flags, CompanyID op, Money monthly
 		if (Company::IsValidID(previous)) ApplyOperatorLivery(previous);
 		if (monthly != 0) ApplyOperatorLivery(op);
 		InvalidateWindowData(WindowClass::Market, c->index);
+	}
+	return CommandCost();
+}
+
+/**
+ * Put a person on a work item of their track, or take them off.
+ * A salesperson working a town leaves it to take on sales work.
+ * @param flags Type of operation.
+ * @param employee The person.
+ * @param feature The item, or FeatureID::Invalid() to free them.
+ * @return The cost of this operation or an error.
+ */
+CommandCost CmdAssignWork(DoCommandFlags flags, EmployeeID employee, FeatureID feature)
+{
+	Employee *e = Employee::GetIfValid(employee);
+	if (e == nullptr || e->company != _current_company) return CMD_ERROR;
+	if (feature != FeatureID::Invalid()) {
+		const Feature *f = Feature::GetIfValid(feature);
+		if (f == nullptr || f->company != _current_company) return CMD_ERROR;
+		if (f->state == FeatureState::Shipped) return CommandCost(STR_ERROR_FEATURE_SHIPPED);
+		if (GetTrackRole(f->GetTrack()) != e->role) return CommandCost(STR_ERROR_WRONG_ROLE_FOR_WORK);
+		if (e->feature == feature) return CommandCost();
+		if (f->assigned >= GetWorkItemSlots(f->spec)) return CommandCost(STR_ERROR_WORK_ITEM_FULL);
+	}
+
+	if (flags.Test(DoCommandFlag::Execute)) {
+		if (feature != FeatureID::Invalid()) e->town = TownID::Invalid();
+		SetEmployeeWork(e, feature);
+		InvalidateWindowData(WindowClass::Market, e->company);
 	}
 	return CommandCost();
 }

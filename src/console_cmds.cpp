@@ -862,9 +862,14 @@ static bool ConHire(std::span<std::string_view> argv)
 		{"engineer", EmployeeRole::Engineer}, {"designer", EmployeeRole::Designer},
 		{"sales", EmployeeRole::Sales}, {"operations", EmployeeRole::Operations},
 	};
+	EmployeeLevel level = EmployeeLevel::Mid;
+	if (argv.size() > 2) {
+		if (StrEqualsIgnoreCase(argv[2], "junior")) level = EmployeeLevel::Junior;
+		if (StrEqualsIgnoreCase(argv[2], "senior")) level = EmployeeLevel::Senior;
+	}
 	for (const auto &[name, role] : roles) {
 		if (StrEqualsIgnoreCase(argv[1], name)) {
-			Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role);
+			Command<Commands::HireEmployee>::Post(STR_ERROR_CAN_T_HIRE, role, level);
 			return true;
 		}
 	}

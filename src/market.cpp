@@ -269,7 +269,7 @@ Money GetOperatorTransitBudget(CompanyID company)
 Money GetCompanyMonthlyCosts(CompanyID company)
 {
 	const Company *c = Company::Get(company);
-	return GetMonthlyPayroll(company) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(company) + c->founder_sponsor_monthly;
+	return GetMonthlyPayroll(company) + GetOfficeRent(c->office_level) + HUB_RENT * CountHubs(company) + GetFieldSalesCosts(company) + c->founder_sponsor_monthly;
 }
 
 /** Startup sponsoring a transit operator, or invalid. */

@@ -75,6 +75,18 @@ static_assert(std::size(_track_roles) == to_underlying(WorkTrack::End));
 
 uint GetWorkItemCount() { return static_cast<uint>(std::size(_work_items)); }
 
+EmployeeRole GetTrackRole(WorkTrack track) { return _track_roles[to_underlying(track)]; }
+
+/**
+ * How many people can work on an item at once; bigger items take more.
+ * @param spec Catalog item.
+ * @return Slots.
+ */
+uint GetWorkItemSlots(uint8_t spec)
+{
+	return std::clamp<uint>(1 + GetWorkItemSpec(spec).effort / 10, 2, 6);
+}
+
 const WorkItemSpec &GetWorkItemSpec(uint8_t spec)
 {
 	return _work_items[std::min<uint>(spec, GetWorkItemCount() - 1)];
@@ -166,28 +178,62 @@ uint CountAssignedStaff(CompanyID company, WorkTrack track)
 }
 
 /**
- * Daily progress, in hundredths of a point, of one person of average skill and morale.
+ * Daily progress of one person, in hundredths of a point.
  * Skill 50 at morale 75 gives half a point per day.
+ * @param e The person.
+ * @return Progress per day.
  */
-static uint GetProgressPerPerson(const TrackStaffStats &s)
+uint GetPersonDailyProgress(const Employee *e)
 {
-	return s.skill * s.morale / 75;
+	return e->skill * e->morale / 75;
+}
+
+/**
+ * Daily progress of everyone on one item.
+ * @param f The item.
+ * @return Progress per day, in hundredths of a point.
+ */
+uint GetFeatureDailyProgress(const Feature *f)
+{
+	uint total = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->feature == f->index) total += GetPersonDailyProgress(e);
+	}
+	return total;
 }
 
 uint GetDailyVelocity(CompanyID company, WorkTrack track)
 {
-	return CountAssignedStaff(company, track) * GetProgressPerPerson(GetTrackStaffStats(company, track));
+	uint total = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company != company || !Feature::IsValidID(e->feature)) continue;
+		if (Feature::Get(e->feature)->GetTrack() == track) total += GetPersonDailyProgress(e);
+	}
+	return total;
 }
 
 /** Ship a work item: quality and bugs depend on how complete it is and who built it. */
 static void ShipFeature(Feature *f, const TrackStaffStats &s)
 {
+	/* The crew's skill counts; juniors add bugs. */
+	uint crew = 0;
+	uint skill = 0;
+	uint juniors = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->feature != f->index) continue;
+		crew++;
+		skill += e->skill;
+		if (e->level == EmployeeLevel::Junior) juniors++;
+	}
+	skill = crew > 0 ? skill / crew : s.skill;
+
 	uint pct = f->GetProgressPercent();
 	uint design_bonus = f->GetTrack() == WorkTrack::Engineering ? std::min<uint>(s.designers, 3) * 10 : 20;
-	uint base = 40 + design_bonus + s.skill * 3 / 10;
+	uint base = 40 + design_bonus + skill * 3 / 10;
 	f->quality = static_cast<uint8_t>(Clamp<uint>(base * pct / 100, 1, 100));
-	f->bugs = static_cast<uint8_t>((100 - pct) / 8 + RandomRange(3));
+	f->bugs = static_cast<uint8_t>(std::min<uint>(UINT8_MAX, (100 - pct) / 8 + RandomRange(3) + juniors));
 	f->state = FeatureState::Shipped;
+	ReleaseFeatureStaff(f->index);
 	f->assigned = 0;
 	Debug(Facility::Misc, Severity::Info, "Founder Mode: company {} shipped '{}' at {}% (quality {}, bugs {})", f->company + 1, f->GetName(), pct, f->quality, f->bugs);
 	InvalidateWindowData(WindowClass::Roadmap, f->company);
@@ -198,20 +244,17 @@ static const IntervalTimer<TimerGameEconomy> _economy_features_daily({TimerGameE
 {
 	if (!_settings_game.game_creation.founder_mode) return;
 
-	for (const Company *c : Company::Iterate()) {
-		std::array<TrackStaffStats, to_underlying(WorkTrack::End)> stats;
-		for (uint t = 0; t < stats.size(); t++) stats[t] = GetTrackStaffStats(c->index, static_cast<WorkTrack>(t));
-
-		bool changed = false;
-		for (Feature *f : Feature::Iterate()) {
-			if (f->company != c->index || f->state != FeatureState::InProgress || f->assigned == 0) continue;
-			const TrackStaffStats &s = stats[to_underlying(f->GetTrack())];
-			f->progress += f->assigned * GetProgressPerPerson(s);
-			changed = true;
-			if (f->progress >= static_cast<uint32_t>(f->effort) * 100) ShipFeature(f, s);
-		}
-		if (changed) InvalidateWindowData(WindowClass::Roadmap, c->index);
+	/* Each person adds their own progress to the item they work on. */
+	for (const Employee *e : Employee::Iterate()) {
+		Feature *f = Feature::GetIfValid(e->feature);
+		if (f != nullptr && f->state == FeatureState::InProgress) f->progress += GetPersonDailyProgress(e);
 	}
+	for (Feature *f : Feature::Iterate()) {
+		if (f->state == FeatureState::InProgress && f->progress >= static_cast<uint32_t>(f->effort) * 100) {
+			ShipFeature(f, GetTrackStaffStats(f->company, f->GetTrack()));
+		}
+	}
+	for (const Company *c : Company::Iterate()) InvalidateWindowData(WindowClass::Roadmap, c->index);
 });
 
 /**
@@ -239,6 +282,7 @@ void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner)
 	for (Feature *f : Feature::Iterate()) {
 		if (f->company != old_owner) continue;
 		/* The buyer keeps its own copy of an item it already has. */
+		ReleaseFeatureStaff(f->index);
 		if (new_owner == INVALID_OWNER || FindWorkItem(new_owner, f->spec) != nullptr) {
 			delete f;
 		} else {
@@ -296,14 +340,23 @@ CommandCost CmdAssignFeature(DoCommandFlags flags, FeatureID feature, uint8_t pe
 	if (f == nullptr || f->company != _current_company) return CMD_ERROR;
 	if (f->state == FeatureState::Shipped) return CommandCost(STR_ERROR_FEATURE_SHIPPED);
 
-	WorkTrack track = f->GetTrack();
-	uint others = CountAssignedStaff(_current_company, track) - f->assigned;
-	if (others + people > CountTrackStaff(_current_company, track)) return CommandCost(STR_ERROR_NO_FREE_STAFF);
+	if (people > GetWorkItemSlots(f->spec)) return CommandCost(STR_ERROR_WORK_ITEM_FULL);
+
+	/* Add the most skilled free people, or take off the least skilled. */
+	const EmployeeRole role = GetTrackRole(f->GetTrack());
+	std::vector<Employee *> pool;
+	for (Employee *e : Employee::Iterate()) {
+		if (e->company != _current_company || e->role != role) continue;
+		if (people > f->assigned ? IsEmployeeFree(e) : e->feature == f->index) pool.push_back(e);
+	}
+	std::ranges::sort(pool, [&](const Employee *a, const Employee *b) {
+		return people > f->assigned ? a->skill > b->skill : a->skill < b->skill;
+	});
+	uint change = people > f->assigned ? people - f->assigned : f->assigned - people;
+	if (pool.size() < change) return CommandCost(STR_ERROR_NO_FREE_STAFF);
 
 	if (flags.Test(DoCommandFlag::Execute)) {
-		f->assigned = people;
-		if (people > 0 && f->state == FeatureState::Backlog) f->state = FeatureState::InProgress;
-		InvalidateWindowData(WindowClass::Roadmap, _current_company);
+		for (uint i = 0; i < change; i++) SetEmployeeWork(pool[i], people > f->assigned ? f->index : FeatureID::Invalid());
 	}
 
 	return CommandCost();

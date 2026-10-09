@@ -29,6 +29,13 @@ public:
 		ROLE_OPERATIONS = ::to_underlying(::EmployeeRole::Operations), ///< Staffs the business track.
 	};
 
+	/** Seniority levels: salary, speed and quality rise with level. */
+	enum StaffLevel {
+		LEVEL_JUNIOR = ::to_underlying(::EmployeeLevel::Junior), ///< Cheap, slower, more bugs.
+		LEVEL_MID = ::to_underlying(::EmployeeLevel::Mid), ///< The baseline.
+		LEVEL_SENIOR = ::to_underlying(::EmployeeLevel::Senior), ///< Expensive, faster, better quality.
+	};
+
 	/** Work tracks of the catalog. */
 	enum WorkTrack {
 		TRACK_ENGINEERING = ::to_underlying(::WorkTrack::Engineering), ///< Features and deployments.
@@ -67,7 +74,7 @@ public:
 	static SQInteger GetStaffCount(ScriptCompany::CompanyID company, StaffRole role);
 
 	/**
-	 * Staff on a track who are not assigned to any work item.
+	 * Staff on a track who are free: not on any work item and not working a town.
 	 * @param company The company.
 	 * @param track The track.
 	 * @return Free staff, or -1 for an invalid company.
@@ -75,7 +82,7 @@ public:
 	static SQInteger GetFreeStaff(ScriptCompany::CompanyID company, WorkTrack track);
 
 	/**
-	 * Sales reps not working any town.
+	 * Sales people who are free: not working a town and not on sales work.
 	 * @param company The company.
 	 * @return Free reps, or -1 for an invalid company.
 	 */
@@ -314,6 +321,13 @@ public:
 	static SQInteger GetWorkItemProgress(ScriptCompany::CompanyID company, SQInteger item);
 
 	/**
+	 * How many people can work on an item at once.
+	 * @param item The item.
+	 * @return Slots, or -1 for an invalid item.
+	 */
+	static SQInteger GetWorkItemSlots(SQInteger item);
+
+	/**
 	 * Staff working on a planned item.
 	 * @param company The company.
 	 * @param item The item.
@@ -322,12 +336,21 @@ public:
 	static SQInteger GetWorkItemStaff(ScriptCompany::CompanyID company, SQInteger item);
 
 	/**
+	 * Monthly salary of a role at a level; the recruiting fee is one month of it.
+	 * @param role The role.
+	 * @param level The level.
+	 * @return The salary.
+	 */
+	static Money GetSalary(StaffRole role, StaffLevel level);
+
+	/**
 	 * Hire someone.
 	 * @param role The role.
+	 * @param level The level.
 	 * @return True when hired.
 	 * @game @pre ScriptCompanyMode::IsValid().
 	 */
-	static bool Hire(StaffRole role);
+	static bool Hire(StaffRole role, StaffLevel level);
 
 	/**
 	 * Let someone go: a free person in the role if there is one, otherwise the newest hire.

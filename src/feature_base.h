@@ -12,6 +12,7 @@
 
 #include "company_type.h"
 #include "feature_type.h"
+#include "employee_type.h"
 #include "core/pool_type.hpp"
 
 using FeaturePool = Pool<Feature, FeatureID, 64>;
@@ -57,6 +58,10 @@ bool HasShippedWorkItem(CompanyID company, uint8_t spec);
 uint CountAssignedStaff(CompanyID company, WorkTrack track);
 uint CountTrackStaff(CompanyID company, WorkTrack track);
 uint GetDailyVelocity(CompanyID company, WorkTrack track);
+uint GetFeatureDailyProgress(const Feature *f);
+uint GetPersonDailyProgress(const struct Employee *e);
+EmployeeRole GetTrackRole(WorkTrack track);
+uint GetWorkItemSlots(uint8_t spec);
 void ChangeFeatureOwnership(CompanyID old_owner, CompanyID new_owner);
 void GrantShippedWorkItem(CompanyID company, uint8_t spec);
 

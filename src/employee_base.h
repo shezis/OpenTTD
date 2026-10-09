@@ -13,6 +13,7 @@
 #include "company_type.h"
 #include "economy_type.h"
 #include "employee_type.h"
+#include "feature_type.h"
 #include "town_type.h"
 #include "core/pool_type.hpp"
 
@@ -28,6 +29,8 @@ struct Employee : EmployeePool::PoolItem<&_employee_pool> {
 	uint8_t morale = 75; ///< Morale from 0 to 100.
 	Money salary = 0; ///< Monthly salary.
 	TownID town = TownID::Invalid(); ///< Town a sales rep works, invalid when unassigned.
+	EmployeeLevel level = EmployeeLevel::Mid; ///< Seniority.
+	FeatureID feature = FeatureID::Invalid(); ///< Work item this person works on, invalid when free.
 
 	Employee(EmployeeID index, CompanyID company = CompanyID::Invalid(), EmployeeRole role = EmployeeRole::Engineer) :
 		EmployeePool::PoolItem<&_employee_pool>(index), company(company), role(role) {}
@@ -42,5 +45,15 @@ Money GetMonthlyPayroll(CompanyID company);
 void PayEmployees();
 void ChangeEmployeeOwnership(CompanyID old_owner, CompanyID new_owner);
 void ApplyFounderBackground(CompanyID company, uint8_t background);
+Money GetLevelSalary(EmployeeRole role, EmployeeLevel level);
+uint GetLevelSpeedPercent(EmployeeLevel level);
+void SetEmployeeWork(Employee *e, FeatureID feature);
+void ReleaseFeatureStaff(FeatureID feature);
+bool IsEmployeeFree(const Employee *e);
+uint CountFieldReps(CompanyID company);
+Money GetFieldSalesCosts(CompanyID company);
+void AfterLoadEmployeeLevels();
+
+static constexpr Money REP_FIELD_COST = 600; ///< Monthly travel and tools for each rep working a town.
 
 #endif /* EMPLOYEE_BASE_H */

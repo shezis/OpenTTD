@@ -37,6 +37,7 @@
 #include "../tree_map.h"
 #include "../company_func.h"
 #include "../company_manager_face.h"
+#include "../employee_base.h"
 #include "../road_cmd.h"
 #include "../ai/ai.hpp"
 #include "../script/script_gui.h"
@@ -3431,6 +3432,7 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SaveLoadVersion::FounderModeRivals)) {
 		for (Company *c : Company::Iterate()) c->founder_operator = c->is_ai;
 	}
+	if (IsSavegameVersionBefore(SaveLoadVersion::FounderModeStaffLevels)) AfterLoadEmployeeLevels();
 
 	AfterLoadLabelMaps();
 	AfterLoadCompanyStats();

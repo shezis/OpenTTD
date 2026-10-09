@@ -68,10 +68,12 @@ static const Feature *FindWorkItem(::CompanyID company, SQInteger item)
 {
 	const Company *c = GetFounderCompany(company);
 	if (c == nullptr || track < TRACK_ENGINEERING || track > TRACK_SALES) return -1;
-	::WorkTrack t = static_cast<::WorkTrack>(track);
-	uint staff = ::CountTrackStaff(c->index, t);
-	uint assigned = ::CountAssignedStaff(c->index, t);
-	return staff > assigned ? staff - assigned : 0;
+	EmployeeRole role = ::GetTrackRole(static_cast<::WorkTrack>(track));
+	SQInteger n = 0;
+	for (const Employee *e : Employee::Iterate()) {
+		if (e->company == c->index && e->role == role && ::IsEmployeeFree(e)) n++;
+	}
+	return n;
 }
 
 /* static */ SQInteger ScriptFounder::GetFreeReps(ScriptCompany::CompanyID company)
@@ -80,7 +82,7 @@ static const Feature *FindWorkItem(::CompanyID company, SQInteger item)
 	if (c == nullptr) return -1;
 	SQInteger n = 0;
 	for (const Employee *e : Employee::Iterate()) {
-		if (e->company == c->index && e->role == EmployeeRole::Sales && !::Town::IsValidID(e->town)) n++;
+		if (e->company == c->index && e->role == EmployeeRole::Sales && ::IsEmployeeFree(e)) n++;
 	}
 	return n;
 }
@@ -301,6 +303,12 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	return f == nullptr ? -1 : f->GetProgressPercent();
 }
 
+/* static */ SQInteger ScriptFounder::GetWorkItemSlots(SQInteger item)
+{
+	if (item < 0 || item >= ::GetWorkItemCount()) return -1;
+	return ::GetWorkItemSlots(item);
+}
+
 /* static */ SQInteger ScriptFounder::GetWorkItemStaff(ScriptCompany::CompanyID company, SQInteger item)
 {
 	const Company *c = GetFounderCompany(company);
@@ -309,11 +317,18 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	return f == nullptr ? -1 : f->assigned;
 }
 
-/* static */ bool ScriptFounder::Hire(StaffRole role)
+/* static */ Money ScriptFounder::GetSalary(StaffRole role, StaffLevel level)
+{
+	if (role < ROLE_ENGINEER || role > ROLE_OPERATIONS || level < LEVEL_JUNIOR || level > LEVEL_SENIOR) return -1;
+	return ::GetLevelSalary(static_cast<EmployeeRole>(role), static_cast<EmployeeLevel>(level));
+}
+
+/* static */ bool ScriptFounder::Hire(StaffRole role, StaffLevel level)
 {
 	EnforceCompanyModeValid(false);
 	EnforcePrecondition(false, role >= ROLE_ENGINEER && role <= ROLE_OPERATIONS);
-	return ScriptObject::Command<Commands::HireEmployee>::Do(static_cast<EmployeeRole>(role));
+	EnforcePrecondition(false, level >= LEVEL_JUNIOR && level <= LEVEL_SENIOR);
+	return ScriptObject::Command<Commands::HireEmployee>::Do(static_cast<EmployeeRole>(role), static_cast<EmployeeLevel>(level));
 }
 
 /* static */ bool ScriptFounder::Fire(StaffRole role)
@@ -324,8 +339,8 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	const Employee *pick = nullptr;
 	for (const Employee *e : Employee::Iterate()) {
 		if (e->company != self || to_underlying(e->role) != role) continue;
-		/* Keep a rep without a town once found; otherwise end on the newest hire. */
-		if (pick != nullptr && pick->role == EmployeeRole::Sales && !::Town::IsValidID(pick->town)) continue;
+		/* Keep a free person once found; otherwise end on the newest hire. */
+		if (pick != nullptr && ::IsEmployeeFree(pick)) continue;
 		pick = e;
 	}
 	EnforcePrecondition(false, pick != nullptr);
@@ -339,7 +354,7 @@ static const FundingRoundSpec *GetNextRound(ScriptCompany::CompanyID company)
 	::CompanyID self = ScriptObject::GetCompany();
 	const Employee *rep = nullptr;
 	for (const Employee *e : Employee::Iterate()) {
-		if (e->company == self && e->role == EmployeeRole::Sales && !::Town::IsValidID(e->town)) {
+		if (e->company == self && e->role == EmployeeRole::Sales && ::IsEmployeeFree(e)) {
 			rep = e;
 			break;
 		}
