@@ -3838,6 +3838,16 @@ STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_EXCLUSIVE_TRANSPORT_MINUTES  :{PUSH_COLOUR}{Y
 STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_BRIBE                        :{PUSH_COLOUR}{YELLOW}Bribe the local authority to increase your rating and abort a competitor's exclusive transport rights, at the risk of a severe penalty if caught.{}{POP_COLOUR}Cost: {CURRENCY_LONG}
 
 # Goal window
+STR_FOUNDER_HUB_COMPANY                                         :{BLACK}Company
+STR_FOUNDER_HUB_COMPANY_TOOLTIP                                 :{BLACK}Open the company panel: team, office and work
+STR_FOUNDER_HUB_WORK                                            :{BLACK}Work
+STR_FOUNDER_HUB_WORK_TOOLTIP                                    :{BLACK}Plan and staff engineering, business and sales work
+STR_FOUNDER_HUB_MARKET                                          :{BLACK}Market
+STR_FOUNDER_HUB_MARKET_TOOLTIP                                  :{BLACK}Map views of towns, customers and coverage
+STR_FOUNDER_HUB_MONEY                                           :{BLACK}Money
+STR_FOUNDER_HUB_MONEY_TOOLTIP                                   :{BLACK}Cash, costs and loans
+STR_FOUNDER_HUB_RIVALS                                          :{BLACK}Rivals
+STR_FOUNDER_HUB_RIVALS_TOOLTIP                                  :{BLACK}How your startup ranks against rivals
 STR_FOUNDER_TAB_TEAM                                            :{BLACK}Team
 STR_FOUNDER_TAB_OFFICE                                          :{BLACK}Office
 STR_FOUNDER_TAB_WORK                                            :{BLACK}Work

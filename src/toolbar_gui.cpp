@@ -2056,6 +2056,11 @@ struct MainToolbarWindow : Window {
 			ShowRoadmapWindow(_local_company);
 			return;
 		}
+		if (_game_mode != GameMode::Menu && _settings_game.game_creation.founder_mode && _local_company != COMPANY_SPECTATOR) {
+			/* Money and Rivals hubs go straight to the local company's screens. */
+			if (widget == WID_TN_FINANCES) { ShowCompanyFinances(_local_company); return; }
+			if (widget == WID_TN_LEAGUE) { ShowFirstLeagueTable(); return; }
+		}
 		if (_game_mode != GameMode::Menu && !this->IsWidgetDisabled(widget)) _toolbar_button_procs[widget](this);
 	}
 
@@ -2312,6 +2317,39 @@ static WindowDesc _toolb_normal_desc(
 	&MainToolbarWindow::hotkeys
 );
 
+/**
+ * Founder Mode toolbar: game controls on the left, the five company hubs in the middle,
+ * view and help on the right. It reuses the main toolbar's widget ids so the same
+ * window class, dropdowns and hotkeys keep working.
+ */
+static constexpr std::initializer_list<NWidgetPart> _nested_toolbar_founder_widgets = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_IMGBTN, Colours::Grey, WID_TN_PAUSE), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_PAUSE, STR_TOOLBAR_TOOLTIP_PAUSE_GAME),
+		NWidget(WWT_IMGBTN, Colours::Grey, WID_TN_FAST_FORWARD), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_FASTFORWARD, STR_TOOLBAR_TOOLTIP_FORWARD),
+		NWidget(WWT_PANEL, Colours::Grey), SetMinimalSize(12, 0), SetFill(0, 1), EndContainer(),
+		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_STATIONS), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_FOUNDER_HUB_COMPANY, STR_FOUNDER_HUB_COMPANY_TOOLTIP),
+		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_TRAINS), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_GOAL, STR_FOUNDER_HUB_WORK, STR_FOUNDER_HUB_WORK_TOOLTIP),
+		NWidget(WWT_IMGTEXTBTN, Colours::Grey, WID_TN_SMALL_MAP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SMALLMAP, STR_FOUNDER_HUB_MARKET, STR_FOUNDER_HUB_MARKET_TOOLTIP),
+		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_FINANCES), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_FINANCE, STR_FOUNDER_HUB_MONEY, STR_FOUNDER_HUB_MONEY_TOOLTIP),
+		NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_TN_LEAGUE), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_LEAGUE, STR_FOUNDER_HUB_RIVALS, STR_FOUNDER_HUB_RIVALS_TOOLTIP),
+		NWidget(WWT_PANEL, Colours::Grey), SetMinimalSize(12, 0), SetFill(1, 1), SetResize(1, 0), EndContainer(),
+		NWidget(WWT_IMGBTN, Colours::Grey, WID_TN_SETTINGS), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_SETTINGS, STR_TOOLBAR_TOOLTIP_OPTIONS),
+		NWidget(WWT_IMGBTN_2, Colours::Grey, WID_TN_SAVE), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_SAVE, STR_TOOLBAR_TOOLTIP_SAVE_GAME_ABANDON_GAME),
+		NWidget(WWT_PUSHIMGBTN, Colours::Grey, WID_TN_ZOOM_IN), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_ZOOMIN, STR_TOOLBAR_TOOLTIP_ZOOM_THE_VIEW_IN),
+		NWidget(WWT_PUSHIMGBTN, Colours::Grey, WID_TN_ZOOM_OUT), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_ZOOMOUT, STR_TOOLBAR_TOOLTIP_ZOOM_THE_VIEW_OUT),
+		NWidget(WWT_IMGBTN, Colours::Grey, WID_TN_MESSAGES), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_MESSAGES, STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS),
+		NWidget(WWT_IMGBTN, Colours::Grey, WID_TN_HELP), SetToolbarMinimalSize(1), SetSpriteTip(SPR_IMG_QUERY, STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION),
+	EndContainer(),
+};
+
+/** Window definition for the Founder Mode toolbar. */
+static WindowDesc _toolb_founder_desc(
+	WindowPosition::Manual, {}, 0, 0,
+	WindowClass::MainToolbar, WindowClass::None,
+	{WindowDefaultFlag::NoFocus, WindowDefaultFlag::NoClose},
+	_nested_toolbar_founder_widgets,
+	&MainToolbarWindow::hotkeys
+);
 
 /* --- Toolbar handling for the scenario editor */
 
@@ -2661,6 +2699,10 @@ void AllocateToolbar()
 {
 	if (_game_mode == GameMode::Editor) {
 		new ScenarioEditorToolbarWindow(_toolb_scen_desc);
+	} else if (_game_mode == GameMode::Normal && _settings_game.game_creation.founder_mode) {
+		/* The Founder toolbar is a plain layout that stretches, so toolbar and status bar span the screen. */
+		_toolbar_width = INT16_MAX;
+		new MainToolbarWindow(_toolb_founder_desc);
 	} else {
 		new MainToolbarWindow(_toolb_normal_desc);
 	}
