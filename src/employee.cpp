@@ -616,21 +616,18 @@ CommandCost CmdRespondPoachOffer(DoCommandFlags flags, EmployeeID employee, bool
 
 /**
  * David vs Goliath: the incumbent starts as an established company.
- * An office floor of mostly mid and senior staff, a mature product, seed and series A raised, and cash in the bank.
+ * An office floor with fifteen mostly mid-level staff, a mature product, seed and series A raised, and cash in the bank.
  * @param c The incumbent.
  */
 void ApplyIncumbentHeadStart(Company *c)
 {
 	c->office_level = 2;
 	static constexpr std::pair<EmployeeRole, EmployeeLevel> team[] = {
-		{EmployeeRole::Engineer, EmployeeLevel::Senior}, {EmployeeRole::Engineer, EmployeeLevel::Senior}, {EmployeeRole::Engineer, EmployeeLevel::Senior},
-		{EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Mid},
+		{EmployeeRole::Engineer, EmployeeLevel::Senior}, {EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Mid},
 		{EmployeeRole::Engineer, EmployeeLevel::Mid}, {EmployeeRole::Engineer, EmployeeLevel::Junior}, {EmployeeRole::Engineer, EmployeeLevel::Junior},
-		{EmployeeRole::Sales, EmployeeLevel::Senior}, {EmployeeRole::Sales, EmployeeLevel::Senior}, {EmployeeRole::Sales, EmployeeLevel::Mid},
-		{EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid},
-		{EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Junior},
-		{EmployeeRole::Sales, EmployeeLevel::Junior}, {EmployeeRole::Operations, EmployeeLevel::Senior}, {EmployeeRole::Operations, EmployeeLevel::Mid},
-		{EmployeeRole::Operations, EmployeeLevel::Mid}, {EmployeeRole::Designer, EmployeeLevel::Mid}, {EmployeeRole::Designer, EmployeeLevel::Mid},
+		{EmployeeRole::Sales, EmployeeLevel::Senior}, {EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Mid},
+		{EmployeeRole::Sales, EmployeeLevel::Mid}, {EmployeeRole::Sales, EmployeeLevel::Junior}, {EmployeeRole::Sales, EmployeeLevel::Junior},
+		{EmployeeRole::Operations, EmployeeLevel::Mid}, {EmployeeRole::Operations, EmployeeLevel::Mid}, {EmployeeRole::Designer, EmployeeLevel::Mid},
 	};
 	for (const auto &[role, level] : team) CreateEmployee(c->index, role, level);
 
@@ -645,5 +642,5 @@ void ApplyIncumbentHeadStart(Company *c)
 	c->founder_round_investor = {1, 3, 0, 0};
 	c->founder_equity = 600;
 	c->founder_valuation = 40000000;
-	c->money = 3000000;
+	c->money = 1500000;
 }

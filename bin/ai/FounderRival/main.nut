@@ -18,6 +18,8 @@ const INCUMBENT = 3;
 
 class FounderRival extends AIController {
 	personality = 0;
+	/** Year the company was founded; incumbents wait before floating. */
+	founded_year = 0;
 	/** Months of cash to keep before hiring more. */
 	target_runway = 6;
 	/** Hiring mix: engineers, sales, operations, designers. */
@@ -31,8 +33,8 @@ class FounderRival extends AIController {
 	}
 
 	function Start();
-	function Save() { return {}; }
-	function Load(version, data) {}
+	function Save() { return { founded_year = this.founded_year }; }
+	function Load(version, data) { if ("founded_year" in data) this.founded_year = data.founded_year; }
 }
 
 function FounderRival::Start()
@@ -43,6 +45,7 @@ function FounderRival::Start()
 	}
 
 	this.personality = AIController.GetSetting("personality");
+	if (this.founded_year == 0) this.founded_year = AIDate.GetYear(AIDate.GetCurrentDate());
 	switch (this.personality) {
 		case BOOTSTRAPPER: this.target_runway = 12; this.mix = [3, 2, 1, 0]; this.open_items = 1; break;
 		case BLITZSCALER:  this.target_runway = 4;  this.mix = [2, 3, 1, 0]; this.open_items = 2; break;
@@ -135,6 +138,8 @@ function FounderRival::Funding()
 	local amount = AIFounder.GetOfferAmount(AICompany.COMPANY_SELF);
 	if (amount <= 0) return;
 	local accept = this.personality != BOOTSTRAPPER || this.Runway() < 6;
+	/* An established incumbent's board is in no hurry to float: it turns down the series C (the IPO round) for its first four years. */
+	if (this.personality == INCUMBENT && AIFounder.GetFundingStage(AICompany.COMPANY_SELF) == 3 && AIDate.GetYear(AIDate.GetCurrentDate()) < this.founded_year + 4) accept = false;
 	AIFounder.RespondToOffer(accept);
 	AILog.Info((accept ? "Accepted " : "Declined ") + "an offer of " + amount);
 }

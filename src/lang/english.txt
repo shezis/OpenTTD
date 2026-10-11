@@ -3861,7 +3861,7 @@ STR_FOUNDER_SETUP_BG_OPERATOR                                   :{BLACK}Operator
 STR_FOUNDER_SETUP_BG_TOOLTIP                                    :{BLACK}Your background sets your starting team. Rivals start the same way
 STR_FOUNDER_SETUP_SCENARIO                                      :{BLACK}Scenario
 STR_FOUNDER_SETUP_SC_GOLIATH                                    :{BLACK}David vs Goliath · recommended
-STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP                            :{BLACK}An established AI incumbent starts with 24 staff, an office floor, a mature product, a series A and £3m. It sells hard but ships slowly. Go public before it does
+STR_FOUNDER_SETUP_SC_GOLIATH_TOOLTIP                            :{BLACK}An established AI incumbent starts with 15 staff, an office floor, a mature product, a series A and £1.5m. It sells hard but ships slowly. Go public before it does
 STR_FOUNDER_SETUP_SC_SANDBOX                                    :{BLACK}Sandbox · build at your own pace
 STR_FOUNDER_SETUP_SC_SANDBOX_TOOLTIP                            :{BLACK}No goals or rivals; try out the company systems
 STR_FOUNDER_SETUP_SC_TUTORIAL                                   :{BLACK}Tutorial · coming later

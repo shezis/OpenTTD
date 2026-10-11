@@ -31,8 +31,8 @@
 static const FundingRoundSpec _funding_rounds[MAX_FUNDING_STAGE] = {
 	{ STR_FUNDING_ROUND_SEED,       250000,     1000000,      0,  300, 17 }, // Needs the Pitch deck.
 	{ STR_FUNDING_ROUND_A,         2000000,     6000000,  12000,    0, 18 }, // Needs the Investor data room.
-	{ STR_FUNDING_ROUND_B,         8000000,    30000000,  80000,    0, 0xFF },
-	{ STR_FUNDING_ROUND_C,        25000000,   120000000, 250000,    0, 0xFF },
+	{ STR_FUNDING_ROUND_B,         6000000,    24000000,  40000,    0, 20 }, // Needs SOC 2 readiness.
+	{ STR_FUNDING_ROUND_C,        20000000,    80000000, 100000,    0, 12 }, // Needs the audit log; post-money reaches the IPO.
 };
 
 static const StringID _investor_names[] = {
