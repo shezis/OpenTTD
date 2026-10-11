@@ -11,6 +11,8 @@
 #include "error.h"
 #include "gui.h"
 #include "window_gui.h"
+#include "dropdown_func.h"
+#include "dropdown_type.h"
 #include "window_func.h"
 #include "textbuf_gui.h"
 #include "help_gui.h"
@@ -332,7 +334,24 @@ struct SelectGameWindow : public Window {
 				}
 				break;
 			case WID_SGI_EXIT:            HandleExitGameRequest(); break;
+
+			case WID_SGI_CLASSIC: {
+				/* The transport game this is built on, out of the way of the startup game. */
+				DropDownList list;
+				list.push_back(MakeDropDownListStringItem(STR_INTRO_NEW_GAME, WID_SGI_GENERATE_GAME));
+				list.push_back(MakeDropDownListStringItem(STR_INTRO_PLAY_HEIGHTMAP, WID_SGI_PLAY_HEIGHTMAP));
+				list.push_back(MakeDropDownListStringItem(STR_INTRO_PLAY_SCENARIO, WID_SGI_PLAY_SCENARIO));
+				list.push_back(MakeDropDownListStringItem(STR_INTRO_SCENARIO_EDITOR, WID_SGI_EDIT_SCENARIO));
+				list.push_back(MakeDropDownListStringItem(STR_INTRO_HIGHSCORE, WID_SGI_HIGHSCORE));
+				ShowDropDownList(this, std::move(list), -1, WID_SGI_CLASSIC);
+				break;
+			}
 		}
+	}
+
+	void OnDropdownSelect(WidgetID widget, int index, int) override
+	{
+		if (widget == WID_SGI_CLASSIC && index >= 0) this->OnClick({}, static_cast<WidgetID>(index), 1);
 	}
 };
 
@@ -341,18 +360,10 @@ static constexpr std::initializer_list<NWidgetPart> _nested_select_game_widgets 
 	NWidget(WWT_PANEL, Colours::Brown),
 		NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_wide, 0), SetPadding(WidgetDimensions::unscaled.sparse),
 
-			/* Single player */
+			/* The game: found a startup, or carry on with one. */
 			NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_NEW_STARTUP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_INTRO_NEW_STARTUP, STR_INTRO_TOOLTIP_NEW_STARTUP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_GENERATE_GAME), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_LANDSCAPING, STR_INTRO_NEW_GAME, STR_INTRO_TOOLTIP_NEW_GAME), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_PLAY_HEIGHTMAP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SHOW_COUNTOURS, STR_INTRO_PLAY_HEIGHTMAP, STR_INTRO_TOOLTIP_PLAY_HEIGHTMAP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_PLAY_SCENARIO), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SUBSIDIES, STR_INTRO_PLAY_SCENARIO, STR_INTRO_TOOLTIP_PLAY_SCENARIO), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+				NWidget(WWT_PUSHIMGTEXTBTN, Colours::DarkBlue, WID_SGI_NEW_STARTUP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_INTRO_NEW_STARTUP, STR_INTRO_TOOLTIP_NEW_STARTUP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
 				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_LOAD_GAME), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SAVE, STR_INTRO_LOAD_GAME, STR_INTRO_TOOLTIP_LOAD_GAME), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_HIGHSCORE), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_LEAGUE, STR_INTRO_HIGHSCORE, STR_INTRO_TOOLTIP_HIGHSCORE), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-			EndContainer(),
-
-			/* Multi player */
-			NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0),
 				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_PLAY_NETWORK), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_INTRO_MULTIPLAYER, STR_INTRO_TOOLTIP_MULTIPLAYER), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
 			EndContainer(),
 
@@ -372,8 +383,8 @@ static constexpr std::initializer_list<NWidgetPart> _nested_select_game_widgets 
 			NWidget(NWID_VERTICAL), SetPIP(0, WidgetDimensions::unscaled.vsep_normal, 0),
 				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_OPTIONS), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SETTINGS, STR_INTRO_GAME_OPTIONS, STR_INTRO_TOOLTIP_GAME_OPTIONS), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
 				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_CONTENT_DOWNLOAD), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SHOW_VEHICLES, STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
-				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_EDIT_SCENARIO), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_SMALLMAP, STR_INTRO_SCENARIO_EDITOR, STR_INTRO_TOOLTIP_SCENARIO_EDITOR), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
 				NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_HELP), SetToolbarMinimalSize(1), SetSpriteStringTip(SPR_IMG_QUERY, STR_INTRO_HELP, STR_INTRO_TOOLTIP_HELP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+				NWidget(WWT_DROPDOWN, Colours::Orange, WID_SGI_CLASSIC), SetToolbarMinimalSize(1), SetStringTip(STR_INTRO_CLASSIC, STR_INTRO_TOOLTIP_CLASSIC), SetFill(1, 0),
 			EndContainer(),
 
 			NWidget(NWID_VERTICAL),

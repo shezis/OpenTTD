@@ -412,7 +412,7 @@ STR_TOOLBAR_TOOLTIP_BUILD_AIRPORTS                              :{BLACK}Build ai
 STR_TOOLBAR_TOOLTIP_LANDSCAPING                                 :{BLACK}Open landscaping menu, tree menu, or place a sign
 STR_TOOLBAR_TOOLTIP_SHOW_SOUND_MUSIC_WINDOW                     :{BLACK}Open sound/music window
 STR_TOOLBAR_TOOLTIP_SHOW_LAST_MESSAGE_NEWS                      :{BLACK}Open last message/news report, messages history or delete all messages
-STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Open land information, screenshot menu, OpenTTD credits, or developer tools
+STR_TOOLBAR_TOOLTIP_LAND_BLOCK_INFORMATION                      :{BLACK}Open land information, screenshot menu, Runway credits, or developer tools
 STR_TOOLBAR_TOOLTIP_SWITCH_TOOLBAR                              :{BLACK}Switch toolbars
 
 # Extra tooltips for the scenario editor toolbar
@@ -543,7 +543,7 @@ STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Toggle console
 STR_ABOUT_MENU_AI_DEBUG                                         :AI/Game script debug
 STR_ABOUT_MENU_SCREENSHOT                                       :Screenshot
 STR_ABOUT_MENU_SHOW_FRAMERATE                                   :Show frame rate
-STR_ABOUT_MENU_ABOUT_OPENTTD                                    :About 'OpenTTD'
+STR_ABOUT_MENU_ABOUT_OPENTTD                                    :About 'Runway'
 STR_ABOUT_MENU_SPRITE_ALIGNER                                   :Sprite aligner
 STR_ABOUT_MENU_TOGGLE_BOUNDING_BOXES                            :Toggle bounding boxes
 STR_ABOUT_MENU_TOGGLE_DIRTY_BLOCKS                              :Toggle colouring of dirty blocks
@@ -1071,7 +1071,7 @@ STR_GAME_OPTIONS_LANGUAGE_TOOLTIP                               :Select the inte
 STR_GAME_OPTIONS_LANGUAGE_PERCENTAGE                            :{RAW_STRING} ({NUM}% completed)
 
 STR_GAME_OPTIONS_FULLSCREEN                                     :Fullscreen
-STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :Turn on to play OpenTTD fullscreen mode
+STR_GAME_OPTIONS_FULLSCREEN_TOOLTIP                             :Turn on to play Runway fullscreen mode
 
 STR_GAME_OPTIONS_RESOLUTION                                     :Screen resolution
 STR_GAME_OPTIONS_RESOLUTION_TOOLTIP                             :Select the screen resolution to use
@@ -2258,8 +2258,8 @@ STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :no compatible G
 STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :GPU driver crashed the game. Hardware acceleration disabled
 
 # Intro window
-STR_INTRO_CAPTION                                               :{WHITE}Founder Mode · built on OpenTTD
-STR_INTRO_VERSION                                               :OpenTTD {REV}
+STR_INTRO_CAPTION                                               :{WHITE}Runway
+STR_INTRO_VERSION                                               :Runway {REV} · built on OpenTTD
 
 STR_INTRO_NEW_GAME                                              :{BLACK}New Game
 STR_INTRO_NEW_STARTUP                                           :{BLACK}New Startup
@@ -2273,6 +2273,9 @@ STR_INTRO_GAME_OPTIONS                                          :{BLACK}Game Opt
 STR_INTRO_HIGHSCORE                                             :{BLACK}Highscore Table
 STR_INTRO_HELP                                                  :{BLACK}Help & Manuals
 STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Online Content
+STR_INTRO_CLASSIC                                               :{BLACK}Classic transport game
+STR_INTRO_TOOLTIP_CLASSIC                                       :{BLACK}The OpenTTD transport game Runway is built on: new transport game, heightmaps, scenarios, the scenario editor and highscores
+STR_INTRO_TAGLINE                                               :{WHITE}Found a startup. Win the city. Go public.
 STR_INTRO_QUIT                                                  :{BLACK}Exit
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Start a new game. Ctrl+Click skips map configuration
@@ -2292,14 +2295,14 @@ STR_INTRO_TOOLTIP_GAME_OPTIONS                                  :{BLACK}Open gam
 STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Open highscore table
 STR_INTRO_TOOLTIP_HELP                                          :{BLACK}Get access to documentation and online resources
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Check for new and updated content to download
-STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Exit 'OpenTTD'
+STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Exit 'Runway'
 
 STR_INTRO_BASESET                                               :{BLACK}The currently selected base graphics set is missing {NUM} sprite{P "" s}. Please check for updates for the baseset.
 STR_INTRO_TRANSLATION                                           :{BLACK}This translation misses {NUM} string{P "" s}. Please help make OpenTTD better by signing up as translator. See readme.txt for details.
 
 # Quit window
 STR_QUIT_CAPTION                                                :{WHITE}Exit
-STR_QUIT_ARE_YOU_SURE_YOU_WANT_TO_EXIT_OPENTTD                  :{YELLOW}Are you sure you want to exit OpenTTD?
+STR_QUIT_ARE_YOU_SURE_YOU_WANT_TO_EXIT_OPENTTD                  :{YELLOW}Are you sure you want to exit Runway?
 STR_QUIT_YES                                                    :{BLACK}Yes
 STR_QUIT_NO                                                     :{BLACK}No
 
@@ -2717,7 +2720,7 @@ STR_CONTENT_UNSELECT_ALL_CAPTION                                :{BLACK}Unselect
 STR_CONTENT_UNSELECT_ALL_CAPTION_TOOLTIP                        :{BLACK}Mark all content to be not downloaded
 STR_CONTENT_SEARCH_EXTERNAL                                     :{BLACK}Search external websites
 STR_CONTENT_SEARCH_EXTERNAL_TOOLTIP                             :{BLACK}Search content not available on OpenTTD's content service on websites not associated to OpenTTD
-STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER_CAPTION                  :{WHITE}You are leaving OpenTTD!
+STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER_CAPTION                  :{WHITE}You are leaving Runway!
 STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER                          :{WHITE}The terms and conditions for downloading content from external websites vary.{}You will have to refer to the external sites for instructions how to install the content into OpenTTD.{}Do you want to continue?
 STR_CONTENT_FILTER_TITLE                                        :{BLACK}Tag/name filter:
 STR_CONTENT_OPEN_URL                                            :{BLACK}Website
@@ -2775,11 +2778,11 @@ STR_CONTENT_ERROR_COULD_NOT_EXTRACT                             :Could not decom
 STR_MISSING_GRAPHICS_SET_CAPTION                                :{WHITE}Missing graphics
 STR_MISSING_GRAPHICS_SET_MESSAGE                                :{BLACK}OpenTTD requires graphics to function but none could be found. Do you allow OpenTTD to download and install these graphics?
 STR_MISSING_GRAPHICS_YES_DOWNLOAD                               :{BLACK}Yes, download the graphics
-STR_MISSING_GRAPHICS_NO_QUIT                                    :{BLACK}No, exit OpenTTD
+STR_MISSING_GRAPHICS_NO_QUIT                                    :{BLACK}No, exit Runway
 
 STR_MISSING_GRAPHICS_ERROR_TITLE                                :{WHITE}Downloading failed
 STR_MISSING_GRAPHICS_ERROR                                      :{BLACK}Downloading graphics failed.{}Please download graphics manually.
-STR_MISSING_GRAPHICS_ERROR_QUIT                                 :{BLACK}Exit OpenTTD
+STR_MISSING_GRAPHICS_ERROR_QUIT                                 :{BLACK}Exit Runway
 
 # Transparency settings window
 STR_TRANSPARENCY_CAPTION                                        :{WHITE}Transparency Options
@@ -3323,9 +3326,9 @@ STR_LAI_OBJECT_DESCRIPTION_COMPANY_HEADQUARTERS                 :Company headqua
 STR_LAI_OBJECT_DESCRIPTION_COMPANY_OWNED_LAND                   :Company-owned land
 
 # About OpenTTD window
-STR_ABOUT_OPENTTD                                               :{WHITE}About OpenTTD
+STR_ABOUT_OPENTTD                                               :{WHITE}About Runway
 STR_ABOUT_ORIGINAL_COPYRIGHT                                    :{BLACK}Original copyright {COPYRIGHT} 1995 Chris Sawyer, All rights reserved
-STR_ABOUT_VERSION                                               :{BLACK}OpenTTD version {REV}
+STR_ABOUT_VERSION                                               :{BLACK}Runway version {REV} · a startup game built on OpenTTD
 STR_ABOUT_COPYRIGHT_OPENTTD                                     :{BLACK}OpenTTD {COPYRIGHT} 2002-{RAW_STRING} The OpenTTD team
 
 # Framerate display window
@@ -3456,7 +3459,7 @@ STR_MAPGEN_QUANTITY_OF_RIVERS                                   :{BLACK}Rivers:
 STR_MAPGEN_SMOOTHNESS                                           :{BLACK}Smoothness:
 STR_MAPGEN_VARIETY                                              :{BLACK}Variety distribution:
 STR_MAPGEN_GENERATE                                             :{WHITE}Generate
-STR_MAPGEN_GENERATE_TOOLTIP                                     :{BLACK}Create the world and play OpenTTD!
+STR_MAPGEN_GENERATE_TOOLTIP                                     :{BLACK}Create the world and play!
 STR_MAPGEN_NEWGRF_SETTINGS                                      :{BLACK}NewGRF Settings
 STR_MAPGEN_NEWGRF_SETTINGS_TOOLTIP                              :{BLACK}Open NewGRF settings
 STR_MAPGEN_AI_SETTINGS                                          :{BLACK}AI Settings
@@ -3953,7 +3956,7 @@ STR_LEAGUE_SUMMARY                                              :{BLACK}{COMPANY
 STR_LEAGUE_SUMMARY_NONE                                         :{BLACK}The first startup to reach {CURRENCY_SHORT} goes public
 STR_LEAGUE_POACH                                                :{BLACK}Poach
 STR_LEAGUE_POACH_TOOLTIP                                        :{BLACK}Offer one of the selected rival's people a job at 20% more. Their employer can match within a month. You need a free desk and one month of the new salary as a signing fee. One offer at a time
-STR_LEAGUE_POACH_ITEM                                           :{RAW_STRING} · {STRING} {STRING} · {CURRENCY_LONG} → offer {CURRENCY_LONG}
+STR_LEAGUE_POACH_ITEM                                           :{RAW_STRING} · {STRING} {STRING} · {CURRENCY_LONG} now · offer {CURRENCY_LONG}
 STR_LEAGUE_POACH_ITEM_TAKEN                                     :{RAW_STRING} · {STRING} {STRING} · already has an offer
 STR_LEAGUE_POACH_NOBODY                                         :Nobody to poach
 STR_LEAGUE_SHOW                                                 :{BLACK}Show HQ
@@ -4101,8 +4104,8 @@ STR_ROADMAP_NEW_ITEM_EXCLUDED                                   :{STRING} · {RA
 STR_WORK_DETAILS                                                :{NUM} pts · {NUM} slots · {RAW_STRING} · testing {CURRENCY_SHORT} · runs {CURRENCY_SHORT}/month
 STR_WORK_IMPACT_NONE                                            :setup work
 STR_WORK_IMPACT_FIT                                             :fit in {STRING} towns
-STR_WORK_IMPACT_PRICE                                           :+£{NUM} per customer
-STR_WORK_IMPACT_CHURN                                           :churn -{NUM}‰
+STR_WORK_IMPACT_PRICE                                           :+{CURRENCY_SHORT} per customer
+STR_WORK_IMPACT_CHURN                                           :churn -{NUM} per 1,000
 STR_WORK_IMPACT_REACH                                           :reach +{NUM} everywhere
 STR_WORK_IMPACT_LOCAL_FIT                                       :fit +{NUM} in {TOWN}
 STR_WORK_IMPACT_LOCAL_FIT_ANY                                   :fit +{NUM} in that town
@@ -5391,7 +5394,7 @@ STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} changelog of {RAW_STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} licence of {RAW_STRING}
 STR_TEXTFILE_SURVEY_RESULT_CAPTION                              :{WHITE}Preview of survey result
-STR_TEXTFILE_GAME_MANUAL_CAPTION                                :{WHITE}OpenTTD document '{RAW_STRING}'
+STR_TEXTFILE_GAME_MANUAL_CAPTION                                :{WHITE}Runway document '{RAW_STRING}'
 
 
 # Vehicle loading indicators

@@ -28,6 +28,7 @@ enum SelectGameIntroWidgets : WidgetID {
 	WID_SGI_HELP,                  ///< Help and manuals button.
 	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
 	WID_SGI_EXIT,                  ///< Exit button.
+	WID_SGI_CLASSIC,               ///< Classic transport game options (dropdown).
 };
 
 #endif /* WIDGETS_INTRO_WIDGET_H */

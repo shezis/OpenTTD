@@ -24,7 +24,7 @@ install(TARGETS openttd
         )
 
 if (NOT EMSCRIPTEN)
-    # Emscripten embeds these files in openttd.data.
+    # Emscripten embeds these files in the .data file.
     # See CMakeLists.txt in the root.
     install(DIRECTORY
                     ${CMAKE_BINARY_DIR}/lang
@@ -38,9 +38,9 @@ if (NOT EMSCRIPTEN)
     )
 else()
     install(FILES
-                ${CMAKE_BINARY_DIR}/openttd.js
-                ${CMAKE_BINARY_DIR}/openttd.wasm
-                ${CMAKE_BINARY_DIR}/openttd.data
+                ${CMAKE_BINARY_DIR}/${BINARY_NAME}.js
+                ${CMAKE_BINARY_DIR}/${BINARY_NAME}.wasm
+                ${CMAKE_BINARY_DIR}/${BINARY_NAME}.data
             DESTINATION ${BINARY_DESTINATION_DIR}
             COMPONENT Runtime
     )
@@ -131,7 +131,7 @@ endif()
 
 set(CPACK_SYSTEM_NAME "${ARCHITECTURE}")
 
-set(CPACK_PACKAGE_NAME "openttd")
+set(CPACK_PACKAGE_NAME "runway")
 set(CPACK_PACKAGE_VENDOR "OpenTTD")
 set(CPACK_PACKAGE_DESCRIPTION "OpenTTD")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenTTD")

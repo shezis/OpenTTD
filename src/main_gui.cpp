@@ -20,6 +20,9 @@
 #include "sound_func.h"
 #include "transparency.h"
 #include "zoom_func.h"
+#include "gfx_func.h"
+#include "palette_func.h"
+#include "strings_func.h"
 #include "toolbar_gui.h"
 #include "statusbar_gui.h"
 #include "linkgraph/linkgraph_gui.h"
@@ -205,6 +208,50 @@ enum GlobalHotKeys : int32_t {
 	GHK_CLOSE_ERROR,
 };
 
+/** "RUNWAY" in 5x7 pixel letters, one row per string; '#' is a filled block. */
+static const std::array<std::array<std::string_view, 7>, 6> _runway_logo = {{
+	{"####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"},
+	{"#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."},
+	{"#...#", "##..#", "#.#.#", "#..##", "#...#", "#...#", "#...#"},
+	{"#...#", "#...#", "#...#", "#.#.#", "#.#.#", "##.##", "#...#"},
+	{".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"},
+	{"#...#", "#...#", ".#.#.", "..#..", "..#..", "..#..", "..#.."},
+}};
+
+/**
+ * Draw the game's title as a chunky pixel logo with a drop shadow, centred on \a cx.
+ * @param cx Horizontal centre in pixels.
+ * @param top Top edge in pixels.
+ */
+static void DrawRunwayLogo(int cx, int top)
+{
+	const int block = ScaleGUITrad(7);
+	const int width = (static_cast<int>(_runway_logo.size()) * 6 - 1) * block;
+	const int shadow = std::max(1, block / 3);
+	const PixelColour face = GetColourGradient(Colours::Yellow, Shade::Lighter);
+	const PixelColour edge = GetColourGradient(Colours::Orange, Shade::Normal);
+	const PixelColour dark = GetColourGradient(Colours::Brown, Shade::Darkest);
+	for (int pass = 0; pass < 2; pass++) {
+		int x = cx - width / 2;
+		for (const auto &letter : _runway_logo) {
+			for (int row = 0; row < 7; row++) {
+				for (int col = 0; col < 5; col++) {
+					if (letter[row][col] != '#') continue;
+					int l = x + col * block, t = top + row * block;
+					if (pass == 0) {
+						GfxFillRect(l + shadow, t + shadow, l + block - 1 + shadow, t + block - 1 + shadow, dark);
+					} else {
+						GfxFillRect(l, t, l + block - 1, t + block - 1, edge);
+						GfxFillRect(l, t, l + block - 1 - shadow, t + block - 1 - shadow, face);
+					}
+				}
+			}
+			x += 6 * block;
+		}
+	}
+	DrawString(cx - width / 2, cx + width / 2, top + 7 * block + ScaleGUITrad(8), STR_INTRO_TAGLINE, TextColour::White, AlignmentH::Centre);
+}
+
 struct MainWindow : Window
 {
 	MainWindow(WindowDesc &desc) : Window(desc)
@@ -252,19 +299,7 @@ struct MainWindow : Window
 	{
 		this->DrawWidgets();
 		if (_game_mode == GameMode::Menu) {
-			static const std::initializer_list<SpriteID> title_sprites = {SPR_OTTD_O, SPR_OTTD_P, SPR_OTTD_E, SPR_OTTD_N, SPR_OTTD_T, SPR_OTTD_T, SPR_OTTD_D};
-			uint letter_spacing = ScaleGUITrad(10);
-			int name_width = static_cast<int>(std::size(title_sprites) - 1) * letter_spacing;
-
-			for (const SpriteID &sprite : title_sprites) {
-				name_width += GetSpriteSize(sprite).width;
-			}
-			int off_x = (this->width - name_width) / 2;
-
-			for (const SpriteID &sprite : title_sprites) {
-				DrawSprite(sprite, PAL_NONE, off_x, ScaleGUITrad(50));
-				off_x += GetSpriteSize(sprite).width + letter_spacing;
-			}
+			DrawRunwayLogo(this->width / 2, ScaleGUITrad(40));
 
 			int text_y = this->height - GetCharacterHeight(FontSize::Normal) * 2;
 			DrawString(0, this->width - 1, text_y, STR_INTRO_VERSION, TextColour::White, {AlignmentH::Centre, AlignmentV::Middle});
